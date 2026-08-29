@@ -3,14 +3,42 @@ import { EventBus } from '@/core/event-bus';
 import { Player } from '@/game/entities/Player';
 import { SimulationWorld } from '../simulation/world';
 
+interface HitParticle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  color: number;
+  size: number;
+  alpha: number;
+  lifeSec: number;
+  maxLifeSec: number;
+}
+
+interface HitShockwave {
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  color: number;
+  alpha: number;
+  lifeSec: number;
+  maxLifeSec: number;
+}
+
 export class SpriteSyncSystem {
   private scene: Phaser.Scene;
   private graphics: Phaser.GameObjects.Graphics;
-  private playerSprite: Phaser.GameObjects.Sprite | null = null;
   private shadowGraphics: Phaser.GameObjects.Graphics;
+  private playerSprite: Phaser.GameObjects.Sprite | null = null;
   private enemySprites: Map<number, Phaser.GameObjects.Sprite> = new Map();
   private dropSprites: Map<number, Phaser.GameObjects.Image> = new Map();
+  private damageTexts: Map<number, Phaser.GameObjects.Text> = new Map();
   private tilemapBackground: Phaser.GameObjects.TileSprite | null = null;
+
+  // 粒子与打击特效列表
+  private particles: HitParticle[] = [];
+  private shockwaves: HitShockwave[] = [];
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -32,9 +60,20 @@ export class SpriteSyncSystem {
 
   private bindEvents(): void {
     EventBus.getInstance().on('entity:damaged', data => {
+      // 1. 产生受击火花粒子
+      this.spawnHitSparks(data.x, data.y, data.isCrit, data.sourceId);
+
+      // 2. 暴击额外镜头震屏与震波
       if (data.isCrit) {
-        this.scene.cameras.main.shake(120, 0.006);
+        this.scene.cameras.main.shake(120, 0.008);
+        this.spawnShockwave(data.x, data.y, 42, 0xffd166);
       }
+    });
+
+    EventBus.getInstance().on('entity:died', data => {
+      // 怪物击杀爆散特效
+      this.spawnDeathExplosion(data.x, data.y);
+      this.spawnShockwave(data.x, data.y, 35, 0xe76f51);
     });
 
     EventBus.getInstance().on('player:died', () => {
@@ -49,7 +88,7 @@ export class SpriteSyncSystem {
     const player = world.player;
     if (!player) return;
 
-    // 1. 绘制边界
+    // 1. 绘制环境边界
     this.renderEnvironment();
 
     // 2. 同步并渲染掉落物 (像素美食/食材)
@@ -58,11 +97,17 @@ export class SpriteSyncSystem {
     // 3. 渲染投射物与攻击特效
     this.renderProjectiles(world);
 
-    // 4. 同步并渲染怪物像素精灵与血条
+    // 4. 同步并渲染怪物像素精灵、受击白闪与血条
     this.renderEnemies(world);
 
     // 5. 同步玩家角色精灵与状态
     this.renderPlayer(player);
+
+    // 6. 渲染打击粒子与冲击波
+    this.updateAndRenderParticles(1 / 60);
+
+    // 7. 同步飘字跳字系统
+    this.renderDamageTexts(world);
   }
 
   private renderEnvironment(): void {
@@ -83,7 +128,6 @@ export class SpriteSyncSystem {
 
       let img = this.dropSprites.get(drop.id);
       if (!img) {
-        // 根据掉落类型选择对应像素美食贴图
         let textureKey = 'item_food';
         if (drop.type === 'heat') {
           textureKey = 'item_skewer';
@@ -201,6 +245,8 @@ export class SpriteSyncSystem {
       let sprite = this.enemySprites.get(e.id);
       const enemyTextureKey = `enemy_${e.definition.id}`;
 
+      const baseScale = e.isBoss ? 2.5 : e.isElite ? 2.0 : 1.5;
+
       if (!sprite) {
         const textureToUse = this.scene.textures.exists(enemyTextureKey)
           ? enemyTextureKey
@@ -208,30 +254,49 @@ export class SpriteSyncSystem {
 
         sprite = this.scene.add.sprite(e.x, e.y, textureToUse);
         sprite.setDepth(5);
-
-        if (e.isBoss) {
-          sprite.setScale(2.5);
-        } else if (e.isElite) {
-          sprite.setScale(2.0);
-        } else {
-          sprite.setScale(1.5);
-        }
+        sprite.setScale(baseScale);
         this.enemySprites.set(e.id, sprite);
       }
 
-      sprite.setPosition(e.x, e.y);
+      // 受击位置微颤动与挤压变形
+      let drawX = e.x;
+      let drawY = e.y;
+      let scaleX = baseScale;
+      let scaleY = baseScale;
+
+      // 1. 核心受击反馈：白闪、形变、微抖
+      if (e.hitFlashTimerSec > 0) {
+        // 纯白高亮受击剪影 (兼顾 Phaser 3/4 API)
+        sprite.setTint(0xffffff);
+        if (typeof (sprite as any).setTintFill === 'function') {
+          (sprite as any).setTintFill(0xffffff);
+        }
+
+        // 受击横向挤压与纵向扁平打击感
+        scaleX = baseScale * 1.22;
+        scaleY = baseScale * 0.82;
+
+        // 微颤抖动
+        drawX += (Math.random() * 4 - 2);
+        drawY += (Math.random() * 4 - 2);
+      } else if (e.burnStatus) {
+        // 灼烧状态：红橙烈焰脉冲滤镜
+        const pulse = Math.sin(this.scene.time.now * 0.015) > 0;
+        sprite.setTint(pulse ? 0xff4500 : 0xffa500);
+      } else if (e.slowStatus) {
+        // 减速状态：冰霜蔚蓝滤镜
+        sprite.setTint(0x48cae4);
+      } else {
+        sprite.clearTint();
+      }
+
+      sprite.setPosition(drawX, drawY);
+      sprite.setScale(scaleX, scaleY);
       sprite.setVisible(true);
 
       // 朝向翻转
       if (e.velocity.x !== 0) {
         sprite.setFlipX(e.velocity.x < 0);
-      }
-
-      // 受击白闪效果
-      if (e.hitFlashTimerSec > 0) {
-        sprite.setTint(0xffffff);
-      } else {
-        sprite.clearTint();
       }
 
       // 底部椭圆阴影
@@ -259,6 +324,53 @@ export class SpriteSyncSystem {
       if (!activeEnemyIds.has(id)) {
         sprite.destroy();
         this.enemySprites.delete(id);
+      }
+    }
+  }
+
+  private renderDamageTexts(world: SimulationWorld): void {
+    const activeTexts = world.damageTextPool.getActiveItems();
+    const activeTextIds = new Set<number>();
+
+    for (let i = 0; i < activeTexts.length; i++) {
+      const dt = activeTexts[i];
+      activeTextIds.add(dt.id);
+
+      let textObj = this.damageTexts.get(dt.id);
+      if (!textObj) {
+        textObj = this.scene.add.text(dt.x, dt.y, dt.text, {
+          fontSize: dt.isCrit ? '16px' : '12px',
+          fontStyle: 'bold',
+          color: dt.isCrit ? '#ffd166' : dt.color || '#ffffff',
+          stroke: '#060b0c',
+          strokeThickness: dt.isCrit ? 4 : 3,
+        });
+        textObj.setOrigin(0.5, 0.5);
+        textObj.setDepth(100);
+        this.damageTexts.set(dt.id, textObj);
+      }
+
+      // 上升与缩放弹跳
+      textObj.setPosition(dt.x, dt.y);
+
+      // 计算生命期渐变与暴击弹跳比例
+      const lifePct = Math.max(0, dt.lifeMs / dt.maxLifeMs);
+      textObj.setAlpha(lifePct);
+
+      if (dt.isCrit) {
+        const scale = 1.0 + (1.0 - lifePct) * 0.3;
+        textObj.setScale(scale);
+      } else {
+        textObj.setScale(1.0);
+      }
+      textObj.setVisible(true);
+    }
+
+    // 清理非激活飘字
+    for (const [id, textObj] of this.damageTexts.entries()) {
+      if (!activeTextIds.has(id)) {
+        textObj.destroy();
+        this.damageTexts.delete(id);
       }
     }
   }
@@ -305,6 +417,104 @@ export class SpriteSyncSystem {
     this.graphics.fillRect(px - pBarW / 2, py - player.radius - 16, pBarW * pHpPct, pBarH);
   }
 
+  private spawnHitSparks(x: number, y: number, isCrit: boolean, sourceId?: string): void {
+    const count = isCrit ? 10 : 5;
+    let sparkColor = 0xffe66d;
+    if (sourceId === 'stove_flame') sparkColor = 0xff5722;
+    else if (sourceId === 'cleaver') sparkColor = 0xf4a261;
+    else if (sourceId === 'bamboo_skewer') sparkColor = 0x00f5d4;
+
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * (isCrit ? 220 : 140) + 40;
+      this.particles.push({
+        x: x + (Math.random() * 8 - 4),
+        y: y + (Math.random() * 8 - 4),
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        color: sparkColor,
+        size: Math.random() * (isCrit ? 3.5 : 2.5) + 1.5,
+        alpha: 1.0,
+        lifeSec: 0,
+        maxLifeSec: Math.random() * 0.18 + 0.12,
+      });
+    }
+  }
+
+  private spawnDeathExplosion(x: number, y: number): void {
+    const count = 12;
+    const colors = [0xe76f51, 0xffd166, 0xf4a261, 0xffffff];
+
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 + (Math.random() * 0.3 - 0.15);
+      const speed = Math.random() * 180 + 80;
+      this.particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        color: colors[i % colors.length],
+        size: Math.random() * 4 + 2,
+        alpha: 1.0,
+        lifeSec: 0,
+        maxLifeSec: Math.random() * 0.25 + 0.18,
+      });
+    }
+  }
+
+  private spawnShockwave(x: number, y: number, maxRadius: number, color: number): void {
+    this.shockwaves.push({
+      x,
+      y,
+      radius: 6,
+      maxRadius,
+      color,
+      alpha: 0.9,
+      lifeSec: 0,
+      maxLifeSec: 0.22,
+    });
+  }
+
+  private updateAndRenderParticles(dt: number): void {
+    // 1. 渲染并更新冲击波
+    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+      const sw = this.shockwaves[i];
+      sw.lifeSec += dt;
+      if (sw.lifeSec >= sw.maxLifeSec) {
+        this.shockwaves.splice(i, 1);
+        continue;
+      }
+      const progress = sw.lifeSec / sw.maxLifeSec;
+      const currentRadius = sw.radius + (sw.maxRadius - sw.radius) * progress;
+      const currentAlpha = sw.alpha * (1 - progress);
+
+      this.graphics.lineStyle(2.5 * (1 - progress * 0.5), sw.color, currentAlpha);
+      this.graphics.strokeCircle(sw.x, sw.y, currentRadius);
+    }
+
+    // 2. 渲染并更新火花粒子
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.lifeSec += dt;
+      if (p.lifeSec >= p.maxLifeSec) {
+        this.particles.splice(i, 1);
+        continue;
+      }
+
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vx *= 0.88; // 阻尼减速
+      p.vy *= 0.88;
+
+      const progress = p.lifeSec / p.maxLifeSec;
+      const currentAlpha = p.alpha * (1 - progress);
+      const currentSize = Math.max(1, p.size * (1 - progress * 0.5));
+
+      this.graphics.fillStyle(p.color, currentAlpha);
+      this.graphics.fillCircle(p.x, p.y, currentSize);
+    }
+  }
+
   public destroy(): void {
     this.graphics.destroy();
     this.shadowGraphics.destroy();
@@ -320,6 +530,10 @@ export class SpriteSyncSystem {
       sprite.destroy();
     }
     this.dropSprites.clear();
+    for (const text of this.damageTexts.values()) {
+      text.destroy();
+    }
+    this.damageTexts.clear();
     if (this.tilemapBackground) {
       this.tilemapBackground.destroy();
       this.tilemapBackground = null;

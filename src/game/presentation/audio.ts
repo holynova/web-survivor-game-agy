@@ -33,24 +33,33 @@ export class AudioManager {
       this.playSfx(data.key, data.volume, data.detune);
     });
 
-    EventBus.getInstance().on('entity:damaged', () => {
-      this.playSfx('sfx_hit', 0.4);
+    EventBus.getInstance().on('entity:damaged', data => {
+      const isCrit = data.isCrit;
+      const vol = isCrit ? 0.65 : 0.45;
+      const detune = isCrit ? 150 : (Math.random() * 160 - 80);
+      if (data.sourceId === 'stove_flame') {
+        this.playSfx('sfx_fire', vol * 0.8, detune);
+      } else if (data.sourceId === 'iron_wok' || data.sourceId === 'cleaver') {
+        this.playSfx('sfx_slash', vol, detune);
+      } else {
+        this.playSfx('sfx_hit', vol, detune);
+      }
     });
 
     EventBus.getInstance().on('entity:died', () => {
-      this.playSfx('sfx_kill', 0.6);
+      this.playSfx('sfx_kill', 0.7, Math.random() * 100 - 50);
     });
 
     EventBus.getInstance().on('drop:collected', data => {
       if (data.dropType === 'ingredient') {
-        this.playSfx('sfx_coin', 0.5);
+        this.playSfx('sfx_coin', 0.5, Math.random() * 120);
       } else {
         this.playSfx('drop_pickup', 0.35);
       }
     });
 
     EventBus.getInstance().on('player:levelup', () => {
-      this.playSfx('sfx_levelup', 0.7);
+      this.playSfx('sfx_levelup', 0.8);
     });
   }
 
@@ -143,10 +152,11 @@ export class AudioManager {
       else if (name === 'sfx_kill') phaserKey = 'sfx_kill';
       else if (name === 'sfx_coin' || name.includes('coin')) phaserKey = 'sfx_coin';
       else if (name === 'sfx_levelup') phaserKey = 'sfx_levelup';
-      else if (name.includes('iron_wok') || name.includes('cleaver')) phaserKey = 'sfx_slash';
-      else if (name.includes('stove_flame')) phaserKey = 'sfx_fire';
+      else if (name === 'sfx_slash' || name.includes('iron_wok') || name.includes('cleaver')) phaserKey = 'sfx_slash';
+      else if (name === 'sfx_fire' || name.includes('stove_flame')) phaserKey = 'sfx_fire';
+      else if (name === 'sfx_gameover') phaserKey = 'sfx_gameover';
 
-      if (phaserKey && this.phaserSound.get(phaserKey)) {
+      if (phaserKey) {
         try {
           this.phaserSound.play(phaserKey, { volume: finalVol, detune });
           return;

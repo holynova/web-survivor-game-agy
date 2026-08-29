@@ -93,7 +93,7 @@ export class Enemy implements Poolable, SpatialEntity {
 
   public takeDamage(amount: number): number {
     this.currentHp = Math.max(0, this.currentHp - amount);
-    this.hitFlashTimerSec = 0.1;
+    this.hitFlashTimerSec = 0.12;
     return amount;
   }
 }
