@@ -88,4 +88,8 @@ export class SaveManager {
     data.highScores.bestTimeSec = Math.max(data.highScores.bestTimeSec, timeSec);
     this.save(data);
   }
+
+  public static recordRun(wave: number, kills: number, timeSec = 0): void {
+    this.updateHighScore(wave, kills, timeSec);
+  }
 }

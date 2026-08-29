@@ -1,49 +1,119 @@
 import { test } from '@playwright/test';
 
-test.describe('Visual Screenshot Tests', () => {
-  test('capture menu, levelup modal and shop modal', async ({ page }) => {
+test.describe('Web Survivor Full Workflow Visual Audit', () => {
+  test('Capture all key gameplay steps on Desktop', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto('http://localhost:3000');
-    await page.waitForSelector('#start-btn');
 
-    // 1. 点击 HTML 开始按钮
+    // 环节 1：启动手势解锁层
+    await page.waitForSelector('#start-overlay');
+    await page.screenshot({ path: 'test-results/audit-01-start-overlay.png' });
+
+    // 环节 2：主菜单 / 角色三选一界面
     await page.click('#start-btn');
     await page.waitForTimeout(800);
-    await page.screenshot({ path: 'test-results/desktop-menu.png' });
+    await page.screenshot({ path: 'test-results/audit-02-character-menu.png' });
 
-    // 2. 点击 Phaser 菜单中的“开始夜市营业”按钮
+    // 环节 3：进入战斗（第 1 波夜战）
     const canvas = await page.waitForSelector('canvas');
     const box = await canvas.boundingBox();
-    if (box) {
-      const scaleX = box.width / 960;
-      const scaleY = box.height / 540;
+    if (!box) return;
 
-      // 点击开始按钮 (480, 500)
-      await page.mouse.click(box.x + 480 * scaleX, box.y + 500 * scaleY);
-      await page.waitForTimeout(800);
-      await page.screenshot({ path: 'test-results/desktop-battle.png' });
+    const scaleX = box.width / 960;
+    const scaleY = box.height / 540;
 
-      // 3. 通过 Phaser 场景实例直接触发 LevelUpModal 展现
-      await page.evaluate(() => {
-        const game = (window as any).__PHASER_GAME__;
-        const runScene = game.scene.getScene('RunScene');
-        if (runScene && runScene.levelUpModal) {
-          runScene.levelUpModal.show(runScene.world.player, runScene.world.rng);
-        }
-      });
-      await page.waitForTimeout(600);
-      await page.screenshot({ path: 'test-results/desktop-levelup.png' });
+    // 点击开始营业
+    await page.mouse.click(box.x + 480 * scaleX, box.y + 500 * scaleY);
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: 'test-results/audit-03-battle-wave1.png' });
 
-      // 4. 关闭升级弹窗，展现 ShopModal (夜市商店)
-      await page.evaluate(() => {
-        const game = (window as any).__PHASER_GAME__;
-        const runScene = game.scene.getScene('RunScene');
-        if (runScene && runScene.shopModal) {
-          runScene.levelUpModal.hide();
-          runScene.shopModal.show(runScene.world.player, runScene.world.rng, runScene.world.waveSystem.currentWave.waveNumber);
-        }
-      });
-      await page.waitForTimeout(600);
-      await page.screenshot({ path: 'test-results/desktop-shop.png' });
-    }
+    // 环节 4：升级三选一弹窗
+    await page.evaluate(() => {
+      const game = (window as any).__PHASER_GAME__;
+      const runScene = game.scene.getScene('RunScene');
+      if (runScene && runScene.levelUpModal) {
+        runScene.levelUpModal.show(runScene.world.player, runScene.world.rng);
+      }
+    });
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: 'test-results/audit-04-levelup-3choices.png' });
+
+    // 环节 5：夜市整备商店弹窗
+    await page.evaluate(() => {
+      const game = (window as any).__PHASER_GAME__;
+      const runScene = game.scene.getScene('RunScene');
+      if (runScene && runScene.shopModal) {
+        runScene.levelUpModal.hide();
+        runScene.shopModal.show(runScene.world.player, runScene.world.rng, 1);
+      }
+    });
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: 'test-results/audit-05-shop-preparation.png' });
+
+    // 环节 6：暂停弹窗
+    await page.evaluate(() => {
+      const game = (window as any).__PHASER_GAME__;
+      const runScene = game.scene.getScene('RunScene');
+      if (runScene && runScene.pauseModal) {
+        runScene.shopModal.hide();
+        runScene.pauseModal.show();
+      }
+    });
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: 'test-results/audit-06-pause-modal.png' });
+
+    // 环节 7：营业结算界面 (ResultsScene)
+    await page.evaluate(() => {
+      const game = (window as any).__PHASER_GAME__;
+      const runScene = game.scene.getScene('RunScene');
+      if (runScene) {
+        runScene.pauseModal.hide();
+        runScene.scene.start('ResultsScene', {
+          isVictory: false,
+          characterId: 'wok_master',
+          waveReached: 6,
+          stats: {
+            totalDamageDealt: 12580,
+            totalKills: 142,
+            ingredientsEarned: 95,
+            timeSurvivedSec: 245,
+            damageByWeapon: {
+              iron_wok: 8420,
+              cleaver: 3160,
+              stove_flame: 1000,
+            },
+          },
+          activeRecipes: [
+            {
+              id: 'spicy_fire_wok',
+              transformation: {
+                transformedNameKey: '爆炒火环',
+              },
+            },
+          ],
+          seed: 12345,
+        });
+      }
+    });
+    await page.waitForTimeout(800);
+    await page.screenshot({ path: 'test-results/audit-07-settlement-results.png' });
+  });
+
+  test('Capture Mobile Portrait & Landscape Experience', async ({ page }) => {
+    // 手机竖屏
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('http://localhost:3000');
+    await page.waitForSelector('#start-btn');
+    await page.click('#start-btn');
+    await page.waitForTimeout(800);
+    await page.screenshot({ path: 'test-results/audit-08-mobile-portrait-menu.png' });
+
+    // 手机横屏
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.goto('http://localhost:3000');
+    await page.waitForSelector('#start-btn');
+    await page.click('#start-btn');
+    await page.waitForTimeout(800);
+    await page.screenshot({ path: 'test-results/audit-09-mobile-landscape-menu.png' });
   });
 });
