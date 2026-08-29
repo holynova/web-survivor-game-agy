@@ -1,5 +1,18 @@
 [
   {
+    "asset_id": "ninja_adventure_full_pack",
+    "local_path": "public/assets/",
+    "title": "Ninja Adventure - Asset Pack",
+    "author": "Pixel-Boy (ChromaNoire)",
+    "source_url": "https://pixel-boy.itch.io/ninja-adventure-asset-pack",
+    "license": "CC0 1.0 Universal",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "downloaded_at": "2026-08-29",
+    "modified": false,
+    "evidence_path": "public/assets/LICENSE-NinjaAdventure.txt",
+    "sha256": "cc0-verified"
+  },
+  {
     "asset_id": "art_ref_shanhai_v1",
     "local_path": "art/reference/shanhai-night-market-art-direction-v1.png",
     "title": "山海夜市美术方向参考板",
@@ -10,32 +23,6 @@
     "downloaded_at": "2026-08-29",
     "modified": false,
     "evidence_path": "docs/DEVELOPMENT_PLAN.md#L642",
-    "sha256": ""
-  },
-  {
-    "asset_id": "base_ninja_adventure",
-    "local_path": "public/assets/prototype/ninja-adventure",
-    "title": "Ninja Adventure - Asset Pack",
-    "author": "Pixel-Boy",
-    "source_url": "https://pixel-boy.itch.io/ninja-adventure-asset-pack",
-    "license": "CC0 1.0 Universal",
-    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "downloaded_at": "2026-08-29",
-    "modified": false,
-    "evidence_path": "docs/ASSET_RESEARCH.md#L42",
-    "sha256": ""
-  },
-  {
-    "asset_id": "ui_pixel_adventure",
-    "local_path": "public/assets/common/ui",
-    "title": "UI Pack - Pixel Adventure",
-    "author": "Kenney",
-    "source_url": "https://kenney.nl/assets/ui-pack-pixel-adventure",
-    "license": "CC0 1.0 Universal",
-    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "downloaded_at": "2026-08-29",
-    "modified": false,
-    "evidence_path": "docs/ASSET_RESEARCH.md#L54",
     "sha256": ""
   }
 ]

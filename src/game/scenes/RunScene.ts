@@ -40,17 +40,22 @@ export class RunScene extends Phaser.Scene {
     this.world = new SimulationWorld(Date.now());
     this.world.initGame(characterId);
 
-    // 2. 初始化表现层与渲染同步器
+    // 2. 初始化音效管理器与战斗音乐
+    AudioManager.getInstance().setSoundManager(this.sound);
+    AudioManager.getInstance().playBgm('bgm_battle', true, 0.45);
+
+    // 3. 初始化表现层与渲染同步器
     this.spriteSync = new SpriteSyncSystem(this);
     this.hud = new HUD(this);
     this.debugOverlay = new DebugOverlay(this);
 
-    // 3. 初始化模态交互窗口
+    // 4. 初始化模态交互窗口
     this.levelUpModal = new LevelUpModal(this, () => {
       this.world.resumeGame();
     });
 
     this.shopModal = new ShopModal(this, () => {
+      AudioManager.getInstance().playBgm('bgm_battle', true, 0.45);
       this.world.waveSystem.nextWave();
       this.world.resumeGame();
     });
@@ -61,15 +66,16 @@ export class RunScene extends Phaser.Scene {
         this.world.resumeGame();
       },
       () => {
+        AudioManager.getInstance().stopBgm();
         this.scene.restart({ characterId });
       },
     );
 
-    // 4. 配置摄像机跟随
+    // 5. 配置摄像机跟随
     this.cameras.main.startFollow(this.world.player.position, true, 0.1, 0.1);
     this.cameras.main.setBounds(-1400, -1400, 2800, 2800);
 
-    // 5. 绑定键盘输入
+    // 6. 绑定键盘输入
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.wasdKeys = {
@@ -91,7 +97,7 @@ export class RunScene extends Phaser.Scene {
       });
     }
 
-    // 6. 绑定全局领域事件流转
+    // 7. 绑定全局领域事件流转
     this.bindEvents(characterId);
   }
 
@@ -100,6 +106,8 @@ export class RunScene extends Phaser.Scene {
 
     this.eventUnsubscribers.push(
       bus.on('player:died', () => {
+        AudioManager.getInstance().stopBgm();
+        AudioManager.getInstance().playSfx('sfx_gameover', 0.8);
         this.time.delayedCall(1200, () => {
           this.scene.start('ResultsScene', {
             isVictory: false,
@@ -115,6 +123,7 @@ export class RunScene extends Phaser.Scene {
 
     this.eventUnsubscribers.push(
       bus.on('game:victory', () => {
+        AudioManager.getInstance().stopBgm();
         this.time.delayedCall(1500, () => {
           this.scene.start('ResultsScene', {
             isVictory: true,
@@ -171,8 +180,9 @@ export class RunScene extends Phaser.Scene {
       this.world.updateStep(dt);
     });
 
-    // 3. 检查整备期弹窗状态
+    // 3. 检查整备期弹窗状态并切换为夜市商摊音乐
     if (this.world.gameState === 'shop' && !this.shopModal.isVisible()) {
+      AudioManager.getInstance().playBgm('bgm_shop', true, 0.4);
       this.shopModal.show(
         this.world.player,
         this.world.rng,
@@ -187,6 +197,7 @@ export class RunScene extends Phaser.Scene {
   }
 
   public shutdown(): void {
+    AudioManager.getInstance().stopBgm();
     for (const unsub of this.eventUnsubscribers) {
       unsub();
     }
