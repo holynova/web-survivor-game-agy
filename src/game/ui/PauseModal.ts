@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { formatTags } from '@/content/schemas/common';
+import { formatTags, TAG_NAMES } from '@/content/schemas/common';
 import { Player } from '../entities/Player';
 import { SimulationWorld } from '../simulation/world';
 
@@ -35,32 +35,25 @@ export class PauseModal {
     const width = this.scene.scale.width;
     const height = this.scene.scale.height;
 
-    // 半透明背景
-    const bg = this.scene.add.graphics();
-    bg.fillStyle(0x060b0c, 0.9);
-    bg.fillRect(0, 0, width, height);
+    // 1. 半透明背景
+    const bg = this.scene.add.rectangle(width / 2, height / 2, width, height, 0x060b0c, 0.98);
     bg.setScrollFactor(0);
+    bg.setInteractive();
     this.container.add(bg);
 
-    // 阻挡穿透
-    const blockerZone = this.scene.add.zone(width / 2, height / 2, width, height);
-    blockerZone.setScrollFactor(0);
-    blockerZone.setInteractive();
-    this.container.add(blockerZone);
-
-    // 面板主框 (1000 x 540)
-    const cardW = 1040;
-    const cardH = 540;
+    // 2. 面板主框 (1080 x 580)
+    const cardW = 1080;
+    const cardH = 580;
     const cardGfx = this.scene.add.graphics();
-    cardGfx.fillStyle(0x0f181b, 0.98);
-    cardGfx.fillRoundedRect(width / 2 - cardW / 2, height / 2 - cardH / 2, cardW, cardH, 12);
+    cardGfx.fillStyle(0x0e171a, 0.98);
+    cardGfx.fillRoundedRect(width / 2 - cardW / 2, height / 2 - cardH / 2, cardW, cardH, 14);
     cardGfx.lineStyle(2, 0x3d5a5b, 1);
-    cardGfx.strokeRoundedRect(width / 2 - cardW / 2, height / 2 - cardH / 2, cardW, cardH, 12);
+    cardGfx.strokeRoundedRect(width / 2 - cardW / 2, height / 2 - cardH / 2, cardW, cardH, 14);
     cardGfx.setScrollFactor(0);
     this.container.add(cardGfx);
 
-    // 顶部标题
-    const title = this.scene.add.text(width / 2, height / 2 - cardH / 2 + 25, '⏸ 游戏暂停 · 神厨当前状态详情', {
+    // 3. 顶部标题
+    const title = this.scene.add.text(width / 2, height / 2 - cardH / 2 + 22, '⏸ 游戏暂停 · 神厨当前状态详情', {
       fontSize: '24px',
       color: '#ffd166',
       fontStyle: 'bold',
@@ -70,21 +63,21 @@ export class PauseModal {
     this.container.add(title);
 
     if (player) {
-      const colW = 310;
-      const colH = 340;
-      const colY = height / 2 - 20;
+      const colW = 330;
+      const colH = 420;
+      const colY = height / 2 - 12;
 
-      // 1. 左栏：已配厨具
+      // 1. 左栏：已配厨具 (最多 4 把)
       this.renderWeaponsColumn(player, width / 2 - colW - 20, colY, colW, colH);
 
-      // 2. 中栏：口味秘方 & 质变菜谱
+      // 2. 中栏：口味秘方 & 菜谱
       this.renderItemsColumn(player, width / 2, colY, colW, colH);
 
-      // 3. 右栏：大厨全维属性
+      // 3. 右栏：大厨全维属性 (双列紧凑排版，绝不撑破容器)
       this.renderStatsColumn(player, world, width / 2 + colW + 20, colY, colW, colH);
     }
 
-    // 底部控制按钮栏
+    // 4. 底部控制按钮栏
     this.renderBottomButtons(width, height, cardH);
 
     this.container.setVisible(true);
@@ -95,15 +88,15 @@ export class PauseModal {
     card.setScrollFactor(0);
 
     const bgGfx = this.scene.add.graphics();
-    bgGfx.fillStyle(0x142126, 0.9);
+    bgGfx.fillStyle(0x132025, 0.9);
     bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-    bgGfx.lineStyle(1.5, 0x2a9d8f, 0.7);
+    bgGfx.lineStyle(1.5, 0x2a9d8f, 0.8);
     bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
     bgGfx.setScrollFactor(0);
     card.add(bgGfx);
 
-    const title = this.scene.add.text(0, -h / 2 + 15, `🔪 装备厨具 (${player.weapons.length}/${player.maxWeapons})`, {
-      fontSize: '16px',
+    const title = this.scene.add.text(0, -h / 2 + 14, `🔪 装备厨具 (${player.weapons.length}/${player.maxWeapons})`, {
+      fontSize: '15px',
       color: '#2a9d8f',
       fontStyle: 'bold',
     });
@@ -111,39 +104,72 @@ export class PauseModal {
     title.setScrollFactor(0);
     card.add(title);
 
-    let startY = -h / 2 + 48;
-    for (let i = 0; i < player.weapons.length; i++) {
+    let startY = -h / 2 + 45;
+    const slotH = 82;
+
+    for (let i = 0; i < player.maxWeapons; i++) {
       const wState = player.weapons[i];
-      const wDef = wState.definition;
-      const curLvlDef = wDef.levels[wState.level - 1];
+      const slotBox = this.scene.add.graphics();
 
-      const wName = this.scene.add.text(
-        -w / 2 + 16,
-        startY,
-        `${wDef.nameKey} (Lv.${wState.level})`,
-        {
-          fontSize: '14px',
-          color: wDef.color || '#f4a261',
-          fontStyle: 'bold',
-        },
-      );
-      wName.setScrollFactor(0);
-      card.add(wName);
+      if (wState) {
+        const wDef = wState.definition;
+        const curLvlDef = wDef.levels[wState.level - 1];
 
-      const wDesc = this.scene.add.text(
-        -w / 2 + 16,
-        startY + 20,
-        curLvlDef ? curLvlDef.descriptionKey : '',
-        {
-          fontSize: '11px',
-          color: '#d8e2dc',
-          wordWrap: { width: w - 32, useAdvancedWrap: true },
-        },
-      );
-      wDesc.setScrollFactor(0);
-      card.add(wDesc);
+        slotBox.fillStyle(0x0a1215, 0.8);
+        slotBox.fillRoundedRect(-w / 2 + 12, startY, w - 24, slotH - 8, 6);
+        slotBox.lineStyle(1, 0x223a40, 0.9);
+        slotBox.strokeRoundedRect(-w / 2 + 12, startY, w - 24, slotH - 8, 6);
+        card.add(slotBox);
 
-      startY += 65;
+        // 武器图标
+        const iconKey = this.getWeaponTextureKey(wDef.id);
+        const icon = this.scene.add.image(-w / 2 + 32, startY + (slotH - 8) / 2, iconKey);
+        icon.setDisplaySize(32, 32);
+        card.add(icon);
+
+        // 武器名与等级
+        const wName = this.scene.add.text(
+          -w / 2 + 56,
+          startY + 8,
+          `${wDef.nameKey} (Lv.${wState.level})`,
+          {
+            fontSize: '13px',
+            color: wDef.color || '#f4a261',
+            fontStyle: 'bold',
+          },
+        );
+        card.add(wName);
+
+        // 描述
+        const wDesc = this.scene.add.text(
+          -w / 2 + 56,
+          startY + 28,
+          curLvlDef ? curLvlDef.descriptionKey : '',
+          {
+            fontSize: '11px',
+            color: '#d8e2dc',
+            wordWrap: { width: w - 85, useAdvancedWrap: true },
+            lineSpacing: 2,
+          },
+        );
+        card.add(wDesc);
+      } else {
+        // 空槽位
+        slotBox.fillStyle(0x090e10, 0.5);
+        slotBox.fillRoundedRect(-w / 2 + 12, startY, w - 24, slotH - 8, 6);
+        slotBox.lineStyle(1, 0x1a262b, 0.6);
+        slotBox.strokeRoundedRect(-w / 2 + 12, startY, w - 24, slotH - 8, 6);
+        card.add(slotBox);
+
+        const emptyText = this.scene.add.text(0, startY + (slotH - 8) / 2, `【空置槽位 ${i + 1}】升级或商店可添置`, {
+          fontSize: '12px',
+          color: '#55666c',
+        });
+        emptyText.setOrigin(0.5, 0.5);
+        card.add(emptyText);
+      }
+
+      startY += slotH;
     }
 
     this.container.add(card);
@@ -154,15 +180,15 @@ export class PauseModal {
     card.setScrollFactor(0);
 
     const bgGfx = this.scene.add.graphics();
-    bgGfx.fillStyle(0x142126, 0.9);
+    bgGfx.fillStyle(0x132025, 0.9);
     bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-    bgGfx.lineStyle(1.5, 0xf4a261, 0.7);
+    bgGfx.lineStyle(1.5, 0xf4a261, 0.8);
     bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
     bgGfx.setScrollFactor(0);
     card.add(bgGfx);
 
-    const title = this.scene.add.text(0, -h / 2 + 15, `🌶️ 口味秘方 & 菜谱`, {
-      fontSize: '16px',
+    const title = this.scene.add.text(0, -h / 2 + 14, `🌶️ 口味秘方 & 菜谱`, {
+      fontSize: '15px',
       color: '#f4a261',
       fontStyle: 'bold',
     });
@@ -170,16 +196,15 @@ export class PauseModal {
     title.setScrollFactor(0);
     card.add(title);
 
-    let startY = -h / 2 + 48;
+    let startY = -h / 2 + 45;
 
     // 1. 已激活菜谱
     if (player.activeRecipes.length > 0) {
-      const recipeTitle = this.scene.add.text(-w / 2 + 16, startY, '🔥 质变神厨菜谱:', {
+      const recipeTitle = this.scene.add.text(-w / 2 + 16, startY, '🔥 质变绝技菜谱:', {
         fontSize: '13px',
         color: '#06d6a0',
         fontStyle: 'bold',
       });
-      recipeTitle.setScrollFactor(0);
       card.add(recipeTitle);
       startY += 20;
 
@@ -194,11 +219,10 @@ export class PauseModal {
             wordWrap: { width: w - 32, useAdvancedWrap: true },
           },
         );
-        rText.setScrollFactor(0);
         card.add(rText);
-        startY += 22;
+        startY += 20;
       }
-      startY += 10;
+      startY += 8;
     }
 
     // 2. 被动食材秘方
@@ -207,32 +231,29 @@ export class PauseModal {
       color: '#8fa3a6',
       fontStyle: 'bold',
     });
-    itemTitle.setScrollFactor(0);
     card.add(itemTitle);
-    startY += 22;
+    startY += 20;
 
     if (player.items.length === 0) {
-      const noItemText = this.scene.add.text(-w / 2 + 16, startY, '暂未获得秘方食材', {
+      const noItemText = this.scene.add.text(-w / 2 + 16, startY, '暂未采购秘方食材', {
         fontSize: '12px',
-        color: '#6c757d',
+        color: '#55666c',
       });
-      noItemText.setScrollFactor(0);
       card.add(noItemText);
     } else {
       for (const item of player.items) {
         const itemText = this.scene.add.text(
           -w / 2 + 16,
           startY,
-          `• ${item.definition.nameKey} (${item.count}/${item.definition.maxStacks}层) - ${formatTags(item.definition.tags)}`,
+          `• ${item.definition.nameKey} (${item.count}/${item.definition.maxStacks}) - ${formatTags(item.definition.tags)}`,
           {
-            fontSize: '12px',
+            fontSize: '11px',
             color: item.definition.color || '#e2ece9',
             wordWrap: { width: w - 32, useAdvancedWrap: true },
           },
         );
-        itemText.setScrollFactor(0);
         card.add(itemText);
-        startY += 24;
+        startY += 20;
       }
     }
 
@@ -251,15 +272,15 @@ export class PauseModal {
     card.setScrollFactor(0);
 
     const bgGfx = this.scene.add.graphics();
-    bgGfx.fillStyle(0x142126, 0.9);
+    bgGfx.fillStyle(0x132025, 0.9);
     bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-    bgGfx.lineStyle(1.5, 0x00f5d4, 0.7);
+    bgGfx.lineStyle(1.5, 0x00f5d4, 0.8);
     bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
     bgGfx.setScrollFactor(0);
     card.add(bgGfx);
 
-    const title = this.scene.add.text(0, -h / 2 + 15, `📊 大厨全维属性`, {
-      fontSize: '16px',
+    const title = this.scene.add.text(0, -h / 2 + 14, `📊 大厨全维属性`, {
+      fontSize: '15px',
       color: '#00f5d4',
       fontStyle: 'bold',
     });
@@ -267,35 +288,84 @@ export class PauseModal {
     title.setScrollFactor(0);
     card.add(title);
 
-    const statRows = [
-      `❤️ 生命值: ${Math.round(player.currentHp)} / ${player.maxHp}`,
-      `🏃 移动速度: ${Math.round(player.moveSpeed)}`,
-      `⚔️ 全伤害倍率: +${Math.round((player.damageMultiplier - 1) * 100)}%`,
-      `⚡ 攻击频率: +${Math.round((player.attackSpeedMultiplier - 1) * 100)}%`,
-      `🎯 暴击概率: ${Math.round(player.critChance * 100)}%`,
-      `💥 暴击伤害: ${player.critMultiplier.toFixed(1)}x`,
-      `🛡️ 角色护甲: ${player.armor}`,
-      `🧲 拾取半径: ${player.pickupRadius} px`,
-      `🥟 拥有食材: ${player.ingredients}`,
-      `✨ 双倍收益留存: ${world?.doubleLootRemaining || 0} 个`,
+    // 双列网格排版，确保每项规整且不撑出容器
+    const leftStats = [
+      `❤️ 生命: ${Math.round(player.currentHp)}/${player.maxHp}`,
+      `🏃 移速: ${Math.round(player.moveSpeed)}`,
+      `⚔️ 伤害: +${Math.round((player.damageMultiplier - 1) * 100)}%`,
+      `⚡ 攻频: +${Math.round((player.attackSpeedMultiplier - 1) * 100)}%`,
+      `🎯 暴击: ${Math.round(player.critChance * 100)}%`,
+    ];
+
+    const rightStats = [
+      `💥 爆伤: ${player.critMultiplier.toFixed(1)}x`,
+      `🛡️ 护甲: ${player.armor}`,
+      `🧲 拾取: ${player.pickupRadius}px`,
+      `🥟 食材: ${player.ingredients}`,
+      `✨ 双倍: ${world?.doubleLootRemaining || 0}个`,
     ];
 
     let startY = -h / 2 + 48;
-    for (const row of statRows) {
-      const rowText = this.scene.add.text(-w / 2 + 16, startY, row, {
+    for (let i = 0; i < leftStats.length; i++) {
+      // 左列
+      const lText = this.scene.add.text(-w / 2 + 16, startY, leftStats[i], {
         fontSize: '12px',
         color: '#d8e2dc',
       });
-      rowText.setScrollFactor(0);
-      card.add(rowText);
+      card.add(lText);
+
+      // 右列
+      const rText = this.scene.add.text(-w / 2 + 170, startY, rightStats[i], {
+        fontSize: '12px',
+        color: '#d8e2dc',
+      });
+      card.add(rText);
+
       startY += 26;
+    }
+
+    // 分割线与风味词条栏
+    startY += 10;
+    const divGfx = this.scene.add.graphics();
+    divGfx.lineStyle(1, 0x223a40, 0.8);
+    divGfx.lineBetween(-w / 2 + 16, startY, w / 2 - 16, startY);
+    card.add(divGfx);
+
+    startY += 12;
+    const tagTitle = this.scene.add.text(-w / 2 + 16, startY, '🏷️ 激活风味词条:', {
+      fontSize: '13px',
+      color: '#ffd166',
+      fontStyle: 'bold',
+    });
+    card.add(tagTitle);
+
+    startY += 22;
+    const activeTags = Object.entries(player.tagCounts).filter(([, count]) => (count || 0) > 0);
+    if (activeTags.length === 0) {
+      const noTagText = this.scene.add.text(-w / 2 + 16, startY, '暂无风味词条共鸣', {
+        fontSize: '12px',
+        color: '#55666c',
+      });
+      card.add(noTagText);
+    } else {
+      const tagStrings = activeTags.map(([tag, count]) => {
+        const name = TAG_NAMES[tag as keyof typeof TAG_NAMES] || tag;
+        return `${name} Lv.${count}`;
+      });
+      const tagContent = this.scene.add.text(-w / 2 + 16, startY, tagStrings.join('  ·  '), {
+        fontSize: '12px',
+        color: '#00f5d4',
+        wordWrap: { width: w - 32, useAdvancedWrap: true },
+        lineSpacing: 4,
+      });
+      card.add(tagContent);
     }
 
     this.container.add(card);
   }
 
   private renderBottomButtons(width: number, height: number, cardH: number): void {
-    const btnY = height / 2 + cardH / 2 - 40;
+    const btnY = height / 2 + cardH / 2 - 38;
     const btnW = 150;
     const btnH = 38;
     const gap = 16;
@@ -439,15 +509,20 @@ export class PauseModal {
     this.container.add(menuZone);
   }
 
+  private getWeaponTextureKey(weaponId: string): string {
+    const key = `weapon_${weaponId}`;
+    if (this.scene.textures.exists(key)) return key;
+    if (weaponId === 'cleaver') return 'weapon_cleaver';
+    if (weaponId === 'bamboo_skewer') return 'item_skewer';
+    if (weaponId === 'seasoning_jar') return 'item_potion';
+    return 'weapon_cleaver';
+  }
+
   public hide(): void {
     this.container.setVisible(false);
   }
 
   public isVisible(): boolean {
     return this.container.visible;
-  }
-
-  public destroy(): void {
-    this.container.destroy();
   }
 }

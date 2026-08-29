@@ -99,22 +99,29 @@ export class Player {
     }
   }
 
-  public equipWeapon(weaponDef: WeaponDefinition): void {
+  public equipWeapon(weaponDef: WeaponDefinition): boolean {
     const existing = this.weapons.find(w => w.definition.id === weaponDef.id);
     if (existing) {
       if (existing.level < weaponDef.levels.length) {
         existing.level++;
+        this.recalculateTags();
+        this.recalculateStats();
+        return true;
       }
-    } else {
-      this.weapons.push({
-        definition: weaponDef,
-        level: 1,
-        cooldownTimerMs: 0,
-        isTransformed: false,
-      });
+      return false;
     }
+    if (this.weapons.length >= this.maxWeapons) {
+      return false; // 已达到武器装备槽位上限
+    }
+    this.weapons.push({
+      definition: weaponDef,
+      level: 1,
+      cooldownTimerMs: 0,
+      isTransformed: false,
+    });
     this.recalculateTags();
     this.recalculateStats();
+    return true;
   }
 
   public getItemCount(id: string): number {

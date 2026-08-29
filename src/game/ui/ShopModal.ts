@@ -45,7 +45,7 @@ export class ShopModal {
     this.render(player, rng, waveNumber);
   }
 
-  private generateSlots(_player: Player, rng: SeededRNG, forceRefreshAll = false): void {
+  private generateSlots(player: Player, rng: SeededRNG, forceRefreshAll = false): void {
     const newSlots: ShopSlot[] = [];
 
     for (let i = 0; i < 4; i++) {
@@ -57,8 +57,30 @@ export class ShopModal {
       // 40% 概率刷出武器，60% 概率刷出食材道具
       const isWeapon = rng.next() < 0.4;
       if (isWeapon) {
-        const weaponList = Object.values(WEAPONS);
-        const chosenWeapon = rng.pick(weaponList);
+        let chosenWeapon: WeaponDefinition;
+        if (player && player.weapons.length >= player.maxWeapons) {
+          // 槽位已满，仅刷出当前已拥有且未满级的武器升星
+          const upgradeable = player.weapons
+            .filter(w => w.level < w.definition.levels.length)
+            .map(w => w.definition);
+          if (upgradeable.length > 0) {
+            chosenWeapon = rng.pick(upgradeable);
+          } else {
+            // 现有武器全满级，则转为刷出食材道具
+            const chosenItem = rng.pick(Object.values(ITEMS));
+            newSlots.push({
+              type: 'item',
+              item: chosenItem,
+              cost: chosenItem.cost || 8,
+              isLocked: false,
+              isBought: false,
+            });
+            continue;
+          }
+        } else {
+          chosenWeapon = rng.pick(Object.values(WEAPONS));
+        }
+
         newSlots.push({
           type: 'weapon',
           weapon: chosenWeapon,
@@ -101,49 +123,55 @@ export class ShopModal {
     blockerZone.setInteractive();
     this.container.add(blockerZone);
 
-    // 顶部标题
-    const title = this.scene.add.text(width / 2, 40, `🍢 山海夜市 · 餐车整备期 (第 ${waveNumber} 波备战)`, {
-      fontSize: '28px',
-      color: '#f4a261',
-      fontStyle: 'bold',
-    });
+    // 顶部状态栏
+    const title = this.scene.add.text(
+      width / 2,
+      40,
+      `🏮 夜市整备铺 · 第 ${waveNumber} 波战前补给 🏮`,
+      {
+        fontSize: '26px',
+        color: '#ffd166',
+        fontStyle: 'bold',
+      },
+    );
     title.setOrigin(0.5, 0);
     title.setScrollFactor(0);
     this.container.add(title);
 
-    // 状态栏
-    const statusText = this.scene.add.text(
+    const subTitle = this.scene.add.text(
       width / 2,
-      82,
-      `拥有食材: 🥟 ${player.ingredients}  |  生命值: ${Math.round(player.currentHp)}/${player.maxHp}  |  已装备厨具: ${player.weapons.length}/${player.maxWeapons}`,
+      78,
+      `拥有食材: 🥟 ${player.ingredients}  |  生命: ${Math.round(player.currentHp)}/${player.maxHp}  |  已配武器: 🔪 ${player.weapons.length}/${player.maxWeapons}`,
       {
-        fontSize: '15px',
-        color: '#ffd166',
+        fontSize: '14px',
+        color: '#8fa3a6',
       },
     );
-    statusText.setOrigin(0.5, 0);
-    statusText.setScrollFactor(0);
-    this.container.add(statusText);
+    subTitle.setOrigin(0.5, 0);
+    subTitle.setScrollFactor(0);
+    this.container.add(subTitle);
 
-    // 4 格商品陈列
-    const cardWidth = 260;
-    const cardHeight = 360;
-    const totalW = 4 * cardWidth + 3 * 24;
-    const startX = (width - totalW) / 2 + cardWidth / 2;
-    const cardY = height / 2 + 5;
+    // 4 个货架商品卡片
+    const cardW = 240;
+    const cardH = 340;
+    const gap = 20;
+    const totalW = 4 * cardW + 3 * gap;
+    const startX = (width - totalW) / 2 + cardW / 2;
+    const cardY = height / 2 - 10;
 
     for (let i = 0; i < 4; i++) {
       const slot = this.slots[i];
-      const cx = startX + i * (cardWidth + 24);
-      const card = this.renderSlotCard(slot, cx, cardY, cardWidth, cardHeight, player, rng, waveNumber);
-      this.container.add(card);
+      if (!slot) continue;
+      const cx = startX + i * (cardW + gap);
+      const cardContainer = this.renderCard(slot, cx, cardY, cardW, cardH, player, rng, waveNumber);
+      this.container.add(cardContainer);
     }
 
-    // 底部控制按钮 (刷新货架 & 出摊迎战)
+    // 底部刷新与准备就绪栏
     this.renderBottomBar(player, rng, waveNumber);
   }
 
-  private renderSlotCard(
+  private renderCard(
     slot: ShopSlot,
     x: number,
     y: number,
@@ -155,43 +183,56 @@ export class ShopModal {
   ): Phaser.GameObjects.Container {
     const card = this.scene.add.container(x, y);
     card.setScrollFactor(0);
-    card.setSize(w, h);
 
     const bgGfx = this.scene.add.graphics();
-    bgGfx.fillStyle(slot.isBought ? 0x0a1012 : 0x121c20, 0.95);
+    bgGfx.fillStyle(slot.isBought ? 0x091012 : 0x121c20, 0.95);
     bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 10);
-    bgGfx.lineStyle(2, slot.isLocked ? 0xffbe0b : 0x3d5a5b, 1);
+    bgGfx.lineStyle(1.5, slot.isLocked ? 0xffd166 : 0x3d5a5b, 1);
     bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
     bgGfx.setScrollFactor(0);
     card.add(bgGfx);
 
     if (slot.isBought) {
-      const boughtText = this.scene.add.text(0, 0, '【已售罄】', {
+      const soldText = this.scene.add.text(0, 0, '【已采购】', {
         fontSize: '20px',
-        color: '#8fa3a6',
+        color: '#6c757d',
         fontStyle: 'bold',
       });
-      boughtText.setOrigin(0.5, 0.5);
-      boughtText.setScrollFactor(0);
-      card.add(boughtText);
+      soldText.setOrigin(0.5, 0.5);
+      soldText.setScrollFactor(0);
+      card.add(soldText);
       return card;
     }
 
     const titleStr = slot.type === 'weapon' ? slot.weapon!.nameKey : slot.item!.nameKey;
     let isMergeUpgrade = false;
+    let isFullBlocked = false;
+    let isMaxLevelBlocked = false;
     let descStr = '';
     let tagStr = '';
 
     if (slot.type === 'weapon') {
       const existing = player.weapons.find(w => w.definition.id === slot.weapon!.id);
       if (existing) {
-        isMergeUpgrade = true;
-        const nextLvl = Math.min(slot.weapon!.levels.length, existing.level + 1);
-        descStr = slot.weapon!.levels[nextLvl - 1].descriptionKey;
-        tagStr = `【合成升星】Lv.${existing.level} ➔ Lv.${nextLvl}`;
+        if (existing.level >= slot.weapon!.levels.length) {
+          isMaxLevelBlocked = true;
+          tagStr = '【已达顶级 Lv.3】';
+          descStr = '此神兵已达最高精炼等级';
+        } else {
+          isMergeUpgrade = true;
+          const nextLvl = existing.level + 1;
+          descStr = slot.weapon!.levels[nextLvl - 1].descriptionKey;
+          tagStr = `【合成升星】Lv.${existing.level} ➔ Lv.${nextLvl}`;
+        }
       } else {
-        descStr = slot.weapon!.levels[0].descriptionKey;
-        tagStr = `厨具 · ${formatTags(slot.weapon!.tags)}`;
+        if (player.weapons.length >= player.maxWeapons) {
+          isFullBlocked = true;
+          tagStr = `【槽位已满 (${player.weapons.length}/${player.maxWeapons})】`;
+          descStr = `已装备 ${player.maxWeapons} 把武器，无法再配新厨具`;
+        } else {
+          descStr = slot.weapon!.levels[0].descriptionKey;
+          tagStr = `新增神兵 · ${formatTags(slot.weapon!.tags)}`;
+        }
       }
     } else {
       const stacks = player.getItemCount(slot.item!.id);
@@ -202,7 +243,7 @@ export class ShopModal {
     // 分类
     const tagText = this.scene.add.text(0, -h / 2 + 20, tagStr, {
       fontSize: '13px',
-      color: isMergeUpgrade ? '#ffd166' : '#2a9d8f',
+      color: isMergeUpgrade ? '#ffd166' : isFullBlocked ? '#e76f51' : '#2a9d8f',
       fontStyle: 'bold',
       wordWrap: { width: w - 24, useAdvancedWrap: true },
       align: 'center',
@@ -254,16 +295,20 @@ export class ShopModal {
     card.add(lockBtn);
 
     // 购买按钮
-    const canAfford = player.ingredients >= slot.cost;
+    const canAfford = player.ingredients >= slot.cost && !isFullBlocked && !isMaxLevelBlocked;
+    let buyBtnLabel = `🥟 ${slot.cost}`;
+    if (isFullBlocked) buyBtnLabel = '槽位已满';
+    else if (isMaxLevelBlocked) buyBtnLabel = '已满级';
+
     const buyBtnGfx = this.scene.add.graphics();
-    buyBtnGfx.fillStyle(canAfford ? 0xe76f51 : 0x444444, 1);
+    buyBtnGfx.fillStyle(canAfford ? 0xe76f51 : 0x334148, 1);
     buyBtnGfx.fillRoundedRect(w / 2 - 105, h / 2 - 46, 92, 32, 6);
     buyBtnGfx.setScrollFactor(0);
     card.add(buyBtnGfx);
 
-    const buyBtnText = this.scene.add.text(w / 2 - 59, h / 2 - 30, `🥟 ${slot.cost}`, {
-      fontSize: '14px',
-      color: '#ffffff',
+    const buyBtnText = this.scene.add.text(w / 2 - 59, h / 2 - 30, buyBtnLabel, {
+      fontSize: isFullBlocked || isMaxLevelBlocked ? '12px' : '14px',
+      color: canAfford ? '#ffffff' : '#8fa3a6',
       fontStyle: 'bold',
     });
     buyBtnText.setOrigin(0.5, 0.5);
