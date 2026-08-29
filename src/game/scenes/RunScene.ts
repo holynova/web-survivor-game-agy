@@ -11,12 +11,12 @@ import { ShopModal } from '../ui/ShopModal';
 
 export class RunScene extends Phaser.Scene {
   public world!: SimulationWorld;
-  private spriteSync!: SpriteSyncSystem;
-  private hud!: HUD;
-  private levelUpModal!: LevelUpModal;
-  private shopModal!: ShopModal;
-  private pauseModal!: PauseModal;
-  private debugOverlay!: DebugOverlay;
+  public spriteSync!: SpriteSyncSystem;
+  public hud!: HUD;
+  public levelUpModal!: LevelUpModal;
+  public shopModal!: ShopModal;
+  public pauseModal!: PauseModal;
+  public debugOverlay!: DebugOverlay;
 
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasdKeys!: {
@@ -139,6 +139,8 @@ export class RunScene extends Phaser.Scene {
 
     this.eventUnsubscribers.push(
       bus.on('player:levelup', () => {
+        this.world.gameState = 'levelup';
+        this.world.clock.pause();
         AudioManager.getInstance().playSfx('sfx_levelup', 0.7);
         this.levelUpModal.show(this.world.player, this.world.rng);
       }),

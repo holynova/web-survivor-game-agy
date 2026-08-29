@@ -40,6 +40,7 @@ export class Player {
   public expToNextLevel = 20;
   public ingredients = 20; // 初始启动资金
 
+  public maxWeapons = 4;
   public weapons: EquippedWeaponState[] = [];
   public items: { definition: ItemDefinition; count: number }[] = [];
   public activeRecipes: RecipeDefinition[] = [];
@@ -57,7 +58,6 @@ export class Player {
     this.critMultiplier = characterDef.baseStats.critMultiplier;
     this.pickupRadius = characterDef.baseStats.pickupRadius;
     this.armor = characterDef.baseStats.armor;
-
     this.recalculateTags();
   }
 
@@ -87,6 +87,15 @@ export class Player {
     return false;
   }
 
+  public upgradeWeapon(weaponId: string): void {
+    const existing = this.weapons.find(w => w.definition.id === weaponId);
+    if (existing && existing.level < existing.definition.levels.length) {
+      existing.level++;
+      this.recalculateTags();
+      this.recalculateStats();
+    }
+  }
+
   public equipWeapon(weaponDef: WeaponDefinition): void {
     const existing = this.weapons.find(w => w.definition.id === weaponDef.id);
     if (existing) {
@@ -103,6 +112,11 @@ export class Player {
     }
     this.recalculateTags();
     this.recalculateStats();
+  }
+
+  public getItemCount(id: string): number {
+    const existing = this.items.find(i => i.definition.id === id);
+    return existing ? existing.count : 0;
   }
 
   public addItem(itemDef: ItemDefinition): void {

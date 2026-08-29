@@ -67,7 +67,7 @@ test.describe('Web Survivor Full Workflow Visual Audit', () => {
       const game = (window as any).__PHASER_GAME__;
       const runScene = game.scene.getScene('RunScene');
       if (runScene) {
-        runScene.pauseModal.hide();
+        runScene.pauseModal?.hide();
         runScene.scene.start('ResultsScene', {
           isVictory: false,
           characterId: 'wok_master',

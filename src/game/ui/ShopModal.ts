@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { ITEMS } from '@/content/items/data';
 import { RECIPES } from '@/content/recipes/data';
-import { Tag, formatTags, TAG_NAMES } from '@/content/schemas/common';
+import { formatTags, Tag, TAG_NAMES } from '@/content/schemas/common';
 import { ItemDefinition } from '@/content/schemas/item';
 import { WeaponDefinition } from '@/content/schemas/weapon';
 import { WEAPONS } from '@/content/weapons/data';
@@ -9,8 +9,7 @@ import { EventBus } from '@/core/event-bus';
 import { SeededRNG } from '@/core/rng';
 import { Player } from '../entities/Player';
 
-export interface ShopSlot {
-  id: string;
+interface ShopSlot {
   type: 'weapon' | 'item';
   weapon?: WeaponDefinition;
   item?: ItemDefinition;
@@ -37,46 +36,43 @@ export class ShopModal {
   }
 
   public show(player: Player, rng: SeededRNG, waveNumber: number): void {
+    this.container.removeAll(true);
+    this.container.setVisible(true);
     this.refreshCost = 2;
+
+    // 每次进入商店若没有锁定商品，则生成新一轮货架
     this.generateSlots(player, rng, false);
     this.render(player, rng, waveNumber);
-    this.container.setVisible(true);
   }
 
-  private generateSlots(_player: Player, rng: SeededRNG, isRefresh: boolean): void {
+  private generateSlots(_player: Player, rng: SeededRNG, forceRefreshAll = false): void {
     const newSlots: ShopSlot[] = [];
 
-    // 保留被锁定的商品
-    if (isRefresh) {
-      for (const s of this.slots) {
-        if (s.isLocked && !s.isBought) {
-          newSlots.push(s);
-        }
+    for (let i = 0; i < 4; i++) {
+      if (!forceRefreshAll && this.slots[i] && this.slots[i].isLocked && !this.slots[i].isBought) {
+        newSlots.push(this.slots[i]);
+        continue;
       }
-    }
 
-    const allWeapons = Object.values(WEAPONS);
-    const allItems = Object.values(ITEMS);
-
-    while (newSlots.length < 4) {
-      const isWeapon = rng.next() < 0.45;
+      // 40% 概率刷出武器，60% 概率刷出食材道具
+      const isWeapon = rng.next() < 0.4;
       if (isWeapon) {
-        const weapon = rng.pick(allWeapons);
+        const weaponList = Object.values(WEAPONS);
+        const chosenWeapon = rng.pick(weaponList);
         newSlots.push({
-          id: `shop_w_${weapon.id}_${Date.now()}_${newSlots.length}`,
           type: 'weapon',
-          weapon,
-          cost: weapon.cost,
+          weapon: chosenWeapon,
+          cost: chosenWeapon.cost || 10,
           isLocked: false,
           isBought: false,
         });
       } else {
-        const item = rng.pick(allItems);
+        const itemList = Object.values(ITEMS);
+        const chosenItem = rng.pick(itemList);
         newSlots.push({
-          id: `shop_i_${item.id}_${Date.now()}_${newSlots.length}`,
           type: 'item',
-          item,
-          cost: item.cost,
+          item: chosenItem,
+          cost: chosenItem.cost || 8,
           isLocked: false,
           isBought: false,
         });
@@ -92,49 +88,58 @@ export class ShopModal {
     const width = this.scene.scale.width;
     const height = this.scene.scale.height;
 
-    // 1. 背景遮罩
+    // 半透明遮罩
     const bg = this.scene.add.graphics();
-    bg.fillStyle(0x060b0c, 0.9);
+    bg.fillStyle(0x060b0c, 0.92);
     bg.fillRect(0, 0, width, height);
+    bg.setScrollFactor(0);
     this.container.add(bg);
 
-    // 2. 标题与食材余额
-    const title = this.scene.add.text(
-      width / 2,
-      28,
-      `🏪 山海夜市餐车整备 (第 ${waveNumber} 波夜战前夕)`,
-      {
-        fontSize: '20px',
-        color: '#f4a261',
-        fontStyle: 'bold',
-      },
-    );
-    title.setOrigin(0.5, 0);
-    this.container.add(title);
+    // 阻挡背景穿透
+    const blockerZone = this.scene.add.zone(width / 2, height / 2, width, height);
+    blockerZone.setScrollFactor(0);
+    blockerZone.setInteractive();
+    this.container.add(blockerZone);
 
-    const balance = this.scene.add.text(width / 2, 54, `当前食材资产: 🥟 ${player.ingredients}`, {
-      fontSize: '15px',
-      color: '#ffd166',
+    // 顶部标题
+    const title = this.scene.add.text(width / 2, 35, `🍢 山海夜市 · 餐车整备期 (第 ${waveNumber} 波备战)`, {
+      fontSize: '22px',
+      color: '#f4a261',
       fontStyle: 'bold',
     });
-    balance.setOrigin(0.5, 0);
-    this.container.add(balance);
+    title.setOrigin(0.5, 0);
+    title.setScrollFactor(0);
+    this.container.add(title);
 
-    // 3. 商品槽位 (4 个卡片)
-    const cardW = 200;
-    const cardH = 250;
-    const totalW = 4 * cardW + 3 * 16;
-    const startX = (width - totalW) / 2 + cardW / 2;
-    const cardY = 200;
+    // 状态栏 (剩余食材、当前血量、已配厨具数)
+    const statusText = this.scene.add.text(
+      width / 2,
+      68,
+      `拥有食材: 🥟 ${player.ingredients}  |  生命值: ${Math.round(player.currentHp)}/${player.maxHp}  |  已装备厨具: ${player.weapons.length}/${player.maxWeapons}`,
+      {
+        fontSize: '13px',
+        color: '#ffd166',
+      },
+    );
+    statusText.setOrigin(0.5, 0);
+    statusText.setScrollFactor(0);
+    this.container.add(statusText);
 
-    for (let i = 0; i < this.slots.length; i++) {
+    // 4 格商品陈列
+    const cardWidth = 195;
+    const cardHeight = 270;
+    const totalW = 4 * cardWidth + 3 * 16;
+    const startX = (width - totalW) / 2 + cardWidth / 2;
+    const cardY = height / 2 - 5;
+
+    for (let i = 0; i < 4; i++) {
       const slot = this.slots[i];
-      const cx = startX + i * (cardW + 16);
-      const card = this.renderSlotCard(slot, cx, cardY, cardW, cardH, player, rng, waveNumber);
+      const cx = startX + i * (cardWidth + 16);
+      const card = this.renderSlotCard(slot, cx, cardY, cardWidth, cardHeight, player, rng, waveNumber);
       this.container.add(card);
     }
 
-    // 4. 底部栏：刷新货架、菜谱预览、出摊迎战
+    // 底部控制按钮 (刷新货架 & 出摊迎战)
     this.renderBottomBar(player, rng, waveNumber);
   }
 
@@ -149,12 +154,15 @@ export class ShopModal {
     waveNumber: number,
   ): Phaser.GameObjects.Container {
     const card = this.scene.add.container(x, y);
+    card.setScrollFactor(0);
+    card.setSize(w, h);
 
     const bgGfx = this.scene.add.graphics();
     bgGfx.fillStyle(slot.isBought ? 0x0a1012 : 0x121c20, 0.95);
     bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
     bgGfx.lineStyle(2, slot.isLocked ? 0xffbe0b : 0x3d5a5b, 1);
     bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
+    bgGfx.setScrollFactor(0);
     card.add(bgGfx);
 
     if (slot.isBought) {
@@ -164,6 +172,7 @@ export class ShopModal {
         fontStyle: 'bold',
       });
       boughtText.setOrigin(0.5, 0.5);
+      boughtText.setScrollFactor(0);
       card.add(boughtText);
       return card;
     }
@@ -200,6 +209,7 @@ export class ShopModal {
       align: 'center',
     });
     tagText.setOrigin(0.5, 0);
+    tagText.setScrollFactor(0);
     card.add(tagText);
 
     // 标题
@@ -211,6 +221,7 @@ export class ShopModal {
       align: 'center',
     });
     titleText.setOrigin(0.5, 0);
+    titleText.setScrollFactor(0);
     card.add(titleText);
 
     // 描述
@@ -222,6 +233,7 @@ export class ShopModal {
       lineSpacing: 3,
     });
     descText.setOrigin(0.5, 0);
+    descText.setScrollFactor(0);
     card.add(descText);
 
     // 锁定按钮
@@ -234,6 +246,7 @@ export class ShopModal {
         color: slot.isLocked ? '#ffd166' : '#8fa3a6',
       },
     );
+    lockBtn.setScrollFactor(0);
     lockBtn.setInteractive({ useHandCursor: true });
     lockBtn.on('pointerdown', () => {
       slot.isLocked = !slot.isLocked;
@@ -246,6 +259,7 @@ export class ShopModal {
     const buyBtnGfx = this.scene.add.graphics();
     buyBtnGfx.fillStyle(canAfford ? 0xe76f51 : 0x444444, 1);
     buyBtnGfx.fillRoundedRect(w / 2 - 85, h / 2 - 36, 75, 26, 4);
+    buyBtnGfx.setScrollFactor(0);
     card.add(buyBtnGfx);
 
     const buyBtnText = this.scene.add.text(w / 2 - 47, h / 2 - 23, `🥟 ${slot.cost}`, {
@@ -254,10 +268,12 @@ export class ShopModal {
       fontStyle: 'bold',
     });
     buyBtnText.setOrigin(0.5, 0.5);
+    buyBtnText.setScrollFactor(0);
     card.add(buyBtnText);
 
     if (canAfford) {
       const buyZone = this.scene.add.zone(w / 2 - 47, h / 2 - 23, 75, 26);
+      buyZone.setScrollFactor(0);
       buyZone.setInteractive({ useHandCursor: true });
       buyZone.on('pointerdown', () => {
         player.ingredients -= slot.cost;
@@ -292,6 +308,7 @@ export class ShopModal {
     const refGfx = this.scene.add.graphics();
     refGfx.fillStyle(canRefresh ? 0x2a9d8f : 0x444444, 1);
     refGfx.fillRoundedRect(rx - refreshBtnW / 2, ry - refreshBtnH / 2, refreshBtnW, refreshBtnH, 6);
+    refGfx.setScrollFactor(0);
     this.container.add(refGfx);
 
     const refText = this.scene.add.text(rx, ry, `🔄 刷新 (🥟 ${this.refreshCost})`, {
@@ -300,10 +317,12 @@ export class ShopModal {
       fontStyle: 'bold',
     });
     refText.setOrigin(0.5, 0.5);
+    refText.setScrollFactor(0);
     this.container.add(refText);
 
     if (canRefresh) {
       const refZone = this.scene.add.zone(rx, ry, refreshBtnW, refreshBtnH);
+      refZone.setScrollFactor(0);
       refZone.setInteractive({ useHandCursor: true });
       refZone.on('pointerdown', () => {
         player.ingredients -= this.refreshCost;
@@ -323,6 +342,7 @@ export class ShopModal {
     const startGfx = this.scene.add.graphics();
     startGfx.fillStyle(0xe76f51, 1);
     startGfx.fillRoundedRect(sx - startBtnW / 2, sy - startBtnH / 2, startBtnW, startBtnH, 6);
+    startGfx.setScrollFactor(0);
     this.container.add(startGfx);
 
     const startText = this.scene.add.text(sx, sy, '⚔️ 出摊迎战！', {
@@ -331,9 +351,11 @@ export class ShopModal {
       fontStyle: 'bold',
     });
     startText.setOrigin(0.5, 0.5);
+    startText.setScrollFactor(0);
     this.container.add(startText);
 
     const startZone = this.scene.add.zone(sx, sy, startBtnW, startBtnH);
+    startZone.setScrollFactor(0);
     startZone.setInteractive({ useHandCursor: true });
     startZone.on('pointerdown', () => {
       this.hide();
@@ -366,6 +388,7 @@ export class ShopModal {
       align: 'center',
     });
     hintText.setOrigin(0.5, 0.5);
+    hintText.setScrollFactor(0);
     this.container.add(hintText);
   }
 

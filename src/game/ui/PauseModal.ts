@@ -27,7 +27,14 @@ export class PauseModal {
     const bg = this.scene.add.graphics();
     bg.fillStyle(0x060b0c, 0.85);
     bg.fillRect(0, 0, width, height);
+    bg.setScrollFactor(0);
     this.container.add(bg);
+
+    // 阻挡穿透
+    const blockerZone = this.scene.add.zone(width / 2, height / 2, width, height);
+    blockerZone.setScrollFactor(0);
+    blockerZone.setInteractive();
+    this.container.add(blockerZone);
 
     // 面板框
     const cardW = 320;
@@ -37,6 +44,7 @@ export class PauseModal {
     cardGfx.fillRoundedRect(width / 2 - cardW / 2, height / 2 - cardH / 2, cardW, cardH, 12);
     cardGfx.lineStyle(2, 0x3d5a5b, 1);
     cardGfx.strokeRoundedRect(width / 2 - cardW / 2, height / 2 - cardH / 2, cardW, cardH, 12);
+    cardGfx.setScrollFactor(0);
     this.container.add(cardGfx);
 
     // 标题
@@ -46,6 +54,7 @@ export class PauseModal {
       fontStyle: 'bold',
     });
     title.setOrigin(0.5, 0);
+    title.setScrollFactor(0);
     this.container.add(title);
 
     // 静音切换按钮
@@ -60,6 +69,7 @@ export class PauseModal {
       },
     );
     muteBtnText.setOrigin(0.5, 0.5);
+    muteBtnText.setScrollFactor(0);
     muteBtnText.setInteractive({ useHandCursor: true });
     muteBtnText.on('pointerdown', () => {
       const isMuted = audioManager.toggleMute();
@@ -71,6 +81,7 @@ export class PauseModal {
     const resumeBtnGfx = this.scene.add.graphics();
     resumeBtnGfx.fillStyle(0x2a9d8f, 1);
     resumeBtnGfx.fillRoundedRect(width / 2 - 100, height / 2 + 15, 200, 34, 6);
+    resumeBtnGfx.setScrollFactor(0);
     this.container.add(resumeBtnGfx);
 
     const resumeText = this.scene.add.text(width / 2, height / 2 + 32, '继续游戏', {
@@ -79,9 +90,11 @@ export class PauseModal {
       fontStyle: 'bold',
     });
     resumeText.setOrigin(0.5, 0.5);
+    resumeText.setScrollFactor(0);
     this.container.add(resumeText);
 
     const resumeZone = this.scene.add.zone(width / 2, height / 2 + 32, 200, 34);
+    resumeZone.setScrollFactor(0);
     resumeZone.setInteractive({ useHandCursor: true });
     resumeZone.on('pointerdown', () => {
       this.hide();
@@ -93,6 +106,7 @@ export class PauseModal {
     const restartBtnGfx = this.scene.add.graphics();
     restartBtnGfx.fillStyle(0xe76f51, 1);
     restartBtnGfx.fillRoundedRect(width / 2 - 100, height / 2 + 60, 200, 34, 6);
+    restartBtnGfx.setScrollFactor(0);
     this.container.add(restartBtnGfx);
 
     const restartText = this.scene.add.text(width / 2, height / 2 + 77, '重新开始', {
@@ -101,9 +115,11 @@ export class PauseModal {
       fontStyle: 'bold',
     });
     restartText.setOrigin(0.5, 0.5);
+    restartText.setScrollFactor(0);
     this.container.add(restartText);
 
     const restartZone = this.scene.add.zone(width / 2, height / 2 + 77, 200, 34);
+    restartZone.setScrollFactor(0);
     restartZone.setInteractive({ useHandCursor: true });
     restartZone.on('pointerdown', () => {
       this.hide();

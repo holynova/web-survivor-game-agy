@@ -36,11 +36,18 @@ export class LevelUpModal {
     const width = this.scene.scale.width;
     const height = this.scene.scale.height;
 
-    // 半透明夜市暗色背景遮罩
+    // 半透明夜市暗色背景遮罩（固定屏幕视口）
     const bg = this.scene.add.graphics();
     bg.fillStyle(0x060b0c, 0.88);
     bg.fillRect(0, 0, width, height);
+    bg.setScrollFactor(0);
     this.container.add(bg);
+
+    // 阻挡背景穿透点击
+    const blockerZone = this.scene.add.zone(width / 2, height / 2, width, height);
+    blockerZone.setScrollFactor(0);
+    blockerZone.setInteractive();
+    this.container.add(blockerZone);
 
     // 顶部发光标题
     const titleGlow = this.scene.add.text(width / 2, 45, '★ 神厨升级！选择一项犒赏 ★', {
@@ -49,6 +56,7 @@ export class LevelUpModal {
       fontStyle: 'bold',
     });
     titleGlow.setOrigin(0.5, 0);
+    titleGlow.setScrollFactor(0);
     this.container.add(titleGlow);
 
     const subTitle = this.scene.add.text(
@@ -61,6 +69,7 @@ export class LevelUpModal {
       },
     );
     subTitle.setOrigin(0.5, 0);
+    subTitle.setScrollFactor(0);
     this.container.add(subTitle);
 
     // 生成 3 个可选升级
@@ -89,12 +98,15 @@ export class LevelUpModal {
     player: Player,
   ): Phaser.GameObjects.Container {
     const card = this.scene.add.container(x, y);
+    card.setScrollFactor(0);
+    card.setSize(w, h);
 
     const bgGfx = this.scene.add.graphics();
     bgGfx.fillStyle(0x121c20, 0.96);
     bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 10);
     bgGfx.lineStyle(2, 0x3d5a5b, 1);
     bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
+    bgGfx.setScrollFactor(0);
     card.add(bgGfx);
 
     let nameText = '';
@@ -150,6 +162,7 @@ export class LevelUpModal {
       align: 'center',
     });
     tagObj.setOrigin(0.5, 0);
+    tagObj.setScrollFactor(0);
     card.add(tagObj);
 
     // 2. 物品图标与名称
@@ -161,6 +174,7 @@ export class LevelUpModal {
       align: 'center',
     });
     titleObj.setOrigin(0.5, 0);
+    titleObj.setScrollFactor(0);
     card.add(titleObj);
 
     // 3. 详细属性与效果描述
@@ -172,6 +186,7 @@ export class LevelUpModal {
       lineSpacing: 4,
     });
     descObj.setOrigin(0.5, 0);
+    descObj.setScrollFactor(0);
     card.add(descObj);
 
     // 4. 底部词条标签
@@ -182,12 +197,14 @@ export class LevelUpModal {
       align: 'center',
     });
     tagsObj.setOrigin(0.5, 0);
+    tagsObj.setScrollFactor(0);
     card.add(tagsObj);
 
-    // 5. 选取按钮
+    // 5. 选取按钮背景与文字
     const btnGfx = this.scene.add.graphics();
     btnGfx.fillStyle(0x2a9d8f, 1);
     btnGfx.fillRoundedRect(-w / 2 + 24, h / 2 - 42, w - 48, 30, 6);
+    btnGfx.setScrollFactor(0);
     card.add(btnGfx);
 
     const btnText = this.scene.add.text(0, h / 2 - 27, '选 取', {
@@ -196,12 +213,21 @@ export class LevelUpModal {
       fontStyle: 'bold',
     });
     btnText.setOrigin(0.5, 0.5);
+    btnText.setScrollFactor(0);
     card.add(btnText);
 
-    // 6. 交互响应
+    // 6. 交互响应（整张卡片与按钮均可点击选择，支持鼠标与移动端触控）
     const hitZone = this.scene.add.zone(0, 0, w, h);
+    hitZone.setScrollFactor(0);
     hitZone.setInteractive({ useHandCursor: true });
     card.add(hitZone);
+
+    const onSelectCard = () => {
+      this.applyUpgrade(opt, player);
+      EventBus.getInstance().emit('sound:play', { key: 'sfx_coin', volume: 0.8 });
+      this.hide();
+      this.onSelectCallback();
+    };
 
     hitZone.on('pointerover', () => {
       bgGfx.clear();
@@ -221,12 +247,7 @@ export class LevelUpModal {
       card.setScale(1.0);
     });
 
-    hitZone.on('pointerdown', () => {
-      this.applyUpgrade(opt, player);
-      EventBus.getInstance().emit('sound:play', { key: 'sfx_coin', volume: 0.8 });
-      this.hide();
-      this.onSelectCallback();
-    });
+    hitZone.on('pointerdown', onSelectCard);
 
     return card;
   }
@@ -240,116 +261,105 @@ export class LevelUpModal {
         candidates.push({
           type: 'weapon_upgrade',
           weapon: w.definition,
-          currentLevel: w.level,
           nextLevel: w.level + 1,
+          currentLevel: w.level,
         });
       }
     }
 
-    // 2. 新武器选项 (最多持有 4 把武器)
-    if (player.weapons.length < 4) {
-      const equippedIds = new Set(player.weapons.map(w => w.definition.id));
-      for (const weapon of Object.values(WEAPONS)) {
-        if (!equippedIds.has(weapon.id)) {
-          candidates.push({ type: 'weapon_new', weapon });
+    // 2. 未装备的新武器 (最多装备 4 把)
+    if (player.weapons.length < player.maxWeapons) {
+      const equippedWeaponIds = new Set(player.weapons.map(w => w.definition.id));
+      for (const wDef of Object.values(WEAPONS)) {
+        if (!equippedWeaponIds.has(wDef.id)) {
+          candidates.push({
+            type: 'weapon_new',
+            weapon: wDef,
+          });
         }
       }
     }
 
-    // 3. 口味被动道具选项 (未达到堆叠上限)
-    for (const item of Object.values(ITEMS)) {
-      const currentItem = player.items.find(i => i.definition.id === item.id);
-      const stacks = currentItem ? currentItem.count : 0;
-      if (stacks < item.maxStacks) {
-        candidates.push({ type: 'item_new', item, currentStacks: stacks });
+    // 3. 被动道具选项
+    for (const itemDef of Object.values(ITEMS)) {
+      const currentStacks = player.getItemCount(itemDef.id);
+      if (currentStacks < itemDef.maxStacks) {
+        candidates.push({
+          type: 'item_new',
+          item: itemDef,
+          currentStacks,
+        });
       }
     }
 
-    // 洗牌
-    const shuffled = rng.shuffle(candidates);
-    const result = shuffled.slice(0, 3);
+    // 随机打乱候选
+    const shuffled = rng.shuffle([...candidates]);
+    const selected: UpgradeOption[] = shuffled.slice(0, 3);
 
-    // 保底：若可选不足 3 项，填充恢复与食材包
-    while (result.length < 3) {
-      if (result.length === 1) {
-        result.push({
+    // 若不足 3 项，用补血或金币保底
+    while (selected.length < 3) {
+      if (player.currentHp < player.maxHp * 0.7) {
+        selected.push({
           type: 'heal_pack',
           amount: Math.round(player.maxHp * 0.5),
         });
       } else {
-        result.push({
+        selected.push({
           type: 'gold_pack',
-          amount: 30,
+          amount: 25,
         });
       }
     }
 
-    return result;
+    return selected;
   }
 
   private applyUpgrade(opt: UpgradeOption, player: Player): void {
-    if (opt.type === 'weapon_upgrade' || opt.type === 'weapon_new') {
+    if (opt.type === 'weapon_upgrade') {
+      player.upgradeWeapon(opt.weapon.id);
+    } else if (opt.type === 'weapon_new') {
       player.equipWeapon(opt.weapon);
     } else if (opt.type === 'item_new') {
       player.addItem(opt.item);
     } else if (opt.type === 'heal_pack') {
-      player.currentHp = Math.min(player.maxHp, player.currentHp + opt.amount);
+      player.heal(opt.amount);
     } else if (opt.type === 'gold_pack') {
       player.ingredients += opt.amount;
     }
   }
 
-  private getWeaponIcon(weaponId: string): string {
-    switch (weaponId) {
-      case 'iron_wok':
-        return '🍳';
-      case 'cleaver':
-        return '🔪';
-      case 'bamboo_skewer':
-        return '🍢';
-      case 'stove_flame':
-        return '🔥';
-      case 'seasoning_jar':
-        return '🏺';
-      case 'service_bell':
-        return '🔔';
-      default:
-        return '⚔️';
-    }
-  }
-
-  private getItemIcon(itemId: string): string {
-    switch (itemId) {
-      case 'chili_pepper':
-        return '🌶️';
-      case 'ice_cube':
-        return '🧊';
-      case 'sesame_oil':
-        return '🫒';
-      case 'cane_sugar':
-        return '🍬';
-      case 'fermented_sauce':
-        return '🍲';
-      case 'bamboo_steamer':
-        return '🥟';
-      case 'garlic_clove':
-        return '🧄';
-      case 'star_anise':
-        return '⭐';
-      default:
-        return '🧂';
-    }
-  }
-
   public hide(): void {
     this.container.setVisible(false);
+    this.container.removeAll(true);
   }
 
   public isVisible(): boolean {
     return this.container.visible;
   }
 
-  public destroy(): void {
-    this.container.destroy();
+  private getWeaponIcon(id: string): string {
+    const iconMap: Record<string, string> = {
+      iron_wok: '🍳',
+      cleaver: '🔪',
+      bamboo_skewer: '🍢',
+      stove_flame: '🔥',
+      seasoning_jar: '🏺',
+      service_bell: '🔔',
+    };
+    return iconMap[id] || '⚔️';
+  }
+
+  private getItemIcon(id: string): string {
+    const iconMap: Record<string, string> = {
+      chili_oil: '🌶️',
+      shaved_ice: '🧊',
+      sesame_oil: '🫒',
+      rock_sugar: '🍬',
+      five_spice: '🌿',
+      gourmet_powder: '✨',
+      garlic_clove: '🧄',
+      rice_wine: '🍶',
+    };
+    return iconMap[id] || '📦';
   }
 }

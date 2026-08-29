@@ -224,17 +224,18 @@ export class WeaponSystem {
       }
 
       case 'area': {
-        // 地面持续燃烧火域
+        // 地面持续燃烧火域：朝最近怪物方向或周围铺设火海
         for (let i = 0; i < totalCount; i++) {
-          const offsetX = (rng.next() - 0.5) * levelDef.range * 1.5;
-          const offsetY = (rng.next() - 0.5) * levelDef.range * 1.5;
+          const spreadDist = ((i + 1) / (totalCount + 1)) * levelDef.range;
+          const targetX = player.position.x + targetDir.x * spreadDist + (rng.next() - 0.5) * 32;
+          const targetY = player.position.y + targetDir.y * spreadDist + (rng.next() - 0.5) * 32;
 
           const proj = projectilePool.acquire();
           proj.spawn({
             weaponId: weaponDef.id,
             attackPattern: 'area',
-            x: player.position.x + offsetX,
-            y: player.position.y + offsetY,
+            x: targetX,
+            y: targetY,
             vx: 0,
             vy: 0,
             damage: Math.max(1, Math.round(finalDamage * 0.4)),
@@ -286,7 +287,7 @@ export class WeaponSystem {
     const px = player.position.x;
     const py = player.position.y;
 
-    if (targeting === 'forward' || enemies.length === 0) {
+    if (enemies.length === 0) {
       return player.facingDirection.clone();
     }
 
@@ -296,25 +297,30 @@ export class WeaponSystem {
 
     for (let i = 0; i < enemies.length; i++) {
       const e = enemies[i];
-      if (!e.isActive) continue;
+      if (!e.isActive || e.currentHp <= 0) continue;
       const dSq = distanceSquared(px, py, e.x, e.y);
 
-      if (targeting === 'nearest') {
-        if (dSq < bestDistSq) {
-          bestDistSq = dSq;
-          bestEnemy = e;
-        }
-      } else if (targeting === 'lowestHp') {
+      if (targeting === 'lowestHp') {
         if (dSq <= searchRange * searchRange * 2 && e.currentHp < lowestHp) {
           lowestHp = e.currentHp;
+          bestEnemy = e;
+        }
+      } else {
+        // nearest 及所有武器默认智能索敌：瞄准距玩家最近的活体妖怪
+        if (dSq < bestDistSq) {
+          bestDistSq = dSq;
           bestEnemy = e;
         }
       }
     }
 
     if (bestEnemy) {
-      const dir = new Vector2(bestEnemy.x - px, bestEnemy.y - py);
-      return dir.normalize();
+      const dx = bestEnemy.x - px;
+      const dy = bestEnemy.y - py;
+      const len = Math.hypot(dx, dy);
+      if (len > 0.0001) {
+        return new Vector2(dx / len, dy / len);
+      }
     }
 
     return player.facingDirection.clone();
