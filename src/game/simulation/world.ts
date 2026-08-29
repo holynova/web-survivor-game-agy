@@ -1,4 +1,5 @@
 import { CHARACTERS } from '@/content/characters/data';
+import { DIFFICULTIES, DifficultyDefinition } from '@/content/difficulty/data';
 import { WEAPONS } from '@/content/weapons/data';
 import { EventBus } from '@/core/event-bus';
 import { ObjectPool } from '@/core/pool';
@@ -90,7 +91,15 @@ export class SimulationWorld {
     );
   }
 
-  public initGame(characterId = 'wok_master'): void {
+  public doubleLootRemaining = 0;
+  public difficultyId = 'normal';
+
+  public get difficulty(): DifficultyDefinition {
+    return DIFFICULTIES[this.difficultyId] || DIFFICULTIES.normal;
+  }
+
+  public initGame(characterId = 'wok_master', difficultyId = 'normal'): void {
+    this.difficultyId = difficultyId;
     const charDef = CHARACTERS[characterId] || CHARACTERS.wok_master;
     this.player = new Player(charDef, 0, 0);
 
@@ -123,8 +132,6 @@ export class SimulationWorld {
       timeSurvivedSec: 0,
     };
   }
-
-  public doubleLootRemaining = 0;
 
   /**
    * 固定逻辑步长更新 (每秒执行 60 次)
@@ -165,7 +172,7 @@ export class SimulationWorld {
       this.projectilePool,
     );
 
-    // 4. 刷怪系统
+    // 4. 刷怪系统 (应用所选难度)
     if (this.waveSystem.wavePhase === 'battle') {
       this.spawnerSystem.update(
         this.waveSystem.currentWave,
@@ -175,6 +182,7 @@ export class SimulationWorld {
         this.spatialHash,
         this.rng,
         dt,
+        this.difficulty,
       );
     }
 

@@ -33,12 +33,13 @@ export class RunScene extends Phaser.Scene {
     super({ key: 'RunScene' });
   }
 
-  public create(data: { characterId?: string }): void {
+  public create(data: { characterId?: string; difficultyId?: string }): void {
     const characterId = data.characterId || 'wok_master';
+    const difficultyId = data.difficultyId || 'normal';
 
     // 1. 初始化世界模拟与实体
     this.world = new SimulationWorld(Date.now());
-    this.world.initGame(characterId);
+    this.world.initGame(characterId, difficultyId);
 
     // 2. 初始化音效管理器与战斗音乐
     AudioManager.getInstance().setSoundManager(this.sound);
@@ -67,7 +68,7 @@ export class RunScene extends Phaser.Scene {
       },
       () => {
         AudioManager.getInstance().stopBgm();
-        this.scene.restart({ characterId });
+        this.scene.restart({ characterId, difficultyId });
       },
     );
 
@@ -98,10 +99,10 @@ export class RunScene extends Phaser.Scene {
     }
 
     // 7. 绑定全局领域事件流转
-    this.bindEvents(characterId);
+    this.bindEvents(characterId, difficultyId);
   }
 
-  private bindEvents(characterId: string): void {
+  private bindEvents(characterId: string, difficultyId: string): void {
     const bus = EventBus.getInstance();
 
     this.eventUnsubscribers.push(
@@ -112,6 +113,7 @@ export class RunScene extends Phaser.Scene {
           this.scene.start('ResultsScene', {
             isVictory: false,
             characterId,
+            difficultyId,
             stats: this.world.statistics,
             waveReached: this.world.waveSystem.currentWave.waveNumber,
             activeRecipes: this.world.player.activeRecipes,
@@ -128,6 +130,7 @@ export class RunScene extends Phaser.Scene {
           this.scene.start('ResultsScene', {
             isVictory: true,
             characterId,
+            difficultyId,
             stats: this.world.statistics,
             waveReached: 12,
             activeRecipes: this.world.player.activeRecipes,
@@ -150,6 +153,16 @@ export class RunScene extends Phaser.Scene {
       bus.on('recipe:activated', _data => {
         AudioManager.getInstance().playSfx('sfx_service_bell', 0.9);
         this.cameras.main.flash(400, 255, 180, 0, false);
+      }),
+    );
+
+    this.eventUnsubscribers.push(
+      bus.on('wave:started', data => {
+        if (data.isBossWave) {
+          AudioManager.getInstance().playBgm('bgm_boss', true, 0.55);
+        } else {
+          AudioManager.getInstance().playBgm('bgm_battle', true, 0.45);
+        }
       }),
     );
   }

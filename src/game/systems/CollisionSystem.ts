@@ -142,6 +142,13 @@ export class CollisionSystem {
             volume: p.isCrit ? 0.8 : 0.5,
           });
 
+          // 触发吸血滋补效果 (当归药膳)
+          if (player.lifestealChance > 0 && rng.next() < player.lifestealChance) {
+            player.heal(player.lifestealAmount);
+            const healText = damageTextPool.acquire();
+            healText.spawn(`💚 +${player.lifestealAmount}`, player.position.x, player.position.y - 14, '#2a9d8f', false);
+          }
+
           // 触发武器附加效果 (击退、灼烧、减速)
           for (const eff of p.effects) {
             if (eff.type === 'knockback') {
@@ -222,7 +229,7 @@ export class CollisionSystem {
       }
     }
 
-    // 3. 掉落物拾取与磁铁吸附 (包含双倍收益留存)
+    // 3. 掉落物拾取与磁铁吸附 (包含双倍收益留存 & 美食回血)
     const activeDrops = dropPool.getActiveItems();
     const pickupRadiusSq = player.pickupRadius * player.pickupRadius;
     const px = player.position.x;
@@ -255,7 +262,13 @@ export class CollisionSystem {
             isDouble = true;
           }
 
-          if (drop.type === 'heat') {
+          if (drop.type === 'food') {
+            // 拾取美食恢复生命
+            player.heal(effectiveValue);
+            const healText = damageTextPool.acquire();
+            healText.spawn(`💚 +${effectiveValue} HP`, player.position.x, player.position.y - 14, '#06d6a0', true);
+            EventBus.getInstance().emit('sound:play', { key: 'sfx_pickup', volume: 0.8 });
+          } else if (drop.type === 'heat') {
             const leveledUp = player.addExp(effectiveValue);
             if (leveledUp) {
               EventBus.getInstance().emit('player:levelup', { newLevel: player.level });
@@ -300,7 +313,7 @@ export class CollisionSystem {
 
   public handleEnemyDeath(
     enemy: Enemy,
-    _player: Player,
+    player: Player,
     enemyPool: ObjectPool<Enemy>,
     dropPool: ObjectPool<Drop>,
     spatialHash: SpatialHash<Enemy>,
@@ -318,8 +331,17 @@ export class CollisionSystem {
       isBoss: enemy.isBoss,
     });
 
-    // 爆出火候(经验)或食材(金币)
-    if (rng.next() < enemy.ingredientChance) {
+    // 触发枸杞击杀回血
+    if (player.healOnKill > 0) {
+      player.heal(player.healOnKill);
+    }
+
+    // 爆出美食(回血)、火候(经验)或食材(金币)
+    const foodChance = enemy.isBoss ? 0.9 : enemy.isElite ? 0.4 : 0.07;
+    if (rng.next() < foodChance) {
+      const foodDrop = dropPool.acquire();
+      foodDrop.spawn('food', enemy.isBoss ? 50 : 25, enemy.x, enemy.y);
+    } else if (rng.next() < enemy.ingredientChance) {
       const ingDrop = dropPool.acquire();
       ingDrop.spawn('ingredient', enemy.ingredientValue, enemy.x, enemy.y);
     } else {

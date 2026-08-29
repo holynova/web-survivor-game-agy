@@ -100,6 +100,7 @@ export class PreloadScene extends Phaser.Scene {
 
     // 5. 加载背景音乐与音效
     this.load.audio('bgm_battle', './assets/audio/bgm_battle.ogg');
+    this.load.audio('bgm_boss', './assets/audio/bgm_boss.ogg');
     this.load.audio('bgm_menu', './assets/audio/bgm_menu.ogg');
     this.load.audio('bgm_shop', './assets/audio/bgm_shop.ogg');
     this.load.audio('sfx_hit', './assets/audio/sfx_hit.wav');

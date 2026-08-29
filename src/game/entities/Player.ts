@@ -30,6 +30,9 @@ export class Player {
   public critMultiplier: number;
   public pickupRadius: number;
   public armor: number;
+  public lifestealChance = 0;
+  public lifestealAmount = 0;
+  public healOnKill = 0;
 
   public isInvincible = false;
   public iFrameTimerSec = 0;
@@ -180,18 +183,19 @@ export class Player {
       }
     }
 
+    // 滋补回血与吸血属性叠加
+    this.lifestealChance = this.getItemCount('dang_gui_herb') * 0.12;
+    this.lifestealAmount = this.getItemCount('dang_gui_herb') * 2;
+    this.healOnKill = this.getItemCount('wolfberry_wine') * 2;
+
     const base = this.characterDef.baseStats;
-    const oldMaxHp = this.maxHp;
-    this.maxHp = base.maxHp + hpBonus;
-    if (this.maxHp > oldMaxHp) {
-      this.currentHp += this.maxHp - oldMaxHp;
-    }
+    this.maxHp = Math.round(base.maxHp + hpBonus);
     this.moveSpeed = base.moveSpeed * (1 + speedBonus);
     this.damageMultiplier = base.damageMultiplier + dmgMultBonus;
     this.attackSpeedMultiplier = base.attackSpeedMultiplier + atkSpdBonus;
-    this.critChance = Math.min(1.0, base.critChance + critBonus);
+    this.critChance = base.critChance + critBonus;
     this.critMultiplier = base.critMultiplier + critMultBonus;
-    this.pickupRadius = base.pickupRadius + pickupBonus;
-    this.armor = base.armor + armorBonus;
+    this.pickupRadius = Math.round(base.pickupRadius * (1 + pickupBonus));
+    this.armor = Math.round(base.armor + armorBonus);
   }
 }

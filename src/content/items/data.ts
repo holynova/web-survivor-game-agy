@@ -127,4 +127,32 @@ export const ITEMS: Record<string, ItemDefinition> = {
       { stat: 'attackSpeedMultiplier', value: 0.12, mode: 'flat' },
     ],
   }),
+
+  dang_gui_herb: ItemDefinitionSchema.parse({
+    id: 'dang_gui_herb',
+    nameKey: '当归滋补草',
+    descriptionKey: '武器命中敌人有 12% 几率吸取 2 点生命值',
+    tags: ['defense', 'ferment'],
+    rarity: 'rare',
+    cost: 12,
+    maxStacks: 3,
+    color: '#2a9d8f',
+    assetKey: 'item_herb',
+    modifiers: [],
+  }),
+
+  wolfberry_wine: ItemDefinitionSchema.parse({
+    id: 'wolfberry_wine',
+    nameKey: '枸杞养生酒',
+    descriptionKey: '击杀敌人必回 2 点生命值，最大生命 +20 点',
+    tags: ['ferment', 'economy'],
+    rarity: 'rare',
+    cost: 14,
+    maxStacks: 3,
+    color: '#e76f51',
+    assetKey: 'item_potion',
+    modifiers: [
+      { stat: 'maxHp', value: 20, mode: 'flat' },
+    ],
+  }),
 };

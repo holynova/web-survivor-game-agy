@@ -1,7 +1,7 @@
 import { Vector2 } from '@/core/math';
 import { Poolable } from '@/core/pool';
 
-export type DropType = 'heat' | 'ingredient';
+export type DropType = 'heat' | 'ingredient' | 'food';
 
 export class Drop implements Poolable {
   public static nextId = 1;
@@ -28,8 +28,8 @@ export class Drop implements Poolable {
     this.y = y;
     this.velocity.set(0, 0);
     this.isMagnetized = false;
-    this.color = type === 'heat' ? '#00f5d4' : '#f4a261';
-    this.radius = type === 'heat' ? 6 : 9;
+    this.color = type === 'heat' ? '#00f5d4' : type === 'ingredient' ? '#f4a261' : '#2a9d8f';
+    this.radius = type === 'heat' ? 6 : type === 'ingredient' ? 9 : 11;
   }
 
   public reset(): void {

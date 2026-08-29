@@ -9,6 +9,7 @@ export const SaveDataSchema = z.object({
   }),
   unlockedCharacters: z.array(z.string()).default(['wok_master', 'cold_brewer', 'skewer_griller']),
   selectedCharacterId: z.string().default('wok_master'),
+  selectedDifficultyId: z.string().default('normal'),
   settings: z.object({
     masterVolume: z.number().min(0).max(1).default(0.8),
     sfxVolume: z.number().min(0).max(1).default(0.8),
@@ -29,6 +30,7 @@ export const DEFAULT_SAVE_DATA: SaveData = {
   },
   unlockedCharacters: ['wok_master', 'cold_brewer', 'skewer_griller'],
   selectedCharacterId: 'wok_master',
+  selectedDifficultyId: 'normal',
   settings: {
     masterVolume: 0.8,
     sfxVolume: 0.8,

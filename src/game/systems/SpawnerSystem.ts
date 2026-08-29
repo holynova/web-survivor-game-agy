@@ -1,8 +1,9 @@
 import { ENEMIES } from '@/content/enemies/data';
+import { DifficultyDefinition } from '@/content/difficulty/data';
 import { WaveDefinition } from '@/content/schemas/wave';
 import { ObjectPool } from '@/core/pool';
 import { SeededRNG } from '@/core/rng';
-import { Enemy } from '../entities/Enemy';
+import { Enemy, EnemyStatMultipliers } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 import { SpatialHash } from '../spatial/spatial-hash';
 
@@ -23,17 +24,26 @@ export class SpawnerSystem {
     spatialHash: SpatialHash<Enemy>,
     rng: SeededRNG,
     dt: number,
+    difficulty?: DifficultyDefinition,
   ): void {
     // 检查是否达到同屏最大怪物上限
     if (enemyPool.getActiveCount() >= wave.maxActiveEnemies) {
       return;
     }
 
+    const mults: EnemyStatMultipliers = {
+      hpMult: difficulty?.enemyHpMultiplier || 1,
+      dmgMult: difficulty?.enemyDamageMultiplier || 1,
+      spdMult: difficulty?.enemySpeedMultiplier || 1,
+    };
+
+    const intervalScale = difficulty?.spawnIntervalMultiplier || 1;
+
     // 1. 生成 Boss（如果是 Boss 波且未生成）
     if (wave.isBossWave && wave.bossId && !this.bossSpawned) {
       const bossDef = ENEMIES[wave.bossId];
       if (bossDef) {
-        this.spawnEnemyAtDistance(bossDef, player, 480, enemyPool, spatialHash, rng);
+        this.spawnEnemyAtDistance(bossDef, player, 480, enemyPool, spatialHash, rng, mults);
         this.bossSpawned = true;
       }
     }
@@ -45,7 +55,9 @@ export class SpawnerSystem {
       let timer = this.spawnTimers.get(entry.enemyId) || 0;
       timer += dt * 1000;
 
-      if (timer >= entry.intervalMs) {
+      const effectiveInterval = entry.intervalMs * intervalScale;
+
+      if (timer >= effectiveInterval) {
         timer = 0;
         const enemyDef = ENEMIES[entry.enemyId];
         if (enemyDef) {
@@ -54,7 +66,7 @@ export class SpawnerSystem {
             wave.maxActiveEnemies - enemyPool.getActiveCount(),
           );
           for (let i = 0; i < spawnCount; i++) {
-            this.spawnEnemyAtDistance(enemyDef, player, 520 + rng.nextFloat(0, 120), enemyPool, spatialHash, rng);
+            this.spawnEnemyAtDistance(enemyDef, player, 520 + rng.nextFloat(0, 120), enemyPool, spatialHash, rng, mults);
           }
         }
       }
@@ -70,13 +82,14 @@ export class SpawnerSystem {
     enemyPool: ObjectPool<Enemy>,
     spatialHash: SpatialHash<Enemy>,
     rng: SeededRNG,
+    mults: EnemyStatMultipliers,
   ): void {
     const angle = rng.nextFloat(0, Math.PI * 2);
     const spawnX = player.position.x + Math.cos(angle) * distance;
     const spawnY = player.position.y + Math.sin(angle) * distance;
 
     const enemy = enemyPool.acquire();
-    enemy.spawn(enemyDef, spawnX, spawnY);
+    enemy.spawn(enemyDef, spawnX, spawnY, mults);
     spatialHash.insert(enemy);
   }
 }

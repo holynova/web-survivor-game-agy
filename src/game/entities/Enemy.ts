@@ -18,6 +18,12 @@ export interface StatusSlow {
 
 export type EnemyChargeState = 'none' | 'windup' | 'dashing' | 'cooldown';
 
+export interface EnemyStatMultipliers {
+  hpMult: number;
+  dmgMult: number;
+  spdMult: number;
+}
+
 export class Enemy implements Poolable, SpatialEntity {
   public static nextId = 1;
 
@@ -59,7 +65,12 @@ export class Enemy implements Poolable, SpatialEntity {
   // 远程射击计时器
   public rangedShootTimerSec = 0;
 
-  public spawn(def: EnemyDefinition, x: number, y: number): void {
+  public spawn(
+    def: EnemyDefinition,
+    x: number,
+    y: number,
+    mults: EnemyStatMultipliers = { hpMult: 1, dmgMult: 1, spdMult: 1 },
+  ): void {
     this.id = Enemy.nextId++;
     this.isActive = true;
     this.definition = def;
@@ -68,10 +79,10 @@ export class Enemy implements Poolable, SpatialEntity {
     this.velocity.set(0, 0);
     this.knockbackVelocity.set(0, 0);
     this.radius = def.radius;
-    this.maxHp = def.maxHp;
-    this.currentHp = def.maxHp;
-    this.moveSpeed = def.moveSpeed;
-    this.contactDamage = def.contactDamage;
+    this.maxHp = Math.round(def.maxHp * mults.hpMult);
+    this.currentHp = this.maxHp;
+    this.moveSpeed = def.moveSpeed * mults.spdMult;
+    this.contactDamage = Math.round(def.contactDamage * mults.dmgMult);
     this.knockbackResistance = def.knockbackResistance;
     this.expValue = def.expValue;
     this.ingredientChance = def.ingredientChance;

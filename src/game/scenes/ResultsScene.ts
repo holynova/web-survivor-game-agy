@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { CHARACTERS } from '@/content/characters/data';
+import { DIFFICULTIES } from '@/content/difficulty/data';
 import { RecipeDefinition } from '@/content/schemas/recipe';
 import { WEAPONS } from '@/content/weapons/data';
 import { RunStatistics } from '../systems/CollisionSystem';
@@ -9,6 +10,7 @@ import { AudioManager } from '../presentation/audio';
 export interface ResultsData {
   isVictory: boolean;
   characterId: string;
+  difficultyId?: string;
   waveReached: number;
   stats: RunStatistics;
   activeRecipes: RecipeDefinition[];
@@ -53,10 +55,12 @@ export class ResultsScene extends Phaser.Scene {
 
     // 3. 副标题
     const charName = CHARACTERS[data.characterId]?.nameKey || '神厨';
+    const diffDef = DIFFICULTIES[data.difficultyId || 'normal'] || DIFFICULTIES.normal;
+
     const subTitle = this.add.text(
       width / 2,
       95,
-      `出战大厨: ${charName} | 营业地图: 山海夜市外街 | Seed: ${data.seed}`,
+      `出战大厨: ${charName} | 挑战难度: 【${diffDef.nameKey}】 ${diffDef.badge} | 积分倍率: ${diffDef.scoreMultiplier}x`,
       {
         fontSize: '15px',
         color: '#8fa3a6',
@@ -97,7 +101,10 @@ export class ResultsScene extends Phaser.Scene {
     replayZone.setInteractive({ useHandCursor: true });
     replayZone.on('pointerdown', () => {
       AudioManager.getInstance().playSfx('sfx_click', 0.6);
-      this.scene.start('RunScene', { characterId: data.characterId });
+      this.scene.start('RunScene', {
+        characterId: data.characterId,
+        difficultyId: data.difficultyId || 'normal',
+      });
     });
 
     // 返回主菜单

@@ -20,7 +20,7 @@ export interface GameEvents {
     isBoss: boolean;
   };
   'drop:collected': {
-    dropType: 'heat' | 'ingredient';
+    dropType: 'heat' | 'ingredient' | 'food';
     value: number;
     x: number;
     y: number;

@@ -83,6 +83,42 @@ canvas {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
 }
 
+.cover-modal-card {
+  max-width: 520px;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--accent-amber);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(244, 162, 97, 0.25);
+}
+
+.cover-banner-wrapper {
+  position: relative;
+  width: 100%;
+  height: 190px;
+  overflow: hidden;
+}
+
+.cover-banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 60%;
+  display: block;
+}
+
+.cover-banner-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 55%;
+  background: linear-gradient(to bottom, transparent, var(--panel-bg));
+}
+
+.cover-content {
+  padding: 16px 28px 24px;
+}
+
 .badge {
   display: inline-block;
   font-size: 11px;
