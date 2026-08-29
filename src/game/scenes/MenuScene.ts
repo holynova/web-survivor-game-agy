@@ -6,6 +6,7 @@ import { CharacterDefinition } from '@/content/schemas/character';
 import { WEAPONS } from '@/content/weapons/data';
 import { SaveManager } from '@/save/storage';
 import { AudioManager } from '../presentation/audio';
+import { CodexModal } from '../ui/CodexModal';
 import { SettingsModal } from '../ui/SettingsModal';
 
 export class MenuScene extends Phaser.Scene {
@@ -59,8 +60,37 @@ export class MenuScene extends Phaser.Scene {
     });
     subTitle.setOrigin(0.5, 0);
 
-    // 3. 右上角偏好设置按钮
+    // 3. 右上角偏好设置与图鉴系统按钮
+    const codexModal = new CodexModal(this);
     const settingsModal = new SettingsModal(this);
+
+    // 📖 百味图鉴按钮
+    const cdxBtnW = 100;
+    const cdxBtnH = 34;
+    const cdxBtnX = width - 185;
+    const cdxBtnY = 45;
+
+    const cdxGfx = this.add.graphics();
+    cdxGfx.fillStyle(0x19282f, 0.9);
+    cdxGfx.fillRoundedRect(cdxBtnX - cdxBtnW / 2, cdxBtnY - cdxBtnH / 2, cdxBtnW, cdxBtnH, 6);
+    cdxGfx.lineStyle(1.5, 0x2a9d8f, 1);
+    cdxGfx.strokeRoundedRect(cdxBtnX - cdxBtnW / 2, cdxBtnY - cdxBtnH / 2, cdxBtnW, cdxBtnH, 6);
+
+    const cdxText = this.add.text(cdxBtnX, cdxBtnY, '📖 百味图鉴', {
+      fontSize: '13px',
+      color: '#00f5d4',
+      fontStyle: 'bold',
+    });
+    cdxText.setOrigin(0.5, 0.5);
+
+    const cdxZone = this.add.zone(cdxBtnX, cdxBtnY, cdxBtnW, cdxBtnH);
+    cdxZone.setInteractive({ useHandCursor: true });
+    cdxZone.on('pointerdown', () => {
+      AudioManager.getInstance().playSfx('sfx_click', 0.5);
+      codexModal.show();
+    });
+
+    // ⚙️ 游戏设置按钮
     const setBtnW = 100;
     const setBtnH = 34;
     const setBtnX = width - 70;

@@ -12,13 +12,15 @@ export const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
   parent: 'game-container',
   width: 1280,
   height: 720,
-  pixelArt: true,
+  pixelArt: false, // 允许 UI 与文字使用高精度矢量平滑抗锯齿
   roundPixels: true,
   render: {
-    pixelArt: true,
-    antialias: false,
-    antialiasGL: false,
+    antialias: true,
+    antialiasGL: true,
     roundPixels: true,
+    powerPreference: 'high-performance',
+    transparent: false,
+    clearBeforeRender: true,
   },
   scale: {
     mode: Phaser.Scale.FIT,
@@ -36,5 +38,5 @@ export const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
   scene: [BootScene, PreloadScene, MenuScene, RunScene, ResultsScene],
 };
 
-// 注入 Retina / HiDPI 高清渲染支持
-(GAME_CONFIG as any).resolution = deviceDpr;
+// 注入 Retina / 4K HiDPI 原生硬件高清分辨率倍率
+(GAME_CONFIG as Record<string, unknown>).resolution = deviceDpr;

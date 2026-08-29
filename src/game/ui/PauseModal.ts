@@ -9,12 +9,20 @@ export class PauseModal {
   private onResumeCallback: () => void;
   private onRestartCallback: () => void;
   private onSettingsCallback?: () => void;
+  private onCodexCallback?: () => void;
 
-  constructor(scene: Phaser.Scene, onResume: () => void, onRestart: () => void, onSettings?: () => void) {
+  constructor(
+    scene: Phaser.Scene,
+    onResume: () => void,
+    onRestart: () => void,
+    onSettings?: () => void,
+    onCodex?: () => void,
+  ) {
     this.scene = scene;
     this.onResumeCallback = onResume;
     this.onRestartCallback = onRestart;
     this.onSettingsCallback = onSettings;
+    this.onCodexCallback = onCodex;
     this.container = scene.add.container(0, 0);
     this.container.setScrollFactor(0);
     this.container.setDepth(300);
@@ -288,11 +296,14 @@ export class PauseModal {
 
   private renderBottomButtons(width: number, height: number, cardH: number): void {
     const btnY = height / 2 + cardH / 2 - 40;
-    const btnW = 160;
+    const btnW = 150;
     const btnH = 38;
+    const gap = 16;
+    const totalW = 5 * btnW + 4 * gap;
+    const startX = width / 2 - totalW / 2 + btnW / 2;
 
     // 1. 继续游戏
-    const resumeX = width / 2 - 270;
+    const resumeX = startX;
     const resGfx = this.scene.add.graphics();
     resGfx.fillStyle(0x2a9d8f, 1);
     resGfx.fillRoundedRect(resumeX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
@@ -300,7 +311,7 @@ export class PauseModal {
     this.container.add(resGfx);
 
     const resText = this.scene.add.text(resumeX, btnY, '▶️ 继续出摊', {
-      fontSize: '15px',
+      fontSize: '14px',
       color: '#060b0c',
       fontStyle: 'bold',
     });
@@ -317,8 +328,38 @@ export class PauseModal {
     });
     this.container.add(resZone);
 
-    // 2. 游戏设置
-    const setX = width / 2 - 90;
+    // 2. 查看图鉴
+    const cdxX = startX + (btnW + gap);
+    const cdxGfx = this.scene.add.graphics();
+    cdxGfx.fillStyle(0x193b3f, 1);
+    cdxGfx.fillRoundedRect(cdxX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+    cdxGfx.lineStyle(1.5, 0x00f5d4, 1);
+    cdxGfx.strokeRoundedRect(cdxX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+    cdxGfx.setScrollFactor(0);
+    this.container.add(cdxGfx);
+
+    const cdxText = this.scene.add.text(cdxX, btnY, '📖 查看图鉴', {
+      fontSize: '14px',
+      color: '#00f5d4',
+      fontStyle: 'bold',
+    });
+    cdxText.setOrigin(0.5, 0.5);
+    cdxText.setScrollFactor(0);
+    this.container.add(cdxText);
+
+    const cdxZone = this.scene.add.zone(cdxX, btnY, btnW, btnH);
+    cdxZone.setScrollFactor(0);
+    cdxZone.setInteractive({ useHandCursor: true });
+    cdxZone.on('pointerdown', () => {
+      this.hide();
+      if (this.onCodexCallback) {
+        this.onCodexCallback();
+      }
+    });
+    this.container.add(cdxZone);
+
+    // 3. 游戏设置
+    const setX = startX + 2 * (btnW + gap);
     const setGfx = this.scene.add.graphics();
     setGfx.fillStyle(0x3d5a5b, 1);
     setGfx.fillRoundedRect(setX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
@@ -345,8 +386,8 @@ export class PauseModal {
     });
     this.container.add(setZone);
 
-    // 3. 重新开始
-    const restX = width / 2 + 90;
+    // 4. 重新开始
+    const restX = startX + 3 * (btnW + gap);
     const restGfx = this.scene.add.graphics();
     restGfx.fillStyle(0xe76f51, 1);
     restGfx.fillRoundedRect(restX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
@@ -354,7 +395,7 @@ export class PauseModal {
     this.container.add(restGfx);
 
     const restText = this.scene.add.text(restX, btnY, '🔄 重新开始', {
-      fontSize: '15px',
+      fontSize: '14px',
       color: '#060b0c',
       fontStyle: 'bold',
     });
@@ -371,8 +412,8 @@ export class PauseModal {
     });
     this.container.add(restZone);
 
-    // 4. 返回主菜单
-    const menuX = width / 2 + 270;
+    // 5. 返回主菜单
+    const menuX = startX + 4 * (btnW + gap);
     const menuGfx = this.scene.add.graphics();
     menuGfx.fillStyle(0x1f3036, 1);
     menuGfx.fillRoundedRect(menuX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
@@ -380,7 +421,7 @@ export class PauseModal {
     this.container.add(menuGfx);
 
     const menuText = this.scene.add.text(menuX, btnY, '🚪 退出菜单', {
-      fontSize: '15px',
+      fontSize: '14px',
       color: '#ffffff',
       fontStyle: 'bold',
     });

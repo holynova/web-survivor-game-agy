@@ -100,6 +100,10 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('tileset_floor', './assets/environment/tileset_floor.png');
 
     // 5. 加载背景音乐与音效
+    this.load.audio('bgm_night_market_theme', [
+      './assets/audio/bgm_night_market_theme.ogg',
+      './assets/audio/bgm_night_market_theme.mp3',
+    ]);
     this.load.audio('bgm_battle', './assets/audio/bgm_battle.ogg');
     this.load.audio('bgm_boss', './assets/audio/bgm_boss.ogg');
     this.load.audio('bgm_menu', './assets/audio/bgm_menu.ogg');

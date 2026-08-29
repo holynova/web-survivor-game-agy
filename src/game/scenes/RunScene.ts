@@ -4,6 +4,7 @@ import { SaveManager } from '@/save/storage';
 import { AudioManager } from '../presentation/audio';
 import { SpriteSyncSystem } from '../presentation/sprite-sync';
 import { SimulationWorld } from '../simulation/world';
+import { CodexModal } from '../ui/CodexModal';
 import { DebugModal } from '../ui/DebugModal';
 import { HUD } from '../ui/HUD';
 import { LevelUpModal } from '../ui/LevelUpModal';
@@ -20,6 +21,7 @@ export class RunScene extends Phaser.Scene {
   public pauseModal!: PauseModal;
   public settingsModal!: SettingsModal;
   public debugModal!: DebugModal;
+  public codexModal!: CodexModal;
 
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasdKeys!: {
@@ -47,7 +49,7 @@ export class RunScene extends Phaser.Scene {
 
     // 2. 初始化音效管理器与战斗音乐
     AudioManager.getInstance().setSoundManager(this.sound);
-    AudioManager.getInstance().playBgm('bgm_battle', true, 0.45);
+    AudioManager.getInstance().playBgm('bgm_night_market_theme', true, 0.45);
 
     // 3. 初始化表现层与渲染同步器
     this.spriteSync = new SpriteSyncSystem(this);
@@ -59,7 +61,7 @@ export class RunScene extends Phaser.Scene {
     });
 
     this.shopModal = new ShopModal(this, () => {
-      AudioManager.getInstance().playBgm('bgm_battle', true, 0.45);
+      AudioManager.getInstance().playBgm('bgm_night_market_theme', true, 0.45);
       this.world.waveSystem.nextWave();
       this.world.resumeGame();
     });
@@ -69,6 +71,10 @@ export class RunScene extends Phaser.Scene {
     });
 
     this.debugModal = new DebugModal(this, () => {
+      this.world.resumeGame();
+    });
+
+    this.codexModal = new CodexModal(this, () => {
       this.world.resumeGame();
     });
 
@@ -83,6 +89,9 @@ export class RunScene extends Phaser.Scene {
       },
       () => {
         this.settingsModal.show();
+      },
+      () => {
+        this.codexModal.show();
       },
     );
 
@@ -124,7 +133,9 @@ export class RunScene extends Phaser.Scene {
           this.world.clock.pause();
           this.pauseModal.show(this.world.player, this.world);
         } else if (this.world.gameState === 'paused') {
-          if (this.settingsModal.isVisible()) {
+          if (this.codexModal.isVisible()) {
+            this.codexModal.hide();
+          } else if (this.settingsModal.isVisible()) {
             this.settingsModal.hide();
           } else if (this.debugModal.isVisible()) {
             this.debugModal.hide();
@@ -211,7 +222,7 @@ export class RunScene extends Phaser.Scene {
         if (data.isBossWave) {
           AudioManager.getInstance().playBgm('bgm_boss', true, 0.55);
         } else {
-          AudioManager.getInstance().playBgm('bgm_battle', true, 0.45);
+          AudioManager.getInstance().playBgm('bgm_night_market_theme', true, 0.45);
         }
       }),
     );
