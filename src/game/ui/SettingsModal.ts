@@ -12,7 +12,7 @@ export class SettingsModal {
     this.onCloseCallback = onClose;
     this.container = scene.add.container(0, 0);
     this.container.setScrollFactor(0);
-    this.container.setDepth(350);
+    this.container.setDepth(450);
     this.container.setVisible(false);
   }
 
@@ -39,22 +39,15 @@ export class SettingsModal {
     const saveData = SaveManager.load();
     const settings = saveData.settings;
 
-    // 半透明背景
-    const bg = this.scene.add.graphics();
-    bg.fillStyle(0x060b0c, 0.9);
-    bg.fillRect(0, 0, width, height);
-    bg.setScrollFactor(0);
-    this.container.add(bg);
-
-    // 阻挡穿透
-    const blocker = this.scene.add.zone(width / 2, height / 2, width, height);
+    // 1. 半透明黑色遮罩与防点击穿透
+    const blocker = this.scene.add.rectangle(width / 2, height / 2, width, height, 0x060b0c, 0.9);
     blocker.setScrollFactor(0);
     blocker.setInteractive();
     this.container.add(blocker);
 
-    // 设置主面板 (680 x 480)
-    const cardW = 680;
-    const cardH = 480;
+    // 2. 设置主面板 (700 x 490)
+    const cardW = 700;
+    const cardH = 490;
     const cardGfx = this.scene.add.graphics();
     cardGfx.fillStyle(0x0f181b, 0.98);
     cardGfx.fillRoundedRect(width / 2 - cardW / 2, height / 2 - cardH / 2, cardW, cardH, 12);
@@ -63,7 +56,7 @@ export class SettingsModal {
     cardGfx.setScrollFactor(0);
     this.container.add(cardGfx);
 
-    // 标题
+    // 3. 标题
     const title = this.scene.add.text(width / 2, height / 2 - cardH / 2 + 25, '⚙️ 游戏画面与声音设置', {
       fontSize: '22px',
       color: '#ffd166',
@@ -73,7 +66,7 @@ export class SettingsModal {
     title.setScrollFactor(0);
     this.container.add(title);
 
-    let rowY = height / 2 - cardH / 2 + 75;
+    let rowY = height / 2 - cardH / 2 + 80;
 
     // 1. 屏幕震动强度 (none / light / normal / heavy)
     this.renderOptionRow({
@@ -144,20 +137,16 @@ export class SettingsModal {
       currentValue: String(settings.isMuted === true),
       onSelect: (val: string) => {
         settings.isMuted = val === 'true';
-        if (settings.isMuted) {
-          AudioManager.getInstance().setMasterVolume(0);
-        } else {
-          AudioManager.getInstance().setMasterVolume(settings.masterVolume || 0.8);
-        }
+        AudioManager.getInstance().setMuted(settings.isMuted);
         SaveManager.save(saveData);
         this.render();
       },
     });
     rowY += 60;
 
-    // 5. 音效音量档位 (25% / 50% / 75% / 100%)
+    // 5. 音效音量 (25% / 50% / 75% / 100%)
     this.renderOptionRow({
-      label: '🎚️ 音效音量',
+      label: '📊 音效音量',
       y: rowY,
       width,
       options: [
@@ -166,47 +155,63 @@ export class SettingsModal {
         { label: '75%', value: '0.75' },
         { label: '100%', value: '1.0' },
       ],
-      currentValue: String(settings.sfxVolume || 0.8),
+      currentValue: String(settings.sfxVolume || 0.75),
       onSelect: (val: string) => {
-        const v = parseFloat(val);
-        settings.sfxVolume = v;
-        settings.masterVolume = v;
-        AudioManager.getInstance().setSfxVolume(v);
-        AudioManager.getInstance().setMasterVolume(v);
+        settings.sfxVolume = parseFloat(val);
+        AudioManager.getInstance().setSfxVolume(settings.sfxVolume);
         SaveManager.save(saveData);
         this.render();
       },
     });
 
     // 底部关闭按钮
-    const btnW = 180;
-    const btnH = 38;
+    const btnW = 200;
+    const btnH = 40;
     const btnX = width / 2;
-    const btnY = height / 2 + cardH / 2 - 35;
+    const btnY = height / 2 + cardH / 2 - 40;
 
-    const btnGfx = this.scene.add.graphics();
-    btnGfx.fillStyle(0x2a9d8f, 1);
-    btnGfx.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-    btnGfx.setScrollFactor(0);
-    this.container.add(btnGfx);
+    const closeBtn = this.scene.add.container(btnX, btnY);
+    closeBtn.setScrollFactor(0);
+    closeBtn.setSize(btnW, btnH);
 
-    const btnText = this.scene.add.text(btnX, btnY, '保存并关闭', {
+    const btnBg = this.scene.add.graphics();
+    btnBg.fillStyle(0x2a9d8f, 1);
+    btnBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 8);
+    closeBtn.add(btnBg);
+
+    const btnText = this.scene.add.text(0, 0, '保存并关闭', {
       fontSize: '15px',
       color: '#060b0c',
       fontStyle: 'bold',
     });
     btnText.setOrigin(0.5, 0.5);
-    btnText.setScrollFactor(0);
-    this.container.add(btnText);
+    closeBtn.add(btnText);
 
-    const btnZone = this.scene.add.zone(btnX, btnY, btnW, btnH);
-    btnZone.setScrollFactor(0);
-    btnZone.setInteractive({ useHandCursor: true });
-    btnZone.on('pointerdown', () => {
+    const btnHit = this.scene.add.zone(0, 0, btnW, btnH);
+    btnHit.setScrollFactor(0);
+    btnHit.setInteractive({ useHandCursor: true });
+    closeBtn.add(btnHit);
+
+    btnHit.on('pointerover', () => {
+      closeBtn.setScale(1.04);
+      btnBg.clear();
+      btnBg.fillStyle(0x00f5d4, 1);
+      btnBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 8);
+    });
+
+    btnHit.on('pointerout', () => {
+      closeBtn.setScale(1.0);
+      btnBg.clear();
+      btnBg.fillStyle(0x2a9d8f, 1);
+      btnBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 8);
+    });
+
+    btnHit.on('pointerdown', () => {
       AudioManager.getInstance().playSfx('sfx_click', 0.5);
       this.hide();
     });
-    this.container.add(btnZone);
+
+    this.container.add(closeBtn);
   }
 
   private renderOptionRow(params: {
@@ -220,7 +225,7 @@ export class SettingsModal {
     const { label, y, width, options, currentValue, onSelect } = params;
 
     // 左侧标签
-    const labelText = this.scene.add.text(width / 2 - 290, y, label, {
+    const labelText = this.scene.add.text(width / 2 - 310, y, label, {
       fontSize: '14px',
       color: '#f4a261',
       fontStyle: 'bold',
@@ -230,41 +235,68 @@ export class SettingsModal {
     this.container.add(labelText);
 
     // 右侧选项组
-    const totalOptionsW = 340;
+    const totalOptionsW = 360;
     const optW = (totalOptionsW - (options.length - 1) * 8) / options.length;
-    const optH = 28;
-    const startX = width / 2 + 290 - totalOptionsW + optW / 2;
+    const optH = 30;
+    const startX = width / 2 + 310 - totalOptionsW + optW / 2;
 
     for (let i = 0; i < options.length; i++) {
       const opt = options[i];
       const isSelected = opt.value === currentValue || (parseFloat(opt.value) && Math.abs(parseFloat(opt.value) - parseFloat(currentValue)) < 0.15);
       const bx = startX + i * (optW + 8);
 
+      const optContainer = this.scene.add.container(bx, y);
+      optContainer.setScrollFactor(0);
+      optContainer.setSize(optW, optH);
+
       const btnGfx = this.scene.add.graphics();
       btnGfx.fillStyle(isSelected ? 0x2a9d8f : 0x142126, 1);
-      btnGfx.fillRoundedRect(bx - optW / 2, y - optH / 2, optW, optH, 6);
-      btnGfx.lineStyle(1, isSelected ? 0x00f5d4 : 0x3d5a5b, 1);
-      btnGfx.strokeRoundedRect(bx - optW / 2, y - optH / 2, optW, optH, 6);
-      btnGfx.setScrollFactor(0);
-      this.container.add(btnGfx);
+      btnGfx.fillRoundedRect(-optW / 2, -optH / 2, optW, optH, 6);
+      btnGfx.lineStyle(1.5, isSelected ? 0x00f5d4 : 0x3d5a5b, 1);
+      btnGfx.strokeRoundedRect(-optW / 2, -optH / 2, optW, optH, 6);
+      optContainer.add(btnGfx);
 
-      const text = this.scene.add.text(bx, y, opt.label, {
+      const text = this.scene.add.text(0, 0, opt.label, {
         fontSize: '11px',
         color: isSelected ? '#060b0c' : '#d8e2dc',
         fontStyle: isSelected ? 'bold' : 'normal',
       });
       text.setOrigin(0.5, 0.5);
-      text.setScrollFactor(0);
-      this.container.add(text);
+      optContainer.add(text);
 
-      const zone = this.scene.add.zone(bx, y, optW, optH);
+      const zone = this.scene.add.zone(0, 0, optW, optH);
       zone.setScrollFactor(0);
       zone.setInteractive({ useHandCursor: true });
+      optContainer.add(zone);
+
+      zone.on('pointerover', () => {
+        if (!isSelected) {
+          optContainer.setScale(1.04);
+          btnGfx.clear();
+          btnGfx.fillStyle(0x1d3557, 1);
+          btnGfx.fillRoundedRect(-optW / 2, -optH / 2, optW, optH, 6);
+          btnGfx.lineStyle(1.5, 0x00f5d4, 1);
+          btnGfx.strokeRoundedRect(-optW / 2, -optH / 2, optW, optH, 6);
+        }
+      });
+
+      zone.on('pointerout', () => {
+        if (!isSelected) {
+          optContainer.setScale(1.0);
+          btnGfx.clear();
+          btnGfx.fillStyle(0x142126, 1);
+          btnGfx.fillRoundedRect(-optW / 2, -optH / 2, optW, optH, 6);
+          btnGfx.lineStyle(1.5, 0x3d5a5b, 1);
+          btnGfx.strokeRoundedRect(-optW / 2, -optH / 2, optW, optH, 6);
+        }
+      });
+
       zone.on('pointerdown', () => {
         AudioManager.getInstance().playSfx('sfx_click', 0.5);
         onSelect(opt.value);
       });
-      this.container.add(zone);
+
+      this.container.add(optContainer);
     }
   }
 

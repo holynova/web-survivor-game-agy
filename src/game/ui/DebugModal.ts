@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 import { ENEMIES } from '@/content/enemies/data';
 import { EventBus } from '@/core/event-bus';
-import { SimulationWorld } from '../simulation/world';
 import { AudioManager } from '../presentation/audio';
+import { SimulationWorld } from '../simulation/world';
 
 export class DebugModal {
   private scene: Phaser.Scene;
@@ -15,7 +15,7 @@ export class DebugModal {
     this.onCloseCallback = onClose;
     this.container = scene.add.container(0, 0);
     this.container.setScrollFactor(0);
-    this.container.setDepth(400);
+    this.container.setDepth(500);
     this.container.setVisible(false);
   }
 
@@ -41,22 +41,15 @@ export class DebugModal {
     const width = this.scene.scale.width;
     const height = this.scene.scale.height;
 
-    // 半透明背景
-    const bg = this.scene.add.graphics();
-    bg.fillStyle(0x060b0c, 0.88);
-    bg.fillRect(0, 0, width, height);
-    bg.setScrollFactor(0);
-    this.container.add(bg);
-
-    // 阻挡穿透
-    const blocker = this.scene.add.zone(width / 2, height / 2, width, height);
+    // 1. 半透明黑色遮罩与防点击穿透
+    const blocker = this.scene.add.rectangle(width / 2, height / 2, width, height, 0x060b0c, 0.9);
     blocker.setScrollFactor(0);
     blocker.setInteractive();
     this.container.add(blocker);
 
-    // 测试主面板 (760 x 480)
-    const cardW = 760;
-    const cardH = 480;
+    // 2. 测试主面板卡片 (780 x 500)
+    const cardW = 780;
+    const cardH = 500;
     const cardGfx = this.scene.add.graphics();
     cardGfx.fillStyle(0x101a1d, 0.98);
     cardGfx.fillRoundedRect(width / 2 - cardW / 2, height / 2 - cardH / 2, cardW, cardH, 12);
@@ -65,7 +58,7 @@ export class DebugModal {
     cardGfx.setScrollFactor(0);
     this.container.add(cardGfx);
 
-    // 标题
+    // 3. 标题
     const title = this.scene.add.text(width / 2, height / 2 - cardH / 2 + 25, '🧪 神厨开发者与测试指令面板 (Debug Menu)', {
       fontSize: '20px',
       color: '#00f5d4',
@@ -75,7 +68,7 @@ export class DebugModal {
     title.setScrollFactor(0);
     this.container.add(title);
 
-    // 指令按钮网格布局
+    // 4. 指令按钮配置
     const btnConfigs = [
       {
         text: '👑 召唤 饕餮夜王 (最终Boss)',
@@ -86,19 +79,19 @@ export class DebugModal {
         },
       },
       {
-        text: '👑 召唤 蒸笼包大妖 (精英Boss)',
+        text: '🥟 召唤 蒸笼包大妖 (精英Boss)',
         color: 0xe76f51,
         action: () => {
           this.spawnBoss('giant_bao_demon');
-          this.popNotice('👑 蒸笼包大妖已降临！');
+          this.popNotice('🥟 蒸笼包大妖已降临！');
         },
       },
       {
-        text: '👑 召唤 离火石锅卫 (精英Boss)',
+        text: '🏮 召唤 离火石锅卫 (精英Boss)',
         color: 0xf4a261,
         action: () => {
           this.spawnBoss('flame_pot_guard');
-          this.popNotice('👑 离火石锅卫已降临！');
+          this.popNotice('🏮 离火石锅卫已降临！');
         },
       },
       {
@@ -120,7 +113,7 @@ export class DebugModal {
         action: () => {
           this.world.player.ingredients += 100;
           this.world.statistics.ingredientsEarned += 100;
-          this.popNotice('🥟 获得 100 食材！');
+          this.popNotice('🥟 获得 +100 食材！');
         },
       },
       {
@@ -129,7 +122,7 @@ export class DebugModal {
         textColor: '#060b0c',
         action: () => {
           this.world.player.heal(this.world.player.maxHp);
-          this.popNotice('💚 生命值已回满！');
+          this.popNotice('💚 生命值已完全回满！');
         },
       },
       {
@@ -168,12 +161,12 @@ export class DebugModal {
     ];
 
     const gridCols = 3;
-    const btnW = 220;
-    const btnH = 46;
+    const btnW = 224;
+    const btnH = 50;
     const gapX = 16;
     const gapY = 14;
     const gridStartX = width / 2 - (gridCols * btnW + (gridCols - 1) * gapX) / 2 + btnW / 2;
-    const gridStartY = height / 2 - cardH / 2 + 100;
+    const gridStartY = height / 2 - cardH / 2 + 105;
 
     for (let i = 0; i < btnConfigs.length; i++) {
       const cfg = btnConfigs[i];
@@ -182,13 +175,18 @@ export class DebugModal {
       const bx = gridStartX + col * (btnW + gapX);
       const by = gridStartY + row * (btnH + gapY);
 
-      const btnGfx = this.scene.add.graphics();
-      btnGfx.fillStyle(cfg.color, 1);
-      btnGfx.fillRoundedRect(bx - btnW / 2, by - btnH / 2, btnW, btnH, 8);
-      btnGfx.setScrollFactor(0);
-      this.container.add(btnGfx);
+      const btnContainer = this.scene.add.container(bx, by);
+      btnContainer.setScrollFactor(0);
+      btnContainer.setSize(btnW, btnH);
 
-      const text = this.scene.add.text(bx, by, cfg.text, {
+      const btnBg = this.scene.add.graphics();
+      btnBg.fillStyle(cfg.color, 1);
+      btnBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 8);
+      btnBg.lineStyle(1.5, 0xffffff, 0.4);
+      btnBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 8);
+      btnContainer.add(btnBg);
+
+      const text = this.scene.add.text(0, 0, cfg.text, {
         fontSize: '12px',
         color: cfg.textColor || '#ffffff',
         fontStyle: 'bold',
@@ -196,47 +194,87 @@ export class DebugModal {
         align: 'center',
       });
       text.setOrigin(0.5, 0.5);
-      text.setScrollFactor(0);
-      this.container.add(text);
+      btnContainer.add(text);
 
-      const zone = this.scene.add.zone(bx, by, btnW, btnH);
-      zone.setScrollFactor(0);
-      zone.setInteractive({ useHandCursor: true });
-      zone.on('pointerdown', () => {
-        AudioManager.getInstance().playSfx('sfx_click', 0.5);
+      const hitZone = this.scene.add.zone(0, 0, btnW, btnH);
+      hitZone.setScrollFactor(0);
+      hitZone.setInteractive({ useHandCursor: true });
+      btnContainer.add(hitZone);
+
+      hitZone.on('pointerover', () => {
+        btnContainer.setScale(1.04);
+        btnBg.clear();
+        btnBg.fillStyle(cfg.color, 1);
+        btnBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 8);
+        btnBg.lineStyle(2.5, 0x00f5d4, 1);
+        btnBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 8);
+      });
+
+      hitZone.on('pointerout', () => {
+        btnContainer.setScale(1.0);
+        btnBg.clear();
+        btnBg.fillStyle(cfg.color, 1);
+        btnBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 8);
+        btnBg.lineStyle(1.5, 0xffffff, 0.4);
+        btnBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 8);
+      });
+
+      hitZone.on('pointerdown', () => {
+        AudioManager.getInstance().playSfx('sfx_click', 0.6);
         cfg.action();
       });
-      this.container.add(zone);
+
+      this.container.add(btnContainer);
     }
 
-    // 底部继续与关闭
-    const closeW = 200;
-    const closeH = 38;
-    const closeY = height / 2 + cardH / 2 - 40;
+    // 5. 底部关闭测试面板按钮
+    const closeW = 220;
+    const closeH = 42;
+    const closeY = height / 2 + cardH / 2 - 45;
 
-    const closeGfx = this.scene.add.graphics();
-    closeGfx.fillStyle(0x3d5a5b, 1);
-    closeGfx.fillRoundedRect(width / 2 - closeW / 2, closeY - closeH / 2, closeW, closeH, 8);
-    closeGfx.setScrollFactor(0);
-    this.container.add(closeGfx);
+    const closeContainer = this.scene.add.container(width / 2, closeY);
+    closeContainer.setScrollFactor(0);
+    closeContainer.setSize(closeW, closeH);
 
-    const closeText = this.scene.add.text(width / 2, closeY, '关闭测试面板', {
+    const closeBg = this.scene.add.graphics();
+    closeBg.fillStyle(0x2a9d8f, 1);
+    closeBg.fillRoundedRect(-closeW / 2, -closeH / 2, closeW, closeH, 8);
+    closeContainer.add(closeBg);
+
+    const closeText = this.scene.add.text(0, 0, '关闭测试面板', {
       fontSize: '15px',
-      color: '#ffffff',
+      color: '#060b0c',
       fontStyle: 'bold',
     });
     closeText.setOrigin(0.5, 0.5);
-    closeText.setScrollFactor(0);
-    this.container.add(closeText);
+    closeContainer.add(closeText);
 
-    const closeZone = this.scene.add.zone(width / 2, closeY, closeW, closeH);
-    closeZone.setScrollFactor(0);
-    closeZone.setInteractive({ useHandCursor: true });
-    closeZone.on('pointerdown', () => {
+    const closeHit = this.scene.add.zone(0, 0, closeW, closeH);
+    closeHit.setScrollFactor(0);
+    closeHit.setInteractive({ useHandCursor: true });
+    closeContainer.add(closeHit);
+
+    closeHit.on('pointerover', () => {
+      closeContainer.setScale(1.04);
+      closeBg.clear();
+      closeBg.fillStyle(0x00f5d4, 1);
+      closeBg.fillRoundedRect(-closeW / 2, -closeH / 2, closeW, closeH, 8);
+    });
+
+    closeHit.on('pointerout', () => {
+      closeContainer.setScale(1.0);
+      closeBg.clear();
+      closeBg.fillStyle(0x2a9d8f, 1);
+      closeBg.fillRoundedRect(-closeW / 2, -closeH / 2, closeW, closeH, 8);
+    });
+
+    closeHit.on('pointerdown', () => {
+      AudioManager.getInstance().playSfx('sfx_click', 0.5);
       this.hide();
       this.world.resumeGame();
     });
-    this.container.add(closeZone);
+
+    this.container.add(closeContainer);
   }
 
   private spawnBoss(bossId: string): void {
@@ -254,21 +292,21 @@ export class DebugModal {
   }
 
   private popNotice(msg: string): void {
-    const notice = this.scene.add.text(this.scene.scale.width / 2, this.scene.scale.height / 2 + 190, msg, {
-      fontSize: '14px',
+    const notice = this.scene.add.text(this.scene.scale.width / 2, this.scene.scale.height / 2 + 195, msg, {
+      fontSize: '15px',
       color: '#ffd166',
       backgroundColor: '#060b0c',
-      padding: { x: 12, y: 6 },
+      padding: { x: 16, y: 8 },
     });
     notice.setOrigin(0.5, 0.5);
     notice.setScrollFactor(0);
-    notice.setDepth(450);
+    notice.setDepth(600);
 
     this.scene.tweens.add({
       targets: notice,
-      y: notice.y - 25,
+      y: notice.y - 30,
       alpha: 0,
-      duration: 1200,
+      duration: 1400,
       onComplete: () => notice.destroy(),
     });
   }

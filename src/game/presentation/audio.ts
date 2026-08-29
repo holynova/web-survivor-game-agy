@@ -91,11 +91,15 @@ export class AudioManager {
     this.sfxVolume = Math.max(0, Math.min(1, vol));
   }
 
-  public toggleMute(): boolean {
-    this.isMuted = !this.isMuted;
+  public setMuted(muted: boolean): void {
+    this.isMuted = muted;
     if (this.phaserSound) {
       this.phaserSound.mute = this.isMuted;
     }
+  }
+
+  public toggleMute(): boolean {
+    this.setMuted(!this.isMuted);
     return this.isMuted;
   }
 

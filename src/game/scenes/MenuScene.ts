@@ -27,10 +27,16 @@ export class MenuScene extends Phaser.Scene {
     AudioManager.getInstance().setSoundManager(this.sound);
     AudioManager.getInstance().playBgm('bgm_menu', true, 0.4);
 
-    // 1. 夜市背景氛围
+    // 1. 夜市背景氛围 (全屏高清插画 + 氛围遮罩)
     const bg = this.add.graphics();
     bg.fillStyle(0x0b1315, 1);
     bg.fillRect(0, 0, width, height);
+
+    if (this.textures.exists('cover_night_market')) {
+      const coverBg = this.add.image(width / 2, height / 2, 'cover_night_market');
+      coverBg.setDisplaySize(width, height);
+      coverBg.setAlpha(0.32);
+    }
 
     // 装饰暖光灯笼
     bg.fillStyle(0xe76f51, 0.12);

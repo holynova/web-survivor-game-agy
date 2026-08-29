@@ -90,6 +90,7 @@ export class PreloadScene extends Phaser.Scene {
     });
 
     // 4. 加载物品与掉落贴图
+    this.load.image('cover_night_market', './assets/ui/cover_night_market.jpg');
     this.load.image('item_skewer', './assets/items/item_skewer.png');
     this.load.image('item_food', './assets/items/item_food.png');
     this.load.image('item_sugar', './assets/items/item_sugar.png');
