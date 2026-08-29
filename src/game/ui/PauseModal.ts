@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import { formatTags } from '@/content/schemas/common';
 import { Player } from '../entities/Player';
-import { AudioManager } from '../presentation/audio';
 import { SimulationWorld } from '../simulation/world';
 
 export class PauseModal {
@@ -9,11 +8,13 @@ export class PauseModal {
   private container: Phaser.GameObjects.Container;
   private onResumeCallback: () => void;
   private onRestartCallback: () => void;
+  private onSettingsCallback?: () => void;
 
-  constructor(scene: Phaser.Scene, onResume: () => void, onRestart: () => void) {
+  constructor(scene: Phaser.Scene, onResume: () => void, onRestart: () => void, onSettings?: () => void) {
     this.scene = scene;
     this.onResumeCallback = onResume;
     this.onRestartCallback = onRestart;
+    this.onSettingsCallback = onSettings;
     this.container = scene.add.container(0, 0);
     this.container.setScrollFactor(0);
     this.container.setDepth(300);
@@ -316,32 +317,33 @@ export class PauseModal {
     });
     this.container.add(resZone);
 
-    // 2. 音效开关
-    const audioManager = AudioManager.getInstance();
-    const muteX = width / 2 - 90;
-    const muteGfx = this.scene.add.graphics();
-    muteGfx.fillStyle(0x3d5a5b, 1);
-    muteGfx.fillRoundedRect(muteX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-    muteGfx.setScrollFactor(0);
-    this.container.add(muteGfx);
+    // 2. 游戏设置
+    const setX = width / 2 - 90;
+    const setGfx = this.scene.add.graphics();
+    setGfx.fillStyle(0x3d5a5b, 1);
+    setGfx.fillRoundedRect(setX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+    setGfx.setScrollFactor(0);
+    this.container.add(setGfx);
 
-    const muteText = this.scene.add.text(muteX, btnY, '🔊 音效开关', {
+    const setText = this.scene.add.text(setX, btnY, '⚙️ 偏好设置', {
       fontSize: '14px',
-      color: '#ffffff',
+      color: '#ffd166',
       fontStyle: 'bold',
     });
-    muteText.setOrigin(0.5, 0.5);
-    muteText.setScrollFactor(0);
-    this.container.add(muteText);
+    setText.setOrigin(0.5, 0.5);
+    setText.setScrollFactor(0);
+    this.container.add(setText);
 
-    const muteZone = this.scene.add.zone(muteX, btnY, btnW, btnH);
-    muteZone.setScrollFactor(0);
-    muteZone.setInteractive({ useHandCursor: true });
-    muteZone.on('pointerdown', () => {
-      const isMuted = audioManager.toggleMute();
-      muteText.setText(isMuted ? '🔇 已静音' : '🔊 音效开启');
+    const setZone = this.scene.add.zone(setX, btnY, btnW, btnH);
+    setZone.setScrollFactor(0);
+    setZone.setInteractive({ useHandCursor: true });
+    setZone.on('pointerdown', () => {
+      this.hide();
+      if (this.onSettingsCallback) {
+        this.onSettingsCallback();
+      }
     });
-    this.container.add(muteZone);
+    this.container.add(setZone);
 
     // 3. 重新开始
     const restX = width / 2 + 90;

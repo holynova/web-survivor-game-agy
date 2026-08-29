@@ -16,6 +16,8 @@ export const SaveDataSchema = z.object({
     isMuted: z.boolean().default(false),
     damageNumbers: z.boolean().default(true),
     screenShake: z.boolean().default(true),
+    shakeIntensity: z.enum(['none', 'light', 'normal', 'heavy']).default('normal'),
+    flashEffects: z.boolean().default(true),
   }),
 });
 
@@ -37,6 +39,8 @@ export const DEFAULT_SAVE_DATA: SaveData = {
     isMuted: false,
     damageNumbers: true,
     screenShake: true,
+    shakeIntensity: 'normal',
+    flashEffects: true,
   },
 };
 

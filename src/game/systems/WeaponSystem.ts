@@ -106,7 +106,7 @@ export class WeaponSystem {
     }
 
     // 更新所有活跃投射物的位置与生命周期
-    this.updateProjectiles(projectilePool, player, dt);
+    this.updateProjectiles(projectilePool, player, dt, rng);
   }
 
   private fireWeapon(params: {
@@ -170,6 +170,133 @@ export class WeaponSystem {
         break;
       }
 
+      case 'boomerang': {
+        // 八卦游龙铲：回旋镖抛物线
+        const spreadAngle = totalCount > 1 ? 0.3 : 0;
+        const startAngle = targetDir.angle() - (spreadAngle * (totalCount - 1)) / 2;
+
+        for (let i = 0; i < totalCount; i++) {
+          const angle = startAngle + i * spreadAngle;
+          const vx = Math.cos(angle) * levelDef.projectileSpeed;
+          const vy = Math.sin(angle) * levelDef.projectileSpeed;
+
+          const proj = projectilePool.acquire();
+          proj.spawn({
+            weaponId: weaponDef.id,
+            attackPattern: 'boomerang',
+            x: player.position.x,
+            y: player.position.y,
+            vx,
+            vy,
+            damage: finalDamage,
+            isCrit,
+            pierce: 999,
+            range: levelDef.range,
+            durationMs: levelDef.durationMs,
+            radius: levelDef.radius,
+            color: customColor,
+            effects,
+            startX: player.position.x,
+            startY: player.position.y,
+          });
+        }
+        break;
+      }
+
+      case 'mortar': {
+        // 金玉爆米花机：高抛迫击炮弹道
+        for (let i = 0; i < totalCount; i++) {
+          const dist = levelDef.range * (0.6 + rng.nextFloat(0, 0.4));
+          const spreadAngle = targetDir.angle() + (rng.next() - 0.5) * 0.6;
+          const targetX = player.position.x + Math.cos(spreadAngle) * dist;
+          const targetY = player.position.y + Math.sin(spreadAngle) * dist;
+
+          const proj = projectilePool.acquire();
+          proj.spawn({
+            weaponId: weaponDef.id,
+            attackPattern: 'mortar',
+            x: player.position.x,
+            y: player.position.y,
+            vx: 0,
+            vy: 0,
+            damage: finalDamage,
+            isCrit,
+            pierce: 1,
+            range: levelDef.range,
+            durationMs: 850,
+            radius: levelDef.radius,
+            color: customColor,
+            effects,
+            startX: player.position.x,
+            startY: player.position.y,
+            targetX,
+            targetY,
+            isCluster: false,
+          });
+        }
+        break;
+      }
+
+      case 'beam': {
+        // 冰魄玉泉壶：持续极速喷涌茶雾洪流
+        const spreadAngle = totalCount > 1 ? 0.22 : 0;
+        const startAngle = targetDir.angle() - (spreadAngle * (totalCount - 1)) / 2;
+
+        for (let i = 0; i < totalCount; i++) {
+          const angle = startAngle + i * spreadAngle;
+          const vx = Math.cos(angle) * levelDef.projectileSpeed;
+          const vy = Math.sin(angle) * levelDef.projectileSpeed;
+
+          const proj = projectilePool.acquire();
+          proj.spawn({
+            weaponId: weaponDef.id,
+            attackPattern: 'beam',
+            x: player.position.x + Math.cos(angle) * 15,
+            y: player.position.y + Math.sin(angle) * 15,
+            vx,
+            vy,
+            damage: finalDamage,
+            isCrit,
+            pierce: 999,
+            range: levelDef.range,
+            durationMs: levelDef.durationMs,
+            radius: levelDef.radius,
+            color: customColor,
+            effects,
+          });
+        }
+        break;
+      }
+
+      case 'vortex': {
+        // 乾坤聚味瓮：前方释放微缩黑洞旋涡
+        for (let i = 0; i < totalCount; i++) {
+          const dist = 140 + i * 50;
+          const targetX = player.position.x + targetDir.x * dist + (rng.next() - 0.5) * 30;
+          const targetY = player.position.y + targetDir.y * dist + (rng.next() - 0.5) * 30;
+
+          const proj = projectilePool.acquire();
+          proj.spawn({
+            weaponId: weaponDef.id,
+            attackPattern: 'vortex',
+            x: targetX,
+            y: targetY,
+            vx: 0,
+            vy: 0,
+            damage: finalDamage,
+            isCrit,
+            pierce: 999,
+            range: levelDef.range,
+            durationMs: levelDef.durationMs,
+            radius: levelDef.radius,
+            color: customColor,
+            effects,
+            vortexPullForce: 160,
+          });
+        }
+        break;
+      }
+
       case 'arc': {
         // 近战弧形横扫
         const proj = projectilePool.acquire();
@@ -224,7 +351,7 @@ export class WeaponSystem {
       }
 
       case 'area': {
-        // 地面持续燃烧火域：朝最近怪物方向或周围铺设火海
+        // 地面持续燃烧火域
         for (let i = 0; i < totalCount; i++) {
           const spreadDist = ((i + 1) / (totalCount + 1)) * levelDef.range;
           const targetX = player.position.x + targetDir.x * spreadDist + (rng.next() - 0.5) * 32;
@@ -306,7 +433,6 @@ export class WeaponSystem {
           bestEnemy = e;
         }
       } else {
-        // nearest 及所有武器默认智能索敌：瞄准距玩家最近的活体妖怪
         if (dSq < bestDistSq) {
           bestDistSq = dSq;
           bestEnemy = e;
@@ -330,6 +456,7 @@ export class WeaponSystem {
     projectilePool: ObjectPool<Projectile>,
     player: Player,
     dt: number,
+    rng: SeededRNG,
   ): void {
     const dtMs = dt * 1000;
     const activeProjectiles = projectilePool.getActiveItems();
@@ -348,16 +475,89 @@ export class WeaponSystem {
         p.orbitAngle += p.orbitSpeed * dt;
         p.x = player.position.x + Math.cos(p.orbitAngle) * p.orbitRadius;
         p.y = player.position.y + Math.sin(p.orbitAngle) * p.orbitRadius;
+      } else if (p.attackPattern === 'boomerang') {
+        // 八卦游龙铲：飞出后返回大厨
+        if (!p.isReturning) {
+          p.x += p.velocity.x * dt;
+          p.y += p.velocity.y * dt;
+          p.distanceTraveled += p.velocity.length() * dt;
+
+          if (p.distanceTraveled >= p.maxDistance) {
+            p.isReturning = true;
+            p.hitEnemyIds.clear(); // 回程重新造成二次伤害判定
+          }
+        } else {
+          const dx = player.position.x - p.x;
+          const dy = player.position.y - p.y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < 20) {
+            projectilePool.release(p);
+            continue;
+          }
+
+          const returnSpeed = 520;
+          p.x += (dx / dist) * returnSpeed * dt;
+          p.y += (dy / dist) * returnSpeed * dt;
+        }
+      } else if (p.attackPattern === 'mortar') {
+        // 爆米花机：高抛抛物线 -> 落地爆散弹跳群
+        if (!p.isCluster) {
+          const totalDur = Math.max(0.1, p.totalDurationMs / 1000);
+          p.arcProgress += dt / totalDur;
+
+          if (p.arcProgress >= 1.0) {
+            // 落地爆炸！爆出 5 颗弹跳爆米花
+            for (let k = 0; k < 5; k++) {
+              const angle = (k / 5) * Math.PI * 2 + (rng.next() - 0.5) * 0.6;
+              const speed = 180 + rng.nextFloat(0, 80);
+              const cluster = projectilePool.acquire();
+              cluster.spawn({
+                weaponId: p.weaponId,
+                attackPattern: 'mortar',
+                x: p.targetX,
+                y: p.targetY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                damage: p.damage,
+                isCrit: p.isCrit,
+                pierce: 1,
+                range: 120,
+                durationMs: 800,
+                radius: 12,
+                color: '#ffe66d',
+                effects: p.effects,
+                isCluster: true,
+              });
+            }
+            projectilePool.release(p);
+            continue;
+          } else {
+            p.x = p.startX + (p.targetX - p.startX) * p.arcProgress;
+            const groundY = p.startY + (p.targetY - p.startY) * p.arcProgress;
+            const heightOffset = Math.sin(p.arcProgress * Math.PI) * 110;
+            p.y = groundY - heightOffset;
+          }
+        } else {
+          // 弹跳爆米花地面散落
+          p.x += p.velocity.x * dt;
+          p.y += p.velocity.y * dt;
+          p.velocity.x *= 0.93;
+          p.velocity.y *= 0.93;
+        }
+      } else if (p.attackPattern === 'vortex') {
+        // 乾坤聚味瓮：静态引力黑洞，持续判定
+        p.tickDamageTimerMs += dtMs;
       } else if (p.attackPattern === 'area') {
-        // 静态地面火域，更新周期伤害计时
+        // 静态地面火域
         p.tickDamageTimerMs += dtMs;
       } else if (p.attackPattern === 'summon') {
-        // 召唤物定期向玩家周围巡航或追击
+        // 召唤物巡航
         p.x += p.velocity.x * dt;
         p.y += p.velocity.y * dt;
         p.tickDamageTimerMs += dtMs;
       } else {
-        // 常规弹道移动
+        // 常规弹道 (含 beam / pierceLine / projectile)
         p.x += p.velocity.x * dt;
         p.y += p.velocity.y * dt;
         p.rangeRemaining -= p.velocity.length() * dt;

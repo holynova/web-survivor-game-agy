@@ -24,6 +24,10 @@ describe('Content Schemas & Data Integrity', () => {
     for (const weapon of Object.values(WEAPONS)) {
       expect(() => WeaponDefinitionSchema.parse(weapon)).not.toThrow();
     }
+    expect(WEAPONS.dragon_spatula.attackPattern).toBe('boomerang');
+    expect(WEAPONS.popcorn_popper.attackPattern).toBe('mortar');
+    expect(WEAPONS.jade_teapot.attackPattern).toBe('beam');
+    expect(WEAPONS.flavor_vortex.attackPattern).toBe('vortex');
   });
 
   it('should validate all items successfully', () => {

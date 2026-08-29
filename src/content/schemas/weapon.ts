@@ -8,6 +8,10 @@ export const AttackPatternSchema = z.enum([
   'area',
   'summon',
   'pierceLine',
+  'boomerang',
+  'mortar',
+  'beam',
+  'vortex',
 ]);
 
 export type AttackPattern = z.infer<typeof AttackPatternSchema>;

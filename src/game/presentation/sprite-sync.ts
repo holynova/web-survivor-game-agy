@@ -175,22 +175,34 @@ export class SpriteSyncSystem {
       const p = activeProjectiles[i];
       activeProjIds.add(p.id);
 
-      const colorNum = parseInt(p.color.replace('#', '0x'), 16);
-
-      // 1. 敌方妖火/毒丸弹道
+      // 1. 敌方妖火/毒丸弹道 (幽紫邪光菱形魔弹 + 妖气拖尾)
       if (p.isEnemy || p.weaponId === 'enemy_bullet') {
-        this.graphics.fillStyle(0xc77dff, 0.9);
-        this.graphics.fillCircle(p.x, p.y, p.radius);
+        const angle = Math.atan2(p.velocity.y, p.velocity.x);
+        this.graphics.fillStyle(0x7209b7, 0.9);
+        this.graphics.lineStyle(1.5, 0xc77dff, 0.9);
+
+        // 绘制锐利妖魔菱形弹头
+        const tipX = p.x + Math.cos(angle) * (p.radius + 3);
+        const tipY = p.y + Math.sin(angle) * (p.radius + 3);
+        const leftX = p.x + Math.cos(angle + 2.2) * p.radius;
+        const leftY = p.y + Math.sin(angle + 2.2) * p.radius;
+        const rightX = p.x + Math.cos(angle - 2.2) * p.radius;
+        const rightY = p.y + Math.sin(angle - 2.2) * p.radius;
+        const tailX = p.x - Math.cos(angle) * (p.radius * 0.8);
+        const tailY = p.y - Math.sin(angle) * (p.radius * 0.8);
+
+        this.graphics.fillTriangle(tipX, tipY, leftX, leftY, rightX, rightY);
+        this.graphics.fillTriangle(tailX, tailY, leftX, leftY, rightX, rightY);
+        this.graphics.strokeTriangle(tipX, tipY, leftX, leftY, rightX, rightY);
+
+        // 妖气光辉核心
         this.graphics.fillStyle(0xffffff, 0.95);
-        this.graphics.fillCircle(p.x, p.y, p.radius * 0.45);
-        this.graphics.lineStyle(2, 0x7209b7, 0.8);
-        this.graphics.strokeCircle(p.x, p.y, p.radius + 2);
+        this.graphics.fillRect(p.x - 2, p.y - 2, 4, 4);
         continue;
       }
 
       // 2. 近战厚重铁锅 (金色弧形斩刃与刀气)
       if (p.attackPattern === 'arc') {
-        this.graphics.fillStyle(colorNum, 0.35);
         this.graphics.lineStyle(4, 0xffd166, 0.95);
         this.graphics.beginPath();
         this.graphics.arc(
@@ -202,7 +214,6 @@ export class SpriteSyncSystem {
         );
         this.graphics.strokePath();
 
-        // 刀光外层残影
         this.graphics.lineStyle(1.5, 0xffffff, 0.7);
         this.graphics.beginPath();
         this.graphics.arc(
@@ -216,20 +227,116 @@ export class SpriteSyncSystem {
         continue;
       }
 
-      // 3. 猛火炉灶 (地火烈焰火域)
-      if (p.attackPattern === 'area') {
-        this.graphics.fillStyle(0xd90429, 0.35);
-        this.graphics.fillCircle(p.x, p.y, p.radius);
-        this.graphics.fillStyle(0xf77f00, 0.55);
-        this.graphics.fillCircle(p.x, p.y, p.radius * 0.7);
-        this.graphics.fillStyle(0xfcbf49, 0.75);
-        this.graphics.fillCircle(p.x, p.y, p.radius * 0.35);
-        this.graphics.fillStyle(0xffffff, 0.9);
-        this.graphics.fillCircle(p.x, p.y, p.radius * 0.15);
+      // 3. 八卦游龙铲 (旋转金龙飞铲 + 金色回旋尾流)
+      if (p.weaponId === 'dragon_spatula' || p.attackPattern === 'boomerang') {
+        let sprite = this.projectileSprites.get(p.id);
+        if (!sprite) {
+          sprite = this.scene.add.image(p.x, p.y, 'weapon_dragon_spatula');
+          sprite.setDepth(8);
+          sprite.setScale(p.isReturning ? 1.5 : 1.3);
+          this.projectileSprites.set(p.id, sprite);
+        }
+        sprite.setPosition(p.x, p.y);
+        sprite.rotation += p.isReturning ? 0.5 : 0.35;
+        sprite.setVisible(true);
+
+        // 回旋金色刀光流线
+        this.graphics.lineStyle(p.isReturning ? 3 : 2, p.isReturning ? 0xff006e : 0xffd166, 0.8);
+        this.graphics.lineBetween(
+          p.x - p.velocity.x * 0.04,
+          p.y - p.velocity.y * 0.04,
+          p.x,
+          p.y,
+        );
         continue;
       }
 
-      // 4. 精钢菜刀 (高速旋转像素菜刀精灵)
+      // 4. 金玉爆米花机 (高抛玉米粒 & 爆散弹跳金米花群)
+      if (p.weaponId === 'popcorn_popper' || p.attackPattern === 'mortar') {
+        if (!p.isCluster) {
+          // 主抛物弹：金黄玉米粒
+          this.graphics.fillStyle(0xffe66d, 1);
+          this.graphics.fillRect(p.x - 4, p.y - 4, 8, 8);
+          this.graphics.fillStyle(0xffffff, 0.9);
+          this.graphics.fillRect(p.x - 2, p.y - 2, 4, 4);
+
+          // 弹道投影
+          const groundY = p.startY + (p.targetY - p.startY) * p.arcProgress;
+          this.shadowGraphics.fillStyle(0x000000, 0.3);
+          this.shadowGraphics.fillEllipse(p.x, groundY, 8, 3);
+        } else {
+          // 爆裂出的弹跳爆米花碎片
+          this.graphics.fillStyle(0xffe66d, 0.95);
+          this.graphics.fillRect(p.x - 3, p.y - 3, 6, 6);
+          this.graphics.fillStyle(0xffffff, 1);
+          this.graphics.fillRect(p.x - 1, p.y - 1, 2, 2);
+        }
+        continue;
+      }
+
+      // 5. 冰魄玉泉壶 (极寒冰霜茶雾射线洪流)
+      if (p.weaponId === 'jade_teapot' || p.attackPattern === 'beam') {
+        const flightAngle = Math.atan2(p.velocity.y, p.velocity.x);
+        this.graphics.lineStyle(3, 0x48cae4, 0.85);
+        this.graphics.lineBetween(
+          p.x - Math.cos(flightAngle) * 20,
+          p.y - Math.sin(flightAngle) * 20,
+          p.x,
+          p.y,
+        );
+        this.graphics.fillStyle(0x90e0ef, 0.9);
+        this.graphics.fillRect(p.x - 3, p.y - 3, 6, 6);
+        this.graphics.fillStyle(0xffffff, 1);
+        this.graphics.fillRect(p.x - 1, p.y - 1, 2, 2);
+        continue;
+      }
+
+      // 6. 乾坤聚味瓮 (微缩聚味引力黑洞旋涡)
+      if (p.weaponId === 'flavor_vortex' || p.attackPattern === 'vortex') {
+        const time = this.scene.time.now * 0.005;
+        this.graphics.lineStyle(2, 0x9d4edd, 0.8);
+
+        // 旋转螺旋星云臂
+        for (let arm = 0; arm < 3; arm++) {
+          const armOffset = (arm * Math.PI * 2) / 3;
+          const a1 = time + armOffset;
+          const a2 = time + armOffset + 1.2;
+          this.graphics.lineBetween(
+            p.x + Math.cos(a1) * (p.radius * 0.3),
+            p.y + Math.sin(a1) * (p.radius * 0.3),
+            p.x + Math.cos(a2) * p.radius,
+            p.y + Math.sin(a2) * p.radius,
+          );
+        }
+
+        // 黑洞中心核心
+        this.graphics.fillStyle(0x060b0c, 1);
+        this.graphics.fillRect(p.x - 6, p.y - 6, 12, 12);
+        this.graphics.fillStyle(0x00f5d4, 1);
+        this.graphics.fillRect(p.x - 2, p.y - 2, 4, 4);
+        continue;
+      }
+
+      // 7. 猛火炉灶 (地火烈焰火域，层次分明的燃烧火舌)
+      if (p.attackPattern === 'area') {
+        const time = this.scene.time.now * 0.006;
+        for (let k = 0; k < 4; k++) {
+          const flameAngle = (k * Math.PI) / 2 + Math.sin(time + k) * 0.4;
+          const flameDist = (p.radius * 0.6) + Math.cos(time + k * 2) * 6;
+          const fx = p.x + Math.cos(flameAngle) * flameDist;
+          const fy = p.y + Math.sin(flameAngle) * flameDist;
+
+          this.graphics.fillStyle(0xd90429, 0.8);
+          this.graphics.fillRect(fx - 5, fy - 5, 10, 10);
+          this.graphics.fillStyle(0xf77f00, 0.9);
+          this.graphics.fillRect(fx - 3, fy - 3, 6, 6);
+          this.graphics.fillStyle(0xffd166, 1);
+          this.graphics.fillRect(fx - 1, fy - 1, 2, 2);
+        }
+        continue;
+      }
+
+      // 8. 精钢菜刀 (高速旋转像素菜刀精灵)
       if (p.weaponId === 'cleaver') {
         let sprite = this.projectileSprites.get(p.id);
         if (!sprite) {
@@ -242,13 +349,18 @@ export class SpriteSyncSystem {
         sprite.rotation += 0.35;
         sprite.setVisible(true);
 
-        // 旋转刀风残影
-        this.graphics.lineStyle(1.5, 0xf4a261, 0.4);
-        this.graphics.strokeCircle(p.x, p.y, 14);
+        // 旋转刀风金光流线
+        this.graphics.lineStyle(1.5, 0xf4a261, 0.6);
+        this.graphics.lineBetween(
+          p.x - p.velocity.x * 0.03,
+          p.y - p.velocity.y * 0.03,
+          p.x,
+          p.y,
+        );
         continue;
       }
 
-      // 5. 穿心竹签 (朝向飞行角度的像素飞签精灵)
+      // 9. 穿心竹签 (朝向飞行角度的像素飞签精灵)
       if (p.weaponId === 'bamboo_skewer' || p.attackPattern === 'pierceLine') {
         let sprite = this.projectileSprites.get(p.id);
         if (!sprite) {
@@ -273,7 +385,7 @@ export class SpriteSyncSystem {
         continue;
       }
 
-      // 6. 八宝调料瓶 (环绕调料药瓶精灵)
+      // 10. 八宝调料瓶 (环绕调料药瓶精灵)
       if (p.weaponId === 'seasoning_jar' || p.attackPattern === 'orbit') {
         let sprite = this.projectileSprites.get(p.id);
         if (!sprite) {
@@ -287,28 +399,26 @@ export class SpriteSyncSystem {
         sprite.setVisible(true);
 
         // 环绕香料星尘
-        this.graphics.fillStyle(0x2a9d8f, 0.6);
-        this.graphics.fillCircle(p.x, p.y, 4);
+        this.graphics.fillStyle(0x2a9d8f, 0.8);
+        this.graphics.fillRect(p.x - 2, p.y - 2, 4, 4);
         continue;
       }
 
-      // 7. 唤灵上菜铃 (帮厨小幽灵与音波光环)
+      // 11. 唤灵上菜铃 (帮厨小幽灵)
       if (p.weaponId === 'service_bell' || p.attackPattern === 'summon') {
         this.graphics.fillStyle(0x7209b7, 0.85);
-        this.graphics.fillCircle(p.x, p.y, p.radius);
+        this.graphics.fillRect(p.x - 8, p.y - 8, 16, 16);
         this.graphics.fillStyle(0x00f5d4, 1);
-        this.graphics.fillCircle(p.x - 3, p.y - 2, 2.5);
-        this.graphics.fillCircle(p.x + 3, p.y - 2, 2.5);
-        this.graphics.lineStyle(1.5, 0xffd166, 0.6);
-        this.graphics.strokeCircle(p.x, p.y, p.radius + 3);
+        this.graphics.fillRect(p.x - 4, p.y - 3, 3, 3);
+        this.graphics.fillRect(p.x + 1, p.y - 3, 3, 3);
         continue;
       }
 
-      // 8. 默认通用光弹
-      this.graphics.fillStyle(colorNum, 0.9);
-      this.graphics.fillCircle(p.x, p.y, p.radius);
-      this.graphics.fillStyle(0xffffff, 0.8);
-      this.graphics.fillCircle(p.x, p.y, p.radius * 0.4);
+      // 12. 默认晶石光弹 (纯多边形发光方晶)
+      this.graphics.fillStyle(0xffd166, 0.9);
+      this.graphics.fillRect(p.x - 4, p.y - 4, 8, 8);
+      this.graphics.fillStyle(0xffffff, 1);
+      this.graphics.fillRect(p.x - 2, p.y - 2, 4, 4);
     }
 
     // 清理非激活投射物精灵

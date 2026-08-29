@@ -68,11 +68,36 @@ test.describe('Web Survivor Full Workflow Visual Audit', () => {
     await page.waitForTimeout(600);
     await page.screenshot({ path: 'test-results/audit-06-pause-modal.png' });
 
+    // 环节 6.1：游戏画面与震动设置弹窗
+    await page.evaluate(() => {
+      const game = (window as any).__PHASER_GAME__;
+      const runScene = game.scene.getScene('RunScene');
+      if (runScene && runScene.settingsModal) {
+        runScene.pauseModal.hide();
+        runScene.settingsModal.show();
+      }
+    });
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: 'test-results/audit-11-settings-modal.png' });
+
+    // 环节 6.2：开发者测试指令弹窗 (Debug Menu)
+    await page.evaluate(() => {
+      const game = (window as any).__PHASER_GAME__;
+      const runScene = game.scene.getScene('RunScene');
+      if (runScene && runScene.debugModal) {
+        runScene.settingsModal.hide();
+        runScene.debugModal.show(runScene.world);
+      }
+    });
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: 'test-results/audit-12-debug-modal.png' });
+
     // 环节 7：营业结算界面 (ResultsScene)
     await page.evaluate(() => {
       const game = (window as any).__PHASER_GAME__;
       const runScene = game.scene.getScene('RunScene');
       if (runScene) {
+        runScene.debugModal?.hide();
         runScene.pauseModal?.hide();
         runScene.scene.start('ResultsScene', {
           isVictory: false,

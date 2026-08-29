@@ -94,14 +94,26 @@ export class CollisionSystem {
         const enemy = this.tempNearbyEnemies[j];
         if (!enemy.isActive) continue;
 
+        // 引力旋涡黑洞牵引物理
+        if (p.attackPattern === 'vortex') {
+          const vx = p.x - enemy.x;
+          const vy = p.y - enemy.y;
+          const vDist = Math.hypot(vx, vy);
+          if (vDist > 8) {
+            enemy.x += (vx / vDist) * p.vortexPullForce * dt;
+            enemy.y += (vy / vDist) * p.vortexPullForce * dt;
+          }
+        }
+
         // 避免单发穿透子弹在同一帧内对同一敌人重复判定
-        if (p.attackPattern !== 'area' && p.attackPattern !== 'orbit' && p.hitEnemyIds.has(enemy.id)) {
+        const isMultiTick = p.attackPattern === 'area' || p.attackPattern === 'orbit' || p.attackPattern === 'vortex' || p.attackPattern === 'beam';
+        if (!isMultiTick && p.hitEnemyIds.has(enemy.id)) {
           continue;
         }
 
-        // 持续区域/环绕/召唤物的冷却防重判定
-        if (p.attackPattern === 'area' || p.attackPattern === 'orbit') {
-          if (p.hitEnemyIds.has(enemy.id) && p.tickDamageTimerMs < 300) {
+        // 持续区域/环绕/旋涡的冷却防重判定
+        if (isMultiTick) {
+          if (p.hitEnemyIds.has(enemy.id) && p.tickDamageTimerMs < 250) {
             continue;
           }
         }
@@ -112,26 +124,28 @@ export class CollisionSystem {
         if (distSq <= rSum * rSum) {
           p.hitEnemyIds.add(enemy.id);
 
-          // 伤害与效果结算
-          const dmgDealt = enemy.takeDamage(p.damage);
+          // 伤害与效果结算 (回旋镖回程双倍伤害)
+          const isBoomerangReturn = p.attackPattern === 'boomerang' && p.isReturning;
+          const rawDamage = isBoomerangReturn ? Math.round(p.damage * 2) : p.damage;
+          const dmgDealt = enemy.takeDamage(rawDamage);
           stats.totalDamageDealt += dmgDealt;
           stats.damageByWeapon[p.weaponId] = (stats.damageByWeapon[p.weaponId] || 0) + dmgDealt;
 
           // 伤害跳字
           const dmgText = damageTextPool.acquire();
           dmgText.spawn(
-            String(dmgDealt),
+            isBoomerangReturn ? `💥 ${dmgDealt}` : String(dmgDealt),
             enemy.x,
             enemy.y,
-            p.isCrit ? '#ffd166' : '#ffffff',
-            p.isCrit,
+            isBoomerangReturn ? '#ff006e' : p.isCrit ? '#ffd166' : '#ffffff',
+            p.isCrit || isBoomerangReturn,
           );
 
           EventBus.getInstance().emit('entity:damaged', {
             targetId: enemy.id,
             sourceId: p.weaponId,
             damage: dmgDealt,
-            isCrit: p.isCrit,
+            isCrit: p.isCrit || isBoomerangReturn,
             x: enemy.x,
             y: enemy.y,
           });
@@ -151,10 +165,10 @@ export class CollisionSystem {
 
           // 触发武器附加效果 (击退、灼烧、减速)
           for (const eff of p.effects) {
-            if (eff.type === 'knockback') {
+            if (eff.type === 'knockback' && eff.value > 0) {
               const kx = enemy.x - player.position.x;
               const ky = enemy.y - player.position.y;
-              const kDist = Math.sqrt(kx * kx + ky * ky);
+              const kDist = Math.hypot(kx, ky);
               if (kDist > 0.001) {
                 enemy.applyKnockback(kx / kDist, ky / kDist, eff.value);
               }
@@ -180,7 +194,7 @@ export class CollisionSystem {
           }
 
           // 穿透损耗判定
-          if (p.attackPattern === 'projectile') {
+          if (p.attackPattern === 'projectile' || (p.attackPattern === 'mortar' && p.isCluster)) {
             p.pierceRemaining--;
             if (p.pierceRemaining <= 0) {
               projectilePool.release(p);

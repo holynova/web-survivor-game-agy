@@ -116,14 +116,14 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   private createPlaceholderTextures(): void {
-    // 粒子圆点
+    // 1. 粒子圆点
     const g = this.make.graphics({ x: 0, y: 0 });
     g.fillStyle(0xffffff, 1);
     g.fillCircle(8, 8, 8);
     g.generateTexture('particle_circle', 16, 16);
     g.destroy();
 
-    // 生成夜市深色石板地砖 (64x64)
+    // 2. 生成夜市深色石板地砖 (64x64)
     const floorG = this.make.graphics({ x: 0, y: 0 });
     floorG.fillStyle(0x0f181b, 1);
     floorG.fillRect(0, 0, 64, 64);
@@ -141,6 +141,98 @@ export class PreloadScene extends Phaser.Scene {
 
     floorG.generateTexture('floor_stone', 64, 64);
     floorG.destroy();
+
+    // 3. 生成八卦游龙铲武器图标 (weapon_dragon_spatula)
+    const spatG = this.make.graphics({ x: 0, y: 0 });
+    spatG.fillStyle(0xffd166, 1);
+    spatG.fillRect(4, 2, 8, 8);
+    spatG.fillStyle(0xf4a261, 1);
+    spatG.fillRect(6, 10, 4, 12);
+    spatG.fillStyle(0xe76f51, 1);
+    spatG.fillRect(7, 22, 2, 6);
+    spatG.generateTexture('weapon_dragon_spatula', 28, 28);
+    spatG.destroy();
+
+    // 4. 生成爆米花机图标 (weapon_popcorn_popper)
+    const popG = this.make.graphics({ x: 0, y: 0 });
+    popG.fillStyle(0xe76f51, 1);
+    popG.fillRect(4, 10, 16, 14);
+    popG.fillStyle(0xffe66d, 1);
+    popG.fillCircle(8, 6, 4);
+    popG.fillCircle(16, 6, 4);
+    popG.fillCircle(12, 3, 3);
+    popG.generateTexture('weapon_popcorn_popper', 24, 24);
+    popG.destroy();
+
+    // 5. 生成冰魄玉泉壶图标 (weapon_jade_teapot)
+    const teaG = this.make.graphics({ x: 0, y: 0 });
+    teaG.fillStyle(0x48cae4, 1);
+    teaG.fillCircle(12, 14, 8);
+    teaG.fillStyle(0x90e0ef, 1);
+    teaG.fillRect(6, 4, 12, 3);
+    teaG.fillStyle(0x0077b6, 1);
+    teaG.fillRect(18, 10, 5, 4);
+    teaG.generateTexture('weapon_jade_teapot', 24, 24);
+    teaG.destroy();
+
+    // 6. 生成乾坤聚味瓮图标 (weapon_flavor_vortex)
+    const vorG = this.make.graphics({ x: 0, y: 0 });
+    vorG.fillStyle(0x7209b7, 1);
+    vorG.fillCircle(12, 14, 9);
+    vorG.fillStyle(0x9d4edd, 1);
+    vorG.fillRect(7, 3, 10, 4);
+    vorG.fillStyle(0x00f5d4, 1);
+    vorG.fillCircle(12, 14, 3);
+    vorG.generateTexture('weapon_flavor_vortex', 24, 24);
+    vorG.destroy();
+
+    // 7. 厚重铁锅图标 (weapon_iron_wok)
+    const wokG = this.make.graphics({ x: 0, y: 0 });
+    wokG.fillStyle(0x3d5a5b, 1);
+    wokG.fillCircle(12, 14, 9);
+    wokG.fillStyle(0xe76f51, 1);
+    wokG.fillRect(2, 12, 4, 3);
+    wokG.fillRect(18, 12, 4, 3);
+    wokG.generateTexture('weapon_iron_wok', 24, 24);
+    wokG.destroy();
+
+    // 8. 猛火炉灶 (weapon_stove_flame)
+    const flameG = this.make.graphics({ x: 0, y: 0 });
+    flameG.fillStyle(0xd90429, 1);
+    flameG.fillTriangle(12, 2, 3, 22, 21, 22);
+    flameG.fillStyle(0xffd166, 1);
+    flameG.fillTriangle(12, 8, 6, 20, 18, 20);
+    flameG.generateTexture('weapon_stove_flame', 24, 24);
+    flameG.destroy();
+
+    // 9. 唤灵上菜铃 (weapon_service_bell)
+    const bellG = this.make.graphics({ x: 0, y: 0 });
+    bellG.fillStyle(0xffd166, 1);
+    bellG.fillTriangle(12, 4, 4, 20, 20, 20);
+    bellG.fillStyle(0xf4a261, 1);
+    bellG.fillRect(10, 20, 4, 3);
+    bellG.generateTexture('weapon_service_bell', 24, 24);
+    bellG.destroy();
+
+    // 10. 八宝调料瓶 (weapon_seasoning_jar)
+    const jarG = this.make.graphics({ x: 0, y: 0 });
+    jarG.fillStyle(0x2a9d8f, 1);
+    jarG.fillRect(6, 8, 12, 14);
+    jarG.fillStyle(0xf4a261, 1);
+    jarG.fillRect(9, 3, 6, 5);
+    jarG.generateTexture('weapon_seasoning_jar', 24, 24);
+    jarG.destroy();
+
+    // 11. 穿心竹签 (weapon_bamboo_skewer)
+    const skewG = this.make.graphics({ x: 0, y: 0 });
+    skewG.fillStyle(0xd4a373, 1);
+    skewG.fillRect(11, 2, 2, 20);
+    skewG.fillStyle(0xe76f51, 1);
+    skewG.fillRect(8, 6, 8, 4);
+    skewG.fillStyle(0x2a9d8f, 1);
+    skewG.fillRect(8, 12, 8, 4);
+    skewG.generateTexture('weapon_bamboo_skewer', 24, 24);
+    skewG.destroy();
   }
 
   public create(): void {

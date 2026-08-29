@@ -6,6 +6,7 @@ import { CharacterDefinition } from '@/content/schemas/character';
 import { WEAPONS } from '@/content/weapons/data';
 import { SaveManager } from '@/save/storage';
 import { AudioManager } from '../presentation/audio';
+import { SettingsModal } from '../ui/SettingsModal';
 
 export class MenuScene extends Phaser.Scene {
   private selectedCharacterId = 'wok_master';
@@ -52,10 +53,37 @@ export class MenuScene extends Phaser.Scene {
     });
     subTitle.setOrigin(0.5, 0);
 
-    // 3. 角色选择卡片
+    // 3. 右上角偏好设置按钮
+    const settingsModal = new SettingsModal(this);
+    const setBtnW = 100;
+    const setBtnH = 34;
+    const setBtnX = width - 70;
+    const setBtnY = 45;
+
+    const setGfx = this.add.graphics();
+    setGfx.fillStyle(0x19282f, 0.9);
+    setGfx.fillRoundedRect(setBtnX - setBtnW / 2, setBtnY - setBtnH / 2, setBtnW, setBtnH, 6);
+    setGfx.lineStyle(1.5, 0x3d5a5b, 1);
+    setGfx.strokeRoundedRect(setBtnX - setBtnW / 2, setBtnY - setBtnH / 2, setBtnW, setBtnH, 6);
+
+    const setText = this.add.text(setBtnX, setBtnY, '⚙️ 游戏设置', {
+      fontSize: '13px',
+      color: '#ffd166',
+      fontStyle: 'bold',
+    });
+    setText.setOrigin(0.5, 0.5);
+
+    const setZone = this.add.zone(setBtnX, setBtnY, setBtnW, setBtnH);
+    setZone.setInteractive({ useHandCursor: true });
+    setZone.on('pointerdown', () => {
+      AudioManager.getInstance().playSfx('sfx_click', 0.5);
+      settingsModal.show();
+    });
+
+    // 4. 角色选择卡片
     this.renderCharacterCards(width, height);
 
-    // 4. 五级难度选择器
+    // 5. 五级难度选择器
     this.renderDifficultySelector(width, height);
 
     // 5. 最高分与历史战绩
