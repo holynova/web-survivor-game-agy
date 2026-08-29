@@ -5,8 +5,9 @@ import { RECIPES } from '@/content/recipes/data';
 import { formatTags } from '@/content/schemas/common';
 import { WEAPONS } from '@/content/weapons/data';
 import { AudioManager } from '../presentation/audio';
+import { SYNERGIES } from '../systems/SynergySystem';
 
-type CodexTab = 'weapons' | 'items' | 'recipes' | 'enemies';
+type CodexTab = 'weapons' | 'items' | 'synergies' | 'recipes' | 'enemies';
 
 export class CodexModal {
   private scene: Phaser.Scene;
@@ -52,9 +53,9 @@ export class CodexModal {
     blocker.setInteractive();
     this.container.add(blocker);
 
-    // 2. 主面板卡片 (980 x 560)
-    const cardW = 980;
-    const cardH = 560;
+    // 2. 主面板卡片 (1020 x 570)
+    const cardW = 1020;
+    const cardH = 570;
     const cardGfx = this.scene.add.graphics();
     cardGfx.fillStyle(0x0e181c, 0.98);
     cardGfx.fillRoundedRect(width / 2 - cardW / 2, height / 2 - cardH / 2, cardW, cardH, 14);
@@ -64,7 +65,7 @@ export class CodexModal {
     this.container.add(cardGfx);
 
     // 3. 顶部标题
-    const title = this.scene.add.text(width / 2 - cardW / 2 + 30, height / 2 - cardH / 2 + 25, '📖 山海夜市 · 百味神魔全图鉴', {
+    const title = this.scene.add.text(width / 2 - cardW / 2 + 25, height / 2 - cardH / 2 + 22, '📖 山海夜市 · 百味神魔全图鉴', {
       fontSize: '22px',
       color: '#ffd166',
       fontStyle: 'bold',
@@ -76,18 +77,19 @@ export class CodexModal {
     const tabs: { id: CodexTab; label: string }[] = [
       { id: 'weapons', label: '🔪 厨具神兵' },
       { id: 'items', label: '🌿 口味秘方' },
+      { id: 'synergies', label: '✨ 流派羁绊' },
       { id: 'recipes', label: '🍲 绝品菜谱' },
       { id: 'enemies', label: '👹 幽冥妖怪' },
     ];
 
-    const tabStartX = width / 2 + 60;
-    const tabY = height / 2 - cardH / 2 + 38;
-    const tabW = 105;
-    const tabH = 32;
+    const tabStartX = width / 2 - 20;
+    const tabY = height / 2 - cardH / 2 + 35;
+    const tabW = 96;
+    const tabH = 30;
 
     for (let i = 0; i < tabs.length; i++) {
       const tab = tabs[i];
-      const tx = tabStartX + i * (tabW + 10);
+      const tx = tabStartX + i * (tabW + 8);
       const isCur = this.currentTab === tab.id;
 
       const tabContainer = this.scene.add.container(tx, tabY);
@@ -101,52 +103,46 @@ export class CodexModal {
       tabGfx.strokeRoundedRect(-tabW / 2, -tabH / 2, tabW, tabH, 6);
       tabContainer.add(tabGfx);
 
-      const tabTxt = this.scene.add.text(0, 0, tab.label, {
-        fontSize: '13px',
+      const tabText = this.scene.add.text(0, 0, tab.label, {
+        fontSize: '12px',
         color: isCur ? '#060b0c' : '#d8e2dc',
-        fontStyle: isCur ? 'bold' : 'normal',
+        fontStyle: 'bold',
       });
-      tabTxt.setOrigin(0.5, 0.5);
-      tabContainer.add(tabTxt);
+      tabText.setOrigin(0.5, 0.5);
+      tabContainer.add(tabText);
 
-      const hit = this.scene.add.zone(0, 0, tabW, tabH);
-      hit.setScrollFactor(0);
-      hit.setInteractive({ useHandCursor: true });
-      tabContainer.add(hit);
-
-      hit.on('pointerdown', () => {
-        if (this.currentTab !== tab.id) {
-          AudioManager.getInstance().playSfx('sfx_click', 0.5);
-          this.currentTab = tab.id;
-          this.selectedIndex = 0;
-          this.render();
-        }
+      const tabHit = this.scene.add.zone(0, 0, tabW, tabH);
+      tabHit.setScrollFactor(0);
+      tabHit.setInteractive({ useHandCursor: true });
+      tabHit.on('pointerdown', () => {
+        AudioManager.getInstance().playSfx('sfx_click', 0.4);
+        this.currentTab = tab.id;
+        this.selectedIndex = 0;
+        this.render();
       });
+      tabContainer.add(tabHit);
 
       this.container.add(tabContainer);
     }
 
-    // 5. 渲染图鉴列表区 (左侧) 与 详情展示区 (右侧)
-    this.renderContentArea(width, height, cardW, cardH);
-
-    // 6. 底部关闭按钮
-    const closeW = 160;
-    const closeH = 38;
-    const closeX = width / 2;
-    const closeY = height / 2 + cardH / 2 - 35;
+    // 5. 关闭按钮
+    const closeW = 90;
+    const closeH = 30;
+    const closeX = width / 2 + cardW / 2 - 60;
+    const closeY = tabY;
 
     const closeContainer = this.scene.add.container(closeX, closeY);
     closeContainer.setScrollFactor(0);
     closeContainer.setSize(closeW, closeH);
 
     const closeGfx = this.scene.add.graphics();
-    closeGfx.fillStyle(0x3d5a5b, 1);
-    closeGfx.fillRoundedRect(-closeW / 2, -closeH / 2, closeW, closeH, 8);
+    closeGfx.fillStyle(0xe76f51, 1);
+    closeGfx.fillRoundedRect(-closeW / 2, -closeH / 2, closeW, closeH, 6);
     closeContainer.add(closeGfx);
 
-    const closeTxt = this.scene.add.text(0, 0, '关闭图鉴', {
-      fontSize: '14px',
-      color: '#ffffff',
+    const closeTxt = this.scene.add.text(0, 0, '✕ 返回', {
+      fontSize: '13px',
+      color: '#060b0c',
       fontStyle: 'bold',
     });
     closeTxt.setOrigin(0.5, 0.5);
@@ -163,13 +159,16 @@ export class CodexModal {
     });
 
     this.container.add(closeContainer);
+
+    // 6. 渲染内容双栏
+    this.renderContentArea(width, height, cardW, cardH);
   }
 
   private renderContentArea(screenWidth: number, screenHeight: number, cardW: number, cardH: number): void {
-    const listX = screenWidth / 2 - cardW / 2 + 30;
-    const listY = screenHeight / 2 - cardH / 2 + 75;
-    const listW = 360;
-    const listH = cardH - 130;
+    const listX = screenWidth / 2 - cardW / 2 + 25;
+    const listY = screenHeight / 2 - cardH / 2 + 70;
+    const listW = 350;
+    const listH = cardH - 95;
 
     // 左侧列表背景
     const listGfx = this.scene.add.graphics();
@@ -180,9 +179,9 @@ export class CodexModal {
     this.container.add(listGfx);
 
     // 右侧详情背景
-    const detailX = listX + listW + 20;
+    const detailX = listX + listW + 18;
     const detailY = listY;
-    const detailW = cardW - listW - 80;
+    const detailW = cardW - listW - 68;
     const detailH = listH;
 
     const detailGfx = this.scene.add.graphics();
@@ -192,14 +191,12 @@ export class CodexModal {
     detailGfx.strokeRoundedRect(detailX, detailY, detailW, detailH, 8);
     this.container.add(detailGfx);
 
-    // 获取当前 Tab 的数据条目
     const items = this.getCurrentTabItems();
     if (this.selectedIndex >= items.length) {
       this.selectedIndex = 0;
     }
 
-    // 渲染左侧条目列表 (支持多行网格/列表)
-    const itemH = 40;
+    const itemH = 38;
     const maxVisible = Math.floor(listH / (itemH + 6));
 
     for (let i = 0; i < Math.min(items.length, maxVisible); i++) {
@@ -220,21 +217,21 @@ export class CodexModal {
       itemContainer.add(itGfx);
 
       // 图标
-      const icon = this.scene.add.image(-(listW - 16) / 2 + 22, 0, it.textureKey);
-      icon.setDisplaySize(24, 24);
+      const icon = this.scene.add.image(-(listW - 16) / 2 + 20, 0, it.textureKey);
+      icon.setDisplaySize(22, 22);
       itemContainer.add(icon);
 
       // 名称与副标
-      const nameTxt = this.scene.add.text(-(listW - 16) / 2 + 42, 0, it.name, {
-        fontSize: '13px',
+      const nameTxt = this.scene.add.text(-(listW - 16) / 2 + 38, 0, it.name, {
+        fontSize: '12px',
         color: isSel ? '#00f5d4' : '#e2ece9',
         fontStyle: isSel ? 'bold' : 'normal',
       });
       nameTxt.setOrigin(0, 0.5);
       itemContainer.add(nameTxt);
 
-      const subTxt = this.scene.add.text((listW - 16) / 2 - 12, 0, it.badge, {
-        fontSize: '11px',
+      const subTxt = this.scene.add.text((listW - 16) / 2 - 10, 0, it.badge, {
+        fontSize: '10px',
         color: '#f4a261',
       });
       subTxt.setOrigin(1, 0.5);
@@ -254,7 +251,6 @@ export class CodexModal {
       this.container.add(itemContainer);
     }
 
-    // 渲染右侧选定条目的详细档案
     const curItem = items[this.selectedIndex];
     if (curItem) {
       this.renderDetailPane(curItem, detailX, detailY, detailW, detailH);
@@ -264,22 +260,20 @@ export class CodexModal {
   private renderDetailPane(item: CodexEntry, dx: number, dy: number, dw: number, _dh: number): void {
     const cx = dx + dw / 2;
 
-    // 1. 顶部大尺寸物品展示台
-    const pedestalY = dy + 65;
+    const pedestalY = dy + 55;
     const pedGfx = this.scene.add.graphics();
     pedGfx.fillStyle(0x13242a, 0.95);
-    pedGfx.fillCircle(cx, pedestalY, 48);
+    pedGfx.fillCircle(cx, pedestalY, 40);
     pedGfx.lineStyle(2, 0x00f5d4, 0.8);
-    pedGfx.strokeCircle(cx, pedestalY, 48);
+    pedGfx.strokeCircle(cx, pedestalY, 40);
     this.container.add(pedGfx);
 
     const bigImg = this.scene.add.image(cx, pedestalY, item.textureKey);
-    bigImg.setDisplaySize(72, 72);
+    bigImg.setDisplaySize(60, 60);
     this.container.add(bigImg);
 
-    // 2. 标题与分类
-    const titleTxt = this.scene.add.text(cx, dy + 128, item.name, {
-      fontSize: '22px',
+    const titleTxt = this.scene.add.text(cx, dy + 105, item.name, {
+      fontSize: '20px',
       color: '#ffd166',
       fontStyle: 'bold',
       align: 'center',
@@ -287,8 +281,8 @@ export class CodexModal {
     titleTxt.setOrigin(0.5, 0);
     this.container.add(titleTxt);
 
-    const badgeTxt = this.scene.add.text(cx, dy + 158, `【${item.category}】 ${item.badge}`, {
-      fontSize: '12px',
+    const badgeTxt = this.scene.add.text(cx, dy + 132, `【${item.category}】 ${item.badge}`, {
+      fontSize: '11px',
       color: '#00f5d4',
       fontStyle: 'bold',
       align: 'center',
@@ -296,43 +290,48 @@ export class CodexModal {
     badgeTxt.setOrigin(0.5, 0);
     this.container.add(badgeTxt);
 
-    // 3. 核心机制与效果描述
     const descBoxW = dw - 40;
-    const descBoxY = dy + 185;
-    const descBoxH = 90;
+    const descGfx = this.scene.add.graphics();
+    descGfx.fillStyle(0x132025, 0.9);
+    descGfx.fillRoundedRect(cx - descBoxW / 2, dy + 155, descBoxW, 70, 6);
+    descGfx.lineStyle(1, 0x22363e, 0.8);
+    descGfx.strokeRoundedRect(cx - descBoxW / 2, dy + 155, descBoxW, 70, 6);
+    this.container.add(descGfx);
 
-    const descBoxGfx = this.scene.add.graphics();
-    descBoxGfx.fillStyle(0x0c1518, 0.9);
-    descBoxGfx.fillRoundedRect(dx + 20, descBoxY, descBoxW, descBoxH, 8);
-    descBoxGfx.lineStyle(1, 0x22363e, 0.8);
-    descBoxGfx.strokeRoundedRect(dx + 20, descBoxY, descBoxW, descBoxH, 8);
-    this.container.add(descBoxGfx);
-
-    const descTxt = this.scene.add.text(cx, descBoxY + descBoxH / 2, item.description, {
-      fontSize: '13px',
-      color: '#e2ece9',
+    const descTxt = this.scene.add.text(cx, dy + 165, item.description, {
+      fontSize: '12px',
+      color: '#d8e2dc',
       wordWrap: { width: descBoxW - 20, useAdvancedWrap: true },
       align: 'center',
-      lineSpacing: 5,
+      lineSpacing: 3,
     });
-    descTxt.setOrigin(0.5, 0.5);
+    descTxt.setOrigin(0.5, 0);
     this.container.add(descTxt);
 
-    // 4. 详细数值属性卡 / 升星信息
-    let statY = dy + 290;
+    let statStartY = dy + 238;
+    const statTitle = this.scene.add.text(dx + 25, statStartY, '📊 核心效果与流派阶梯:', {
+      fontSize: '13px',
+      color: '#ffd166',
+      fontStyle: 'bold',
+    });
+    this.container.add(statTitle);
+    statStartY += 22;
+
     for (const stat of item.stats) {
-      const statTxt = this.scene.add.text(dx + 30, statY, stat, {
-        fontSize: '12px',
-        color: '#f4a261',
+      const stTxt = this.scene.add.text(dx + 25, statStartY, `• ${stat}`, {
+        fontSize: '11px',
+        color: '#e2ece9',
+        wordWrap: { width: dw - 50, useAdvancedWrap: true },
+        lineSpacing: 2,
       });
-      this.container.add(statTxt);
-      statY += 24;
+      this.container.add(stTxt);
+      statStartY += 20;
     }
 
-    // 5. 底部典故/风味文本
     if (item.flavorText) {
-      const flavorTxt = this.scene.add.text(cx, dy + _dh - 30, `“ ${item.flavorText} ”`, {
-        fontSize: '12px',
+      const flavorY = dy + _dh - 32;
+      const flavorTxt = this.scene.add.text(cx, flavorY, `“${item.flavorText}”`, {
+        fontSize: '10px',
         color: '#8fa3a6',
         fontStyle: 'italic',
         align: 'center',
@@ -344,16 +343,11 @@ export class CodexModal {
 
   private formatAttackPattern(pattern: string): string {
     const map: Record<string, string> = {
-      arc: '扇面挥砍',
-      projectile: '直线飞掷',
-      pierceLine: '穿心贯透',
-      area: '猛火地烈',
+      slash: '近战挥砍',
+      pierceLine: '贯穿直线',
       orbit: '环绕护体',
       summon: '帮厨助阵',
-      boomerang: '回旋折返',
-      mortar: '抛物爆裂',
-      beam: '极寒射线',
-      vortex: '黑洞聚引',
+      area: '猛火地烈',
     };
     return map[pattern] || pattern;
   }
@@ -389,6 +383,17 @@ export class CodexModal {
           `🏷️ 秘方标签: ${formatTags(it.tags)}`,
         ],
         flavorText: '夜市老字号秘制佐料，滴滴入魂，激发生命潜能。',
+      }));
+    } else if (this.currentTab === 'synergies') {
+      return Object.values(SYNERGIES).map(s => ({
+        id: s.tag,
+        name: `${s.icon} ${s.name}`,
+        category: '流派羁绊',
+        badge: `2/4/6件套阶梯`,
+        textureKey: 'weapon_cleaver',
+        description: `装备带有【${s.name}】标签的神兵厨具，可激活阶梯式全局战斗特权！`,
+        stats: s.tiers.map((t, idx) => `阶梯 T${idx + 1} (${t.requiredCount}件): ${t.description}`),
+        flavorText: '同一流派神兵相互呼应，爆发出惊天动地的羁绊神力。',
       }));
     } else if (this.currentTab === 'recipes') {
       return Object.values(RECIPES).map(rcp => ({
@@ -435,9 +440,10 @@ export class CodexModal {
   private getItemTextureKey(itemId: string): string {
     if (itemId === 'dang_gui_herb') return 'item_herb';
     if (itemId === 'wolfberry_wine') return 'item_potion';
-    if (itemId === 'sugar_candy' || itemId === 'sugar') return 'item_sugar';
-    if (itemId === 'chili_oil' || itemId === 'soy_sauce' || itemId === 'vinegar') return 'item_potion';
-    if (itemId === 'skewer_bamboo') return 'item_skewer';
+    if (itemId === 'sugar_candy' || itemId === 'sugar' || itemId === 'cane_sugar' || itemId === 'lucky_cat') return 'item_sugar';
+    if (itemId === 'chili_oil' || itemId === 'soy_sauce' || itemId === 'vinegar' || itemId === 'aged_vinegar') return 'item_potion';
+    if (itemId === 'skewer_bamboo' || itemId === 'star_anise') return 'item_skewer';
+    if (itemId === 'bamboo_steamer' || itemId === 'iron_stomach') return 'item_food';
     return 'item_herb';
   }
 }

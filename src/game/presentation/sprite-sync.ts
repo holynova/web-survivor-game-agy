@@ -36,6 +36,8 @@ export class SpriteSyncSystem {
   private projectileSprites: Map<number, Phaser.GameObjects.Image | Phaser.GameObjects.Sprite> = new Map();
   private damageTexts: Map<number, Phaser.GameObjects.Text> = new Map();
   private tilemapBackground: Phaser.GameObjects.TileSprite | null = null;
+  private orbitingWeaponSprites: Phaser.GameObjects.Image[] = [];
+  private destructibleSprites: Map<number, Phaser.GameObjects.Image> = new Map();
 
   // 粒子与打击特效列表
   private particles: HitParticle[] = [];
@@ -89,34 +91,89 @@ export class SpriteSyncSystem {
     const player = world.player;
     if (!player) return;
 
-    // 1. 绘制环境边界
+    // 1. 绘制封闭夜市竞技场边界
     this.renderEnvironment();
 
-    // 2. 同步并渲染掉落物 (纯净像素食材，去掉圆圈)
+    // 2. 同步并渲染场地破坏物 (蒸笼与招财宝箱)
+    this.renderDestructibles(world);
+
+    // 3. 同步并渲染掉落物 (纯净像素食材)
     this.renderDrops(world);
 
-    // 3. 渲染投射物与攻击特效 (精美像素武器与弹道)
+    // 4. 渲染投射物与攻击特效
     this.renderProjectiles(world);
 
-    // 4. 同步并渲染怪物像素精灵、受击白闪与血条
+    // 5. 同步并渲染怪物像素精灵、受击白闪与血条
     this.renderEnemies(world);
 
-    // 5. 同步玩家角色精灵与状态 (去掉自身圆圈)
+    // 6. 同步玩家角色精灵与 6 把神兵悬浮环绕
     this.renderPlayer(player);
 
-    // 6. 渲染打击粒子与冲击波
+    // 7. 渲染打击粒子与冲击波
     this.updateAndRenderParticles(1 / 60);
 
-    // 7. 同步飘字跳字系统
+    // 8. 同步飘字跳字系统
     this.renderDamageTexts(world);
   }
 
   private renderEnvironment(): void {
-    // 地图边界发光警示线 (-1400 到 1400)
-    this.graphics.lineStyle(6, 0xe76f51, 0.7);
-    this.graphics.strokeRect(-1400, -1400, 2800, 2800);
-    this.graphics.lineStyle(2, 0xffbe0b, 0.5);
-    this.graphics.strokeRect(-1408, -1408, 2816, 2816);
+    // 封闭夜市擂台边界 (-800 到 800, -600 到 600)
+    this.graphics.lineStyle(8, 0xe76f51, 0.85);
+    this.graphics.strokeRect(-800, -600, 1600, 1200);
+    this.graphics.lineStyle(2, 0xffd166, 0.7);
+    this.graphics.strokeRect(-806, -606, 1612, 1212);
+
+    // 四角红灯笼柱点缀
+    const corners = [
+      { x: -800, y: -600 },
+      { x: 800, y: -600 },
+      { x: -800, y: 600 },
+      { x: 800, y: 600 },
+    ];
+    for (const c of corners) {
+      this.graphics.fillStyle(0xffbe0b, 1);
+      this.graphics.fillCircle(c.x, c.y, 8);
+      this.graphics.fillStyle(0xe76f51, 0.8);
+      this.graphics.fillCircle(c.x, c.y, 14);
+    }
+  }
+
+  private renderDestructibles(world: SimulationWorld): void {
+    if (!world.destructibles) return;
+    const activeIds = new Set<number>();
+
+    for (const crate of world.destructibles) {
+      if (!crate.isAlive) continue;
+      activeIds.add(crate.id);
+
+      let sprite = this.destructibleSprites.get(crate.id);
+      if (!sprite) {
+        const tex = crate.type === 'fortune_chest' ? 'item_sugar' : 'item_food';
+        sprite = this.scene.add.image(crate.position.x, crate.position.y, tex);
+        sprite.setDepth(5);
+        sprite.setScale(1.6);
+        this.destructibleSprites.set(crate.id, sprite);
+      }
+
+      sprite.setPosition(crate.position.x, crate.position.y);
+      if (crate.hitFlashTimer > 0) {
+        crate.hitFlashTimer -= 1 / 60;
+        sprite.setTint(0xffffff);
+      } else {
+        sprite.clearTint();
+      }
+
+      // 阴影
+      this.shadowGraphics.fillStyle(0x000000, 0.35);
+      this.shadowGraphics.fillEllipse(crate.position.x, crate.position.y + 12, crate.radius * 1.8, 8);
+    }
+
+    for (const [id, sprite] of this.destructibleSprites.entries()) {
+      if (!activeIds.has(id)) {
+        sprite.destroy();
+        this.destructibleSprites.delete(id);
+      }
+    }
   }
 
   private renderDrops(world: SimulationWorld): void {
@@ -615,6 +672,48 @@ export class SpriteSyncSystem {
     this.graphics.fillRect(px - pBarW / 2, py - player.radius - 16, pBarW, pBarH);
     this.graphics.fillStyle(0x2a9d8f, 1);
     this.graphics.fillRect(px - pBarW / 2, py - player.radius - 16, pBarW * pHpPct, pBarH);
+
+    // 渲染围绕玩家身周悬浮环绕的 1~6 把神兵武器 (Brotato 风格视觉)
+    const totalWeapons = player.weapons.length;
+    const baseOrbitAngle = (this.scene.time.now / 1000) * 1.6;
+
+    while (this.orbitingWeaponSprites.length < totalWeapons) {
+      const img = this.scene.add.image(0, 0, 'weapon_cleaver');
+      img.setDepth(7);
+      img.setScale(1.15);
+      this.orbitingWeaponSprites.push(img);
+    }
+    while (this.orbitingWeaponSprites.length > totalWeapons) {
+      const img = this.orbitingWeaponSprites.pop();
+      img?.destroy();
+    }
+
+    const orbitRadius = 36;
+    for (let i = 0; i < totalWeapons; i++) {
+      const wState = player.weapons[i];
+      const img = this.orbitingWeaponSprites[i];
+      const angle = baseOrbitAngle + (i / totalWeapons) * Math.PI * 2;
+      const wx = px + Math.cos(angle) * orbitRadius;
+      const wy = py + Math.sin(angle) * orbitRadius;
+
+      img.setPosition(wx, wy);
+
+      const assetKey = wState.definition.assetKey || `weapon_${wState.definition.id}`;
+      if (this.scene.textures.exists(assetKey)) {
+        img.setTexture(assetKey);
+      } else if (this.scene.textures.exists(`weapon_${wState.definition.id}`)) {
+        img.setTexture(`weapon_${wState.definition.id}`);
+      }
+
+      // 武器朝向：外向放射角 + 微妙晃动
+      img.setRotation(angle + Math.PI / 4);
+      img.setVisible(true);
+
+      // 微光环绕粒子
+      const col = parseInt((wState.definition.color || '#ffd166').replace('#', '0x'), 16) || 0xffd166;
+      this.graphics.fillStyle(col, 0.45);
+      this.graphics.fillRect(wx - 2, wy - 2, 4, 4);
+    }
   }
 
   private spawnHitSparks(x: number, y: number, isCrit: boolean, sourceId?: string): void {

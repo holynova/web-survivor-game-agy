@@ -1,13 +1,13 @@
 import Phaser from 'phaser';
 import { ITEMS } from '@/content/items/data';
-import { RECIPES } from '@/content/recipes/data';
-import { formatTags, Tag, TAG_NAMES } from '@/content/schemas/common';
+import { formatTags } from '@/content/schemas/common';
 import { ItemDefinition } from '@/content/schemas/item';
 import { WeaponDefinition } from '@/content/schemas/weapon';
 import { WEAPONS } from '@/content/weapons/data';
 import { EventBus } from '@/core/event-bus';
 import { SeededRNG } from '@/core/rng';
 import { Player } from '../entities/Player';
+import { SynergySystem } from '../systems/SynergySystem';
 
 interface ShopSlot {
   type: 'weapon' | 'item';
@@ -40,7 +40,6 @@ export class ShopModal {
     this.container.setVisible(true);
     this.refreshCost = 2;
 
-    // 每次进入商店若没有锁定商品，则生成新一轮货架
     this.generateSlots(player, rng, false);
     this.render(player, rng, waveNumber);
   }
@@ -54,19 +53,18 @@ export class ShopModal {
         continue;
       }
 
-      // 40% 概率刷出武器，60% 概率刷出食材道具
-      const isWeapon = rng.next() < 0.4;
+      // 45% 概率刷出武器，55% 概率刷出食材秘方
+      const isWeapon = rng.next() < 0.45;
       if (isWeapon) {
         let chosenWeapon: WeaponDefinition;
         if (player && player.weapons.length >= player.maxWeapons) {
-          // 槽位已满，仅刷出当前已拥有且未满级的武器升星
+          // 槽位已满，仅刷出当前已拥有且未满级的武器升阶
           const upgradeable = player.weapons
             .filter(w => w.level < w.definition.levels.length)
             .map(w => w.definition);
           if (upgradeable.length > 0) {
             chosenWeapon = rng.pick(upgradeable);
           } else {
-            // 现有武器全满级，则转为刷出食材道具
             const chosenItem = rng.pick(Object.values(ITEMS));
             newSlots.push({
               type: 'item',
@@ -110,54 +108,48 @@ export class ShopModal {
     const width = this.scene.scale.width;
     const height = this.scene.scale.height;
 
-    // 半透明遮罩
-    const bg = this.scene.add.graphics();
-    bg.fillStyle(0x060b0c, 0.92);
-    bg.fillRect(0, 0, width, height);
+    // 1. 半透明遮罩
+    const bg = this.scene.add.rectangle(width / 2, height / 2, width, height, 0x060b0c, 0.95);
     bg.setScrollFactor(0);
+    bg.setInteractive();
     this.container.add(bg);
 
-    // 阻挡背景穿透
-    const blockerZone = this.scene.add.zone(width / 2, height / 2, width, height);
-    blockerZone.setScrollFactor(0);
-    blockerZone.setInteractive();
-    this.container.add(blockerZone);
-
-    // 顶部状态栏
+    // 2. 顶部状态栏 (夜市营收与收获利息)
     const title = this.scene.add.text(
       width / 2,
-      40,
+      30,
       `🏮 夜市整备铺 · 第 ${waveNumber} 波战前补给 🏮`,
       {
-        fontSize: '26px',
+        fontSize: '24px',
         color: '#ffd166',
         fontStyle: 'bold',
       },
     );
     title.setOrigin(0.5, 0);
-    title.setScrollFactor(0);
     this.container.add(title);
 
     const subTitle = this.scene.add.text(
       width / 2,
-      78,
-      `拥有食材: 🥟 ${player.ingredients}  |  生命: ${Math.round(player.currentHp)}/${player.maxHp}  |  已配武器: 🔪 ${player.weapons.length}/${player.maxWeapons}`,
+      64,
+      `🥟 拥有食材: ${player.ingredients}  |  🌾 营收收获: +${player.harvest}/波  |  🍀 幸运: ${player.luck}  |  🔪 已配武器: ${player.weapons.length}/${player.maxWeapons}`,
       {
-        fontSize: '14px',
-        color: '#8fa3a6',
+        fontSize: '13px',
+        color: '#00f5d4',
       },
     );
     subTitle.setOrigin(0.5, 0);
-    subTitle.setScrollFactor(0);
     this.container.add(subTitle);
 
-    // 4 个货架商品卡片
-    const cardW = 240;
-    const cardH = 340;
-    const gap = 20;
+    // 3. 上方：已装备神兵管理栏（支持变卖回收与升阶）
+    this.renderEquippedWeaponsBar(player, width, 95);
+
+    // 4. 中间：4 个货架商品卡片
+    const cardW = 245;
+    const cardH = 300;
+    const gap = 16;
     const totalW = 4 * cardW + 3 * gap;
     const startX = (width - totalW) / 2 + cardW / 2;
-    const cardY = height / 2 - 10;
+    const cardY = height / 2 + 50;
 
     for (let i = 0; i < 4; i++) {
       const slot = this.slots[i];
@@ -167,8 +159,87 @@ export class ShopModal {
       this.container.add(cardContainer);
     }
 
-    // 底部刷新与准备就绪栏
+    // 5. 底部流派羁绊条与准备就绪栏
     this.renderBottomBar(player, rng, waveNumber);
+  }
+
+  private renderEquippedWeaponsBar(player: Player, screenW: number, y: number): void {
+    const barW = 1040;
+    const barH = 75;
+    const barGfx = this.scene.add.graphics();
+    barGfx.fillStyle(0x0c1619, 0.9);
+    barGfx.fillRoundedRect(screenW / 2 - barW / 2, y, barW, barH, 8);
+    barGfx.lineStyle(1, 0x22363e, 0.8);
+    barGfx.strokeRoundedRect(screenW / 2 - barW / 2, y, barW, barH, 8);
+    this.container.add(barGfx);
+
+    const barTitle = this.scene.add.text(screenW / 2 - barW / 2 + 16, y + 8, `🎒 厨神背包 (点击武器可折价变卖回收食材)`, {
+      fontSize: '12px',
+      color: '#8fa3a6',
+      fontStyle: 'bold',
+    });
+    this.container.add(barTitle);
+
+    // 渲染 6 个武器槽位
+    const slotW = 155;
+    const slotH = 46;
+    const startX = screenW / 2 - barW / 2 + 16 + slotW / 2;
+    const slotY = y + 45;
+
+    for (let i = 0; i < player.maxWeapons; i++) {
+      const wState = player.weapons[i];
+      const cx = startX + i * (slotW + 12);
+
+      const slotGfx = this.scene.add.graphics();
+      slotGfx.fillStyle(wState ? 0x14252c : 0x091012, 0.9);
+      slotGfx.fillRoundedRect(cx - slotW / 2, slotY - slotH / 2, slotW, slotH, 6);
+      slotGfx.lineStyle(1, wState ? 0x2a9d8f : 0x1f2e33, 1);
+      slotGfx.strokeRoundedRect(cx - slotW / 2, slotY - slotH / 2, slotW, slotH, 6);
+      this.container.add(slotGfx);
+
+      if (wState) {
+        // 武器名与等级
+        const wTxt = this.scene.add.text(cx - slotW / 2 + 8, slotY - 12, `${wState.definition.nameKey}`, {
+          fontSize: '11px',
+          color: wState.definition.color || '#ffd166',
+          fontStyle: 'bold',
+        });
+        this.container.add(wTxt);
+
+        const lvlTxt = this.scene.add.text(cx + slotW / 2 - 8, slotY - 12, `Lv.${wState.level}`, {
+          fontSize: '10px',
+          color: '#00f5d4',
+          fontStyle: 'bold',
+        });
+        lvlTxt.setOrigin(1, 0);
+        this.container.add(lvlTxt);
+
+        // 变卖按钮
+        const sellValue = Math.max(3, Math.floor((wState.definition.cost || 10) * 0.7 * wState.level));
+        const sellBtn = this.scene.add.text(cx, slotY + 9, `♻️ 变卖 (+${sellValue}🥟)`, {
+          fontSize: '10px',
+          color: '#e76f51',
+          backgroundColor: '#0a1012',
+          padding: { x: 4, y: 1 },
+        });
+        sellBtn.setOrigin(0.5, 0.5);
+        sellBtn.setInteractive({ useHandCursor: true });
+        sellBtn.on('pointerdown', () => {
+          player.removeWeapon(i);
+          player.ingredients += sellValue;
+          EventBus.getInstance().emit('sound:play', { key: 'sfx_coin', volume: 0.8 });
+          this.render(player, this.scene.registry.get('rng') || new SeededRNG(1), 1);
+        });
+        this.container.add(sellBtn);
+      } else {
+        const emptyTxt = this.scene.add.text(cx, slotY, `空槽位 ${i + 1}`, {
+          fontSize: '11px',
+          color: '#3d5057',
+        });
+        emptyTxt.setOrigin(0.5, 0.5);
+        this.container.add(emptyTxt);
+      }
+    }
   }
 
   private renderCard(
@@ -185,21 +256,19 @@ export class ShopModal {
     card.setScrollFactor(0);
 
     const bgGfx = this.scene.add.graphics();
-    bgGfx.fillStyle(slot.isBought ? 0x091012 : 0x121c20, 0.95);
+    bgGfx.fillStyle(slot.isBought ? 0x091012 : 0x101a1e, 0.95);
     bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 10);
-    bgGfx.lineStyle(1.5, slot.isLocked ? 0xffd166 : 0x3d5a5b, 1);
+    bgGfx.lineStyle(1.5, slot.isLocked ? 0xffd166 : 0x2f4850, 1);
     bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
-    bgGfx.setScrollFactor(0);
     card.add(bgGfx);
 
     if (slot.isBought) {
       const soldText = this.scene.add.text(0, 0, '【已采购】', {
-        fontSize: '20px',
+        fontSize: '18px',
         color: '#6c757d',
         fontStyle: 'bold',
       });
       soldText.setOrigin(0.5, 0.5);
-      soldText.setScrollFactor(0);
       card.add(soldText);
       return card;
     }
@@ -222,13 +291,13 @@ export class ShopModal {
           isMergeUpgrade = true;
           const nextLvl = existing.level + 1;
           descStr = slot.weapon!.levels[nextLvl - 1].descriptionKey;
-          tagStr = `【合成升星】Lv.${existing.level} ➔ Lv.${nextLvl}`;
+          tagStr = `【升阶合成】Lv.${existing.level} ➔ Lv.${nextLvl}`;
         }
       } else {
         if (player.weapons.length >= player.maxWeapons) {
           isFullBlocked = true;
           tagStr = `【槽位已满 (${player.weapons.length}/${player.maxWeapons})】`;
-          descStr = `已装备 ${player.maxWeapons} 把武器，无法再配新厨具`;
+          descStr = `已装备 ${player.maxWeapons} 把武器，请先变卖闲置厨具`;
         } else {
           descStr = slot.weapon!.levels[0].descriptionKey;
           tagStr = `新增神兵 · ${formatTags(slot.weapon!.tags)}`;
@@ -237,56 +306,51 @@ export class ShopModal {
     } else {
       const stacks = player.getItemCount(slot.item!.id);
       descStr = slot.item!.descriptionKey;
-      tagStr = `口味 · ${formatTags(slot.item!.tags)} (已有 ${stacks}/${slot.item!.maxStacks})`;
+      tagStr = `口味 · ${formatTags(slot.item!.tags)} (${stacks}/${slot.item!.maxStacks})`;
     }
 
-    // 分类
-    const tagText = this.scene.add.text(0, -h / 2 + 20, tagStr, {
-      fontSize: '13px',
-      color: isMergeUpgrade ? '#ffd166' : isFullBlocked ? '#e76f51' : '#2a9d8f',
+    // 分类标签
+    const tagText = this.scene.add.text(0, -h / 2 + 16, tagStr, {
+      fontSize: '12px',
+      color: isMergeUpgrade ? '#ffd166' : isFullBlocked ? '#e76f51' : '#00f5d4',
       fontStyle: 'bold',
-      wordWrap: { width: w - 24, useAdvancedWrap: true },
+      wordWrap: { width: w - 20, useAdvancedWrap: true },
       align: 'center',
     });
     tagText.setOrigin(0.5, 0);
-    tagText.setScrollFactor(0);
     card.add(tagText);
 
     // 标题
-    const titleText = this.scene.add.text(0, -h / 2 + 48, titleStr, {
-      fontSize: '18px',
+    const titleText = this.scene.add.text(0, -h / 2 + 42, titleStr, {
+      fontSize: '17px',
       color: slot.type === 'weapon' ? slot.weapon!.color : slot.item!.color,
       fontStyle: 'bold',
-      wordWrap: { width: w - 24, useAdvancedWrap: true },
       align: 'center',
     });
     titleText.setOrigin(0.5, 0);
-    titleText.setScrollFactor(0);
     card.add(titleText);
 
     // 描述
-    const descText = this.scene.add.text(0, -h / 2 + 95, descStr, {
-      fontSize: '13px',
+    const descText = this.scene.add.text(0, -h / 2 + 82, descStr, {
+      fontSize: '12px',
       color: '#d8e2dc',
-      wordWrap: { width: w - 28, useAdvancedWrap: true },
+      wordWrap: { width: w - 24, useAdvancedWrap: true },
       align: 'center',
-      lineSpacing: 5,
+      lineSpacing: 4,
     });
     descText.setOrigin(0.5, 0);
-    descText.setScrollFactor(0);
     card.add(descText);
 
     // 锁定按钮
     const lockBtn = this.scene.add.text(
-      -w / 2 + 18,
-      h / 2 - 30,
+      -w / 2 + 16,
+      h / 2 - 28,
       slot.isLocked ? '🔒 已锁' : '🔓 锁定',
       {
-        fontSize: '13px',
+        fontSize: '12px',
         color: slot.isLocked ? '#ffd166' : '#8fa3a6',
       },
     );
-    lockBtn.setScrollFactor(0);
     lockBtn.setInteractive({ useHandCursor: true });
     lockBtn.on('pointerdown', () => {
       slot.isLocked = !slot.isLocked;
@@ -301,23 +365,20 @@ export class ShopModal {
     else if (isMaxLevelBlocked) buyBtnLabel = '已满级';
 
     const buyBtnGfx = this.scene.add.graphics();
-    buyBtnGfx.fillStyle(canAfford ? 0xe76f51 : 0x334148, 1);
-    buyBtnGfx.fillRoundedRect(w / 2 - 105, h / 2 - 46, 92, 32, 6);
-    buyBtnGfx.setScrollFactor(0);
+    buyBtnGfx.fillStyle(canAfford ? 0xe76f51 : 0x2a363c, 1);
+    buyBtnGfx.fillRoundedRect(w / 2 - 96, h / 2 - 42, 86, 30, 6);
     card.add(buyBtnGfx);
 
-    const buyBtnText = this.scene.add.text(w / 2 - 59, h / 2 - 30, buyBtnLabel, {
-      fontSize: isFullBlocked || isMaxLevelBlocked ? '12px' : '14px',
+    const buyBtnText = this.scene.add.text(w / 2 - 53, h / 2 - 27, buyBtnLabel, {
+      fontSize: isFullBlocked || isMaxLevelBlocked ? '11px' : '13px',
       color: canAfford ? '#ffffff' : '#8fa3a6',
       fontStyle: 'bold',
     });
     buyBtnText.setOrigin(0.5, 0.5);
-    buyBtnText.setScrollFactor(0);
     card.add(buyBtnText);
 
     if (canAfford) {
-      const buyZone = this.scene.add.zone(w / 2 - 59, h / 2 - 30, 92, 32);
-      buyZone.setScrollFactor(0);
+      const buyZone = this.scene.add.zone(w / 2 - 53, h / 2 - 27, 86, 30);
       buyZone.setInteractive({ useHandCursor: true });
       buyZone.on('pointerdown', () => {
         player.ingredients -= slot.cost;
@@ -342,98 +403,78 @@ export class ShopModal {
     const width = this.scene.scale.width;
     const height = this.scene.scale.height;
 
-    // 1. 刷新按钮
-    const refreshBtnW = 200;
-    const refreshBtnH = 44;
-    const rx = width / 2 - 160;
-    const ry = height - 65;
+    // 1. 流派羁绊提示行
+    const synergies = SynergySystem.getActiveSynergies(player);
+    const synTextList = synergies.map(s => `${s.synergy.icon} ${s.synergy.name} (${s.count}件)`);
+    const synSummary = synTextList.length > 0 ? synTextList.join('  ·  ') : '暂无激活的流派套装羁绊';
+
+    const synLabel = this.scene.add.text(width / 2, height - 76, `✨ 当前神兵流派共鸣: ${synSummary}`, {
+      fontSize: '12px',
+      color: '#ffd166',
+      fontStyle: 'bold',
+    });
+    synLabel.setOrigin(0.5, 0);
+    this.container.add(synLabel);
+
+    // 2. 刷新货架按钮
+    const refW = 180;
+    const refH = 38;
+    const rx = width / 2 - 130;
+    const ry = height - 32;
 
     const canRefresh = player.ingredients >= this.refreshCost;
     const refGfx = this.scene.add.graphics();
-    refGfx.fillStyle(canRefresh ? 0x2a9d8f : 0x444444, 1);
-    refGfx.fillRoundedRect(rx - refreshBtnW / 2, ry - refreshBtnH / 2, refreshBtnW, refreshBtnH, 8);
-    refGfx.setScrollFactor(0);
+    refGfx.fillStyle(canRefresh ? 0x2a9d8f : 0x2a363c, 1);
+    refGfx.fillRoundedRect(rx - refW / 2, ry - refH / 2, refW, refH, 8);
     this.container.add(refGfx);
 
-    const refText = this.scene.add.text(rx, ry, `🔄 刷新货架 (🥟 ${this.refreshCost})`, {
-      fontSize: '15px',
-      color: '#ffffff',
+    const refText = this.scene.add.text(rx, ry, `🔄 进货刷新 (🥟 ${this.refreshCost})`, {
+      fontSize: '13px',
+      color: canRefresh ? '#060b0c' : '#8fa3a6',
       fontStyle: 'bold',
     });
     refText.setOrigin(0.5, 0.5);
-    refText.setScrollFactor(0);
     this.container.add(refText);
 
     if (canRefresh) {
-      const refZone = this.scene.add.zone(rx, ry, refreshBtnW, refreshBtnH);
-      refZone.setScrollFactor(0);
+      const refZone = this.scene.add.zone(rx, ry, refW, refH);
       refZone.setInteractive({ useHandCursor: true });
       refZone.on('pointerdown', () => {
         player.ingredients -= this.refreshCost;
-        this.refreshCost += 1;
+        this.refreshCost += 1; // 阶梯刷新递增
         this.generateSlots(player, rng, true);
+        EventBus.getInstance().emit('sound:play', { key: 'sfx_click', volume: 0.5 });
         this.render(player, rng, waveNumber);
       });
       this.container.add(refZone);
     }
 
-    // 2. 出摊迎战按钮
-    const startBtnW = 200;
-    const startBtnH = 44;
-    const sx = width / 2 + 160;
-    const sy = height - 65;
+    // 3. 出摊迎战按钮
+    const rdyW = 200;
+    const rdyH = 38;
+    const rdx = width / 2 + 130;
+    const rdy = height - 32;
 
-    const startGfx = this.scene.add.graphics();
-    startGfx.fillStyle(0xe76f51, 1);
-    startGfx.fillRoundedRect(sx - startBtnW / 2, sy - startBtnH / 2, startBtnW, startBtnH, 8);
-    startGfx.setScrollFactor(0);
-    this.container.add(startGfx);
+    const rdyGfx = this.scene.add.graphics();
+    rdyGfx.fillStyle(0xe76f51, 1);
+    rdyGfx.fillRoundedRect(rdx - rdyW / 2, rdy - rdyH / 2, rdyW, rdyH, 8);
+    this.container.add(rdyGfx);
 
-    const startText = this.scene.add.text(sx, sy, '⚔️ 出摊迎战！', {
-      fontSize: '16px',
+    const rdyText = this.scene.add.text(rdx, rdy, '🔥 准备就绪 · 出摊迎战 🔥', {
+      fontSize: '14px',
       color: '#ffffff',
       fontStyle: 'bold',
     });
-    startText.setOrigin(0.5, 0.5);
-    startText.setScrollFactor(0);
-    this.container.add(startText);
+    rdyText.setOrigin(0.5, 0.5);
+    this.container.add(rdyText);
 
-    const startZone = this.scene.add.zone(sx, sy, startBtnW, startBtnH);
-    startZone.setScrollFactor(0);
-    startZone.setInteractive({ useHandCursor: true });
-    startZone.on('pointerdown', () => {
+    const rdyZone = this.scene.add.zone(rdx, rdy, rdyW, rdyH);
+    rdyZone.setInteractive({ useHandCursor: true });
+    rdyZone.on('pointerdown', () => {
       this.hide();
       this.onReadyCallback();
     });
-    this.container.add(startZone);
-
-    // 3. 实时菜谱进度提示
-    const recipeHints = Object.values(RECIPES)
-      .filter(r => !player.activeRecipes.some(ar => ar.id === r.id))
-      .map(r => {
-        const wName = r.requirement.requiredWeaponId
-          ? WEAPONS[r.requirement.requiredWeaponId]?.nameKey || ''
-          : '';
-        const tagReqs = r.requirement.requiredTagCounts
-          ? Object.entries(r.requirement.requiredTagCounts)
-              .map(([t, c]) => `${c}x#${TAG_NAMES[t as Tag] || t}(已有${player.tagCounts[t as Tag] || 0})`)
-              .join(' ')
-          : '';
-        return `💡 菜谱【${r.nameKey}】: 需要 ${wName} + ${tagReqs}`;
-      })
-      .slice(0, 2)
-      .join('  |  ');
-
-    const hintText = this.scene.add.text(width / 2, height - 122, recipeHints, {
-      fontSize: '13px',
-      color: '#2a9d8f',
-      fontStyle: 'bold',
-      wordWrap: { width: width - 60, useAdvancedWrap: true },
-      align: 'center',
-    });
-    hintText.setOrigin(0.5, 0.5);
-    hintText.setScrollFactor(0);
-    this.container.add(hintText);
+    this.container.add(rdyZone);
   }
 
   public hide(): void {
@@ -442,9 +483,5 @@ export class ShopModal {
 
   public isVisible(): boolean {
     return this.container.visible;
-  }
-
-  public destroy(): void {
-    this.container.destroy();
   }
 }

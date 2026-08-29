@@ -4,7 +4,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
   chili_pepper: ItemDefinitionSchema.parse({
     id: 'chili_pepper',
     nameKey: '朝天红辣椒',
-    descriptionKey: '全武器伤害 +15%，灼烧持续伤害 +25%',
+    descriptionKey: '全武器伤害 +15%，元素灼烧伤害 +25%',
     tags: ['fire', 'crit'],
     rarity: 'common',
     cost: 8,
@@ -13,14 +13,31 @@ export const ITEMS: Record<string, ItemDefinition> = {
     assetKey: 'item_chili_pepper',
     modifiers: [
       { stat: 'damageMultiplier', value: 0.15, mode: 'flat' },
-      { stat: 'burnDamageMultiplier', value: 0.25, mode: 'flat' },
+      { stat: 'elementalDamage', value: 3, mode: 'flat' },
+    ],
+  }),
+
+  heavy_spices: ItemDefinitionSchema.parse({
+    id: 'heavy_spices',
+    nameKey: '重辣魔鬼粉',
+    descriptionKey: '【有得有失】近战伤害 +8, 元素伤害 +5, 护甲 -2',
+    tags: ['fire', 'cleaver'],
+    rarity: 'rare',
+    cost: 12,
+    maxStacks: 3,
+    color: '#ff5400',
+    assetKey: 'item_chili_pepper',
+    modifiers: [
+      { stat: 'meleeDamage', value: 8, mode: 'flat' },
+      { stat: 'elementalDamage', value: 5, mode: 'flat' },
+      { stat: 'armor', value: -2, mode: 'flat' },
     ],
   }),
 
   ice_cube: ItemDefinitionSchema.parse({
     id: 'ice_cube',
     nameKey: '老窖碎冰块',
-    descriptionKey: '减速持续时间 +30%，角色护甲 +1',
+    descriptionKey: '角色护甲 +2，闪避率 +5%',
     tags: ['ice', 'defense'],
     rarity: 'common',
     cost: 8,
@@ -28,15 +45,32 @@ export const ITEMS: Record<string, ItemDefinition> = {
     color: '#48cae4',
     assetKey: 'item_ice_cube',
     modifiers: [
-      { stat: 'slowDurationMultiplier', value: 0.3, mode: 'flat' },
-      { stat: 'armor', value: 1, mode: 'flat' },
+      { stat: 'armor', value: 2, mode: 'flat' },
+      { stat: 'dodge', value: 0.05, mode: 'flat' },
+    ],
+  }),
+
+  aged_vinegar: ItemDefinitionSchema.parse({
+    id: 'aged_vinegar',
+    nameKey: '老坛十年陈醋',
+    descriptionKey: '【有得有失】闪避率 +10%, 移速 +18, 最大生命 -10',
+    tags: ['ice', 'speed'],
+    rarity: 'rare',
+    cost: 11,
+    maxStacks: 3,
+    color: '#2a9d8f',
+    assetKey: 'item_potion',
+    modifiers: [
+      { stat: 'dodge', value: 0.1, mode: 'flat' },
+      { stat: 'moveSpeed', value: 18, mode: 'flat' },
+      { stat: 'maxHp', value: -10, mode: 'flat' },
     ],
   }),
 
   sesame_oil: ItemDefinitionSchema.parse({
     id: 'sesame_oil',
     nameKey: '纯香芝麻油',
-    descriptionKey: '角色移动速度 +10%，暴击率 +4%',
+    descriptionKey: '角色移动速度 +12，暴击率 +5%',
     tags: ['oil', 'speed'],
     rarity: 'common',
     cost: 8,
@@ -44,15 +78,32 @@ export const ITEMS: Record<string, ItemDefinition> = {
     color: '#f4a261',
     assetKey: 'item_sesame_oil',
     modifiers: [
-      { stat: 'moveSpeed', value: 0.1, mode: 'flat' },
-      { stat: 'critChance', value: 0.04, mode: 'flat' },
+      { stat: 'moveSpeed', value: 12, mode: 'flat' },
+      { stat: 'critChance', value: 0.05, mode: 'flat' },
+    ],
+  }),
+
+  golden_spatula: ItemDefinitionSchema.parse({
+    id: 'golden_spatula',
+    nameKey: '纯金大炒勺',
+    descriptionKey: '【有得有失】【收获】营收 +15, 幸运 +10, 全伤害 -8%',
+    tags: ['economy', 'sugar'],
+    rarity: 'epic',
+    cost: 15,
+    maxStacks: 3,
+    color: '#ffd166',
+    assetKey: 'item_sugar',
+    modifiers: [
+      { stat: 'harvest', value: 15, mode: 'flat' },
+      { stat: 'luck', value: 10, mode: 'flat' },
+      { stat: 'damageMultiplier', value: -0.08, mode: 'flat' },
     ],
   }),
 
   cane_sugar: ItemDefinitionSchema.parse({
     id: 'cane_sugar',
     nameKey: '古法红蔗糖',
-    descriptionKey: '掉落物拾取范围 +25%，食材掉落收益 +35%',
+    descriptionKey: '拾取范围 +30px，【收获】营收 +6',
     tags: ['sugar', 'economy'],
     rarity: 'common',
     cost: 8,
@@ -60,15 +111,32 @@ export const ITEMS: Record<string, ItemDefinition> = {
     color: '#ffd166',
     assetKey: 'item_cane_sugar',
     modifiers: [
-      { stat: 'pickupRadius', value: 0.25, mode: 'flat' },
-      { stat: 'ingredientDropBonus', value: 0.35, mode: 'flat' },
+      { stat: 'pickupRadius', value: 30, mode: 'flat' },
+      { stat: 'harvest', value: 6, mode: 'flat' },
+    ],
+  }),
+
+  iron_stomach: ItemDefinitionSchema.parse({
+    id: 'iron_stomach',
+    nameKey: '暴食铁胃',
+    descriptionKey: '【有得有失】最大生命 +30, 生命秒回 +3, 移速 -15',
+    tags: ['defense', 'ferment'],
+    rarity: 'epic',
+    cost: 14,
+    maxStacks: 3,
+    color: '#06d6a0',
+    assetKey: 'item_food',
+    modifiers: [
+      { stat: 'maxHp', value: 30, mode: 'flat' },
+      { stat: 'hpRegen', value: 3, mode: 'flat' },
+      { stat: 'moveSpeed', value: -15, mode: 'flat' },
     ],
   }),
 
   fermented_sauce: ItemDefinitionSchema.parse({
     id: 'fermented_sauce',
     nameKey: '特酿豆瓣酱',
-    descriptionKey: '暴击伤害倍率 +35%，全武器伤害 +10%',
+    descriptionKey: '暴击伤害 +40%，近战伤害 +6',
     tags: ['ferment', 'crit'],
     rarity: 'rare',
     cost: 12,
@@ -76,16 +144,16 @@ export const ITEMS: Record<string, ItemDefinition> = {
     color: '#9b2226',
     assetKey: 'item_fermented_sauce',
     modifiers: [
-      { stat: 'critMultiplier', value: 0.35, mode: 'flat' },
-      { stat: 'damageMultiplier', value: 0.1, mode: 'flat' },
+      { stat: 'critMultiplier', value: 0.4, mode: 'flat' },
+      { stat: 'meleeDamage', value: 6, mode: 'flat' },
     ],
   }),
 
   bamboo_steamer: ItemDefinitionSchema.parse({
     id: 'bamboo_steamer',
     nameKey: '老竹小蒸笼',
-    descriptionKey: '最大生命值 +25 点，角色护甲 +2',
-    tags: ['defense', 'ferment'],
+    descriptionKey: '最大生命值 +25 点，帮厨工程 +3',
+    tags: ['defense', 'summon'],
     rarity: 'rare',
     cost: 12,
     maxStacks: 3,
@@ -93,14 +161,14 @@ export const ITEMS: Record<string, ItemDefinition> = {
     assetKey: 'item_bamboo_steamer',
     modifiers: [
       { stat: 'maxHp', value: 25, mode: 'flat' },
-      { stat: 'armor', value: 2, mode: 'flat' },
+      { stat: 'engineering', value: 3, mode: 'flat' },
     ],
   }),
 
   garlic_clove: ItemDefinitionSchema.parse({
     id: 'garlic_clove',
     nameKey: '紫皮独头蒜',
-    descriptionKey: '最大生命值 +15 点，角色护甲 +1',
+    descriptionKey: '角色护甲 +2，生命秒回 +1',
     tags: ['defense', 'oil'],
     rarity: 'common',
     cost: 7,
@@ -108,37 +176,41 @@ export const ITEMS: Record<string, ItemDefinition> = {
     color: '#e2ece9',
     assetKey: 'item_garlic_clove',
     modifiers: [
-      { stat: 'maxHp', value: 15, mode: 'flat' },
-      { stat: 'armor', value: 1, mode: 'flat' },
+      { stat: 'armor', value: 2, mode: 'flat' },
+      { stat: 'hpRegen', value: 1, mode: 'flat' },
     ],
   }),
 
   star_anise: ItemDefinitionSchema.parse({
     id: 'star_anise',
     nameKey: '阴阳八角茴',
-    descriptionKey: '全武器攻击速度 +12%',
-    tags: ['speed', 'crit'],
+    descriptionKey: '全武器攻击速度 +15%，远程伤害 +4',
+    tags: ['speed', 'skewer'],
     rarity: 'rare',
     cost: 12,
     maxStacks: 3,
     color: '#8d0801',
     assetKey: 'item_star_anise',
     modifiers: [
-      { stat: 'attackSpeedMultiplier', value: 0.12, mode: 'flat' },
+      { stat: 'attackSpeedMultiplier', value: 0.15, mode: 'flat' },
+      { stat: 'rangedDamage', value: 4, mode: 'flat' },
     ],
   }),
 
   dang_gui_herb: ItemDefinitionSchema.parse({
     id: 'dang_gui_herb',
     nameKey: '当归滋补草',
-    descriptionKey: '武器命中敌人有 12% 几率吸取 2 点生命值',
+    descriptionKey: '生命窃取 +2，生命秒回 +2',
     tags: ['defense', 'ferment'],
     rarity: 'rare',
     cost: 12,
     maxStacks: 3,
     color: '#2a9d8f',
     assetKey: 'item_herb',
-    modifiers: [],
+    modifiers: [
+      { stat: 'lifesteal', value: 2, mode: 'flat' },
+      { stat: 'hpRegen', value: 2, mode: 'flat' },
+    ],
   }),
 
   wolfberry_wine: ItemDefinitionSchema.parse({
@@ -153,6 +225,23 @@ export const ITEMS: Record<string, ItemDefinition> = {
     assetKey: 'item_potion',
     modifiers: [
       { stat: 'maxHp', value: 20, mode: 'flat' },
+    ],
+  }),
+
+  lucky_cat: ItemDefinitionSchema.parse({
+    id: 'lucky_cat',
+    nameKey: '招财金灵猫',
+    descriptionKey: '【有得有失】幸运 +20, 【收获】营收 +10, 攻击速度 -8%',
+    tags: ['economy', 'sugar'],
+    rarity: 'epic',
+    cost: 16,
+    maxStacks: 3,
+    color: '#ffd166',
+    assetKey: 'item_sugar',
+    modifiers: [
+      { stat: 'luck', value: 20, mode: 'flat' },
+      { stat: 'harvest', value: 10, mode: 'flat' },
+      { stat: 'attackSpeedMultiplier', value: -0.08, mode: 'flat' },
     ],
   }),
 };

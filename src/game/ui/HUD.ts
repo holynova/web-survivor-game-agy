@@ -200,9 +200,9 @@ export class HUD {
   }
 
   private initWeaponHotbar(): void {
-    const slotCount = 4;
-    const slotSize = 48;
-    const gap = 12;
+    const slotCount = 6;
+    const slotSize = 44;
+    const gap = 10;
     const startX = -((slotCount * slotSize + (slotCount - 1) * gap) / 2) + slotSize / 2;
 
     for (let i = 0; i < slotCount; i++) {
@@ -213,14 +213,14 @@ export class HUD {
       slotContainer.add(bg);
 
       const icon = this.scene.add.image(0, 0, 'particle_circle');
-      icon.setDisplaySize(30, 30);
+      icon.setDisplaySize(28, 28);
       icon.setVisible(false);
       slotContainer.add(icon);
 
       const cdGfx = this.scene.add.graphics();
       slotContainer.add(cdGfx);
 
-      const levelText = this.scene.add.text(slotSize / 2 - 4, slotSize / 2 - 4, '', {
+      const levelText = this.scene.add.text(slotSize / 2 - 3, slotSize / 2 - 3, '', {
         fontSize: '10px',
         color: '#ffd166',
         fontStyle: 'bold',

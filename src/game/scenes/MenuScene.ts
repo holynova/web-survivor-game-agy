@@ -167,15 +167,16 @@ export class MenuScene extends Phaser.Scene {
 
   private renderCharacterCards(width: number, height: number): void {
     const characters = Object.values(CHARACTERS);
-    const cardW = 275;
+    const cardW = 216;
     const cardH = 290;
-    const totalW = characters.length * cardW + (characters.length - 1) * 28;
+    const gap = 14;
+    const totalW = characters.length * cardW + (characters.length - 1) * gap;
     const startX = (width - totalW) / 2 + cardW / 2;
     const cardY = height / 2 - 40;
 
     for (let i = 0; i < characters.length; i++) {
       const charDef = characters[i];
-      const cx = startX + i * (cardW + 28);
+      const cx = startX + i * (cardW + gap);
       this.createCard(charDef, cx, cardY, cardW, cardH);
     }
   }
@@ -199,25 +200,24 @@ export class MenuScene extends Phaser.Scene {
 
     // 像素大厨精灵头像预览
     const charTextureKey = `char_${charDef.id}`;
-    if (this.textures.exists(charTextureKey)) {
-      const charSprite = this.add.sprite(0, -h / 2 + 45, charTextureKey, 0);
-      charSprite.setScale(2.8);
-      card.add(charSprite);
-    }
+    const tex = this.textures.exists(charTextureKey) ? charTextureKey : 'char_wok_master';
+    const charSprite = this.add.sprite(0, -h / 2 + 40, tex, 0);
+    charSprite.setScale(2.4);
+    card.add(charSprite);
 
     // 角色名
-    const nameText = this.add.text(0, -h / 2 + 78, charDef.nameKey, {
-      fontSize: '19px',
+    const nameText = this.add.text(0, -h / 2 + 68, charDef.nameKey, {
+      fontSize: '16px',
       color: '#f4a261',
       fontStyle: 'bold',
     });
     nameText.setOrigin(0.5, 0);
     card.add(nameText);
 
-    // 初始武器与定位
+    // 初始武器与槽位
     const weaponName = WEAPONS[charDef.startingWeaponId]?.nameKey || '';
-    const startWeaponText = this.add.text(0, -h / 2 + 108, `初始厨具: ${weaponName}`, {
-      fontSize: '12px',
+    const startWeaponText = this.add.text(0, -h / 2 + 94, `🔪 ${weaponName} (槽位: ${charDef.maxWeapons})`, {
+      fontSize: '11px',
       color: '#2a9d8f',
       fontStyle: 'bold',
     });
@@ -225,12 +225,12 @@ export class MenuScene extends Phaser.Scene {
     card.add(startWeaponText);
 
     // 描述
-    const descText = this.add.text(0, -h / 2 + 135, charDef.descriptionKey, {
-      fontSize: '12px',
+    const descText = this.add.text(0, -h / 2 + 118, charDef.descriptionKey, {
+      fontSize: '11px',
       color: '#d8e2dc',
-      wordWrap: { width: w - 28, useAdvancedWrap: true },
+      wordWrap: { width: w - 20, useAdvancedWrap: true },
       align: 'center',
-      lineSpacing: 4,
+      lineSpacing: 3,
     });
     descText.setOrigin(0.5, 0);
     card.add(descText);
@@ -238,12 +238,12 @@ export class MenuScene extends Phaser.Scene {
     // 中文标签
     const tagsText = this.add.text(
       0,
-      h / 2 - 28,
+      h / 2 - 24,
       formatTags(charDef.tags),
       {
-        fontSize: '11px',
+        fontSize: '10px',
         color: '#8fa3a6',
-        wordWrap: { width: w - 24, useAdvancedWrap: true },
+        wordWrap: { width: w - 16, useAdvancedWrap: true },
         align: 'center',
       },
     );

@@ -14,10 +14,10 @@ export interface MapBounds {
 
 export class MovementSystem {
   public static readonly DEFAULT_BOUNDS: MapBounds = {
-    minX: -1500,
-    minY: -1500,
-    maxX: 1500,
-    maxY: 1500,
+    minX: -800,
+    minY: -600,
+    maxX: 800,
+    maxY: 600,
   };
 
   private tempNeighbors: Enemy[] = [];

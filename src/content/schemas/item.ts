@@ -4,19 +4,28 @@ import { TagSchema } from './common';
 export const ItemModifierSchema = z.object({
   stat: z.enum([
     'maxHp',
-    'moveSpeed',
+    'hpRegen',
+    'lifesteal',
     'damageMultiplier',
+    'meleeDamage',
+    'rangedDamage',
+    'elementalDamage',
     'attackSpeedMultiplier',
     'critChance',
     'critMultiplier',
     'pickupRadius',
     'armor',
+    'dodge',
+    'moveSpeed',
+    'harvest',
+    'luck',
+    'engineering',
     'burnDamageMultiplier',
     'slowDurationMultiplier',
     'ingredientDropBonus',
   ]),
   value: z.number(),
-  mode: z.enum(['flat', 'multiply']).default('multiply'),
+  mode: z.enum(['flat', 'multiply']).default('flat'),
 });
 
 export type ItemModifier = z.infer<typeof ItemModifierSchema>;

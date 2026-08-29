@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
-import { formatTags, TAG_NAMES } from '@/content/schemas/common';
+import { formatTags } from '@/content/schemas/common';
 import { Player } from '../entities/Player';
 import { SimulationWorld } from '../simulation/world';
+import { SynergySystem } from '../systems/SynergySystem';
 
 export class PauseModal {
   private scene: Phaser.Scene;
@@ -53,7 +54,7 @@ export class PauseModal {
     this.container.add(cardGfx);
 
     // 3. 顶部标题
-    const title = this.scene.add.text(width / 2, height / 2 - cardH / 2 + 22, '⏸ 游戏暂停 · 神厨当前状态详情', {
+    const title = this.scene.add.text(width / 2, height / 2 - cardH / 2 + 20, '⏸ 游戏暂停 · 神厨当前状态详情', {
       fontSize: '24px',
       color: '#ffd166',
       fontStyle: 'bold',
@@ -64,16 +65,16 @@ export class PauseModal {
 
     if (player) {
       const colW = 330;
-      const colH = 420;
-      const colY = height / 2 - 12;
+      const colH = 425;
+      const colY = height / 2 - 10;
 
-      // 1. 左栏：已配厨具 (最多 4 把)
+      // 1. 左栏：已配厨具 (最多 6 把)
       this.renderWeaponsColumn(player, width / 2 - colW - 20, colY, colW, colH);
 
       // 2. 中栏：口味秘方 & 菜谱
       this.renderItemsColumn(player, width / 2, colY, colW, colH);
 
-      // 3. 右栏：大厨全维属性 (双列紧凑排版，绝不撑破容器)
+      // 3. 右栏：大厨 12 维属性与羁绊
       this.renderStatsColumn(player, world, width / 2 + colW + 20, colY, colW, colH);
     }
 
@@ -95,7 +96,7 @@ export class PauseModal {
     bgGfx.setScrollFactor(0);
     card.add(bgGfx);
 
-    const title = this.scene.add.text(0, -h / 2 + 14, `🔪 装备厨具 (${player.weapons.length}/${player.maxWeapons})`, {
+    const title = this.scene.add.text(0, -h / 2 + 12, `🔪 装备厨具 (${player.weapons.length}/${player.maxWeapons})`, {
       fontSize: '15px',
       color: '#2a9d8f',
       fontStyle: 'bold',
@@ -104,10 +105,11 @@ export class PauseModal {
     title.setScrollFactor(0);
     card.add(title);
 
-    let startY = -h / 2 + 45;
-    const slotH = 82;
+    let startY = -h / 2 + 40;
+    const maxSlots = player.maxWeapons;
+    const slotH = maxSlots > 4 ? 58 : 82;
 
-    for (let i = 0; i < player.maxWeapons; i++) {
+    for (let i = 0; i < maxSlots; i++) {
       const wState = player.weapons[i];
       const slotBox = this.scene.add.graphics();
 
@@ -116,24 +118,24 @@ export class PauseModal {
         const curLvlDef = wDef.levels[wState.level - 1];
 
         slotBox.fillStyle(0x0a1215, 0.8);
-        slotBox.fillRoundedRect(-w / 2 + 12, startY, w - 24, slotH - 8, 6);
+        slotBox.fillRoundedRect(-w / 2 + 12, startY, w - 24, slotH - 6, 6);
         slotBox.lineStyle(1, 0x223a40, 0.9);
-        slotBox.strokeRoundedRect(-w / 2 + 12, startY, w - 24, slotH - 8, 6);
+        slotBox.strokeRoundedRect(-w / 2 + 12, startY, w - 24, slotH - 6, 6);
         card.add(slotBox);
 
         // 武器图标
         const iconKey = this.getWeaponTextureKey(wDef.id);
-        const icon = this.scene.add.image(-w / 2 + 32, startY + (slotH - 8) / 2, iconKey);
-        icon.setDisplaySize(32, 32);
+        const icon = this.scene.add.image(-w / 2 + 28, startY + (slotH - 6) / 2, iconKey);
+        icon.setDisplaySize(26, 26);
         card.add(icon);
 
         // 武器名与等级
         const wName = this.scene.add.text(
-          -w / 2 + 56,
-          startY + 8,
+          -w / 2 + 48,
+          startY + (maxSlots > 4 ? 4 : 8),
           `${wDef.nameKey} (Lv.${wState.level})`,
           {
-            fontSize: '13px',
+            fontSize: '12px',
             color: wDef.color || '#f4a261',
             fontStyle: 'bold',
           },
@@ -142,27 +144,27 @@ export class PauseModal {
 
         // 描述
         const wDesc = this.scene.add.text(
-          -w / 2 + 56,
-          startY + 28,
+          -w / 2 + 48,
+          startY + (maxSlots > 4 ? 20 : 28),
           curLvlDef ? curLvlDef.descriptionKey : '',
           {
-            fontSize: '11px',
+            fontSize: '10px',
             color: '#d8e2dc',
-            wordWrap: { width: w - 85, useAdvancedWrap: true },
-            lineSpacing: 2,
+            wordWrap: { width: w - 75, useAdvancedWrap: true },
+            lineSpacing: 1,
           },
         );
         card.add(wDesc);
       } else {
         // 空槽位
         slotBox.fillStyle(0x090e10, 0.5);
-        slotBox.fillRoundedRect(-w / 2 + 12, startY, w - 24, slotH - 8, 6);
+        slotBox.fillRoundedRect(-w / 2 + 12, startY, w - 24, slotH - 6, 6);
         slotBox.lineStyle(1, 0x1a262b, 0.6);
-        slotBox.strokeRoundedRect(-w / 2 + 12, startY, w - 24, slotH - 8, 6);
+        slotBox.strokeRoundedRect(-w / 2 + 12, startY, w - 24, slotH - 6, 6);
         card.add(slotBox);
 
-        const emptyText = this.scene.add.text(0, startY + (slotH - 8) / 2, `【空置槽位 ${i + 1}】升级或商店可添置`, {
-          fontSize: '12px',
+        const emptyText = this.scene.add.text(0, startY + (slotH - 6) / 2, `【空置槽位 ${i + 1}】升级或商店添置`, {
+          fontSize: '11px',
           color: '#55666c',
         });
         emptyText.setOrigin(0.5, 0.5);
@@ -187,7 +189,7 @@ export class PauseModal {
     bgGfx.setScrollFactor(0);
     card.add(bgGfx);
 
-    const title = this.scene.add.text(0, -h / 2 + 14, `🌶️ 口味秘方 & 菜谱`, {
+    const title = this.scene.add.text(0, -h / 2 + 12, `🌶️ 口味秘方 & 绝技`, {
       fontSize: '15px',
       color: '#f4a261',
       fontStyle: 'bold',
@@ -196,17 +198,17 @@ export class PauseModal {
     title.setScrollFactor(0);
     card.add(title);
 
-    let startY = -h / 2 + 45;
+    let startY = -h / 2 + 38;
 
     // 1. 已激活菜谱
     if (player.activeRecipes.length > 0) {
       const recipeTitle = this.scene.add.text(-w / 2 + 16, startY, '🔥 质变绝技菜谱:', {
-        fontSize: '13px',
+        fontSize: '12px',
         color: '#06d6a0',
         fontStyle: 'bold',
       });
       card.add(recipeTitle);
-      startY += 20;
+      startY += 18;
 
       for (const r of player.activeRecipes) {
         const rText = this.scene.add.text(
@@ -214,29 +216,29 @@ export class PauseModal {
           startY,
           `• 【${r.transformation?.transformedNameKey || r.nameKey}】`,
           {
-            fontSize: '12px',
+            fontSize: '11px',
             color: '#ffd166',
             wordWrap: { width: w - 32, useAdvancedWrap: true },
           },
         );
         card.add(rText);
-        startY += 20;
+        startY += 18;
       }
-      startY += 8;
+      startY += 6;
     }
 
     // 2. 被动食材秘方
     const itemTitle = this.scene.add.text(-w / 2 + 16, startY, '📦 已获秘方食材:', {
-      fontSize: '13px',
+      fontSize: '12px',
       color: '#8fa3a6',
       fontStyle: 'bold',
     });
     card.add(itemTitle);
-    startY += 20;
+    startY += 18;
 
     if (player.items.length === 0) {
       const noItemText = this.scene.add.text(-w / 2 + 16, startY, '暂未采购秘方食材', {
-        fontSize: '12px',
+        fontSize: '11px',
         color: '#55666c',
       });
       card.add(noItemText);
@@ -253,7 +255,7 @@ export class PauseModal {
           },
         );
         card.add(itemText);
-        startY += 20;
+        startY += 18;
       }
     }
 
@@ -262,7 +264,7 @@ export class PauseModal {
 
   private renderStatsColumn(
     player: Player,
-    world: SimulationWorld | undefined,
+    _world: SimulationWorld | undefined,
     cx: number,
     cy: number,
     w: number,
@@ -279,7 +281,7 @@ export class PauseModal {
     bgGfx.setScrollFactor(0);
     card.add(bgGfx);
 
-    const title = this.scene.add.text(0, -h / 2 + 14, `📊 大厨全维属性`, {
+    const title = this.scene.add.text(0, -h / 2 + 12, `📊 12维全维属性`, {
       fontSize: '15px',
       color: '#00f5d4',
       fontStyle: 'bold',
@@ -288,11 +290,12 @@ export class PauseModal {
     title.setScrollFactor(0);
     card.add(title);
 
-    // 双列网格排版，确保每项规整且不撑出容器
+    // 12 维深度双列网格属性
     const leftStats = [
       `❤️ 生命: ${Math.round(player.currentHp)}/${player.maxHp}`,
+      `💖 秒回: +${player.hpRegen}/5s`,
       `🏃 移速: ${Math.round(player.moveSpeed)}`,
-      `⚔️ 伤害: +${Math.round((player.damageMultiplier - 1) * 100)}%`,
+      `⚔️ 全伤: +${Math.round((player.damageMultiplier - 1) * 100)}%`,
       `⚡ 攻频: +${Math.round((player.attackSpeedMultiplier - 1) * 100)}%`,
       `🎯 暴击: ${Math.round(player.critChance * 100)}%`,
     ];
@@ -300,63 +303,61 @@ export class PauseModal {
     const rightStats = [
       `💥 爆伤: ${player.critMultiplier.toFixed(1)}x`,
       `🛡️ 护甲: ${player.armor}`,
-      `🧲 拾取: ${player.pickupRadius}px`,
+      `💨 闪避: ${Math.round(player.dodge * 100)}%`,
+      `🌾 收获: +${player.harvest}/波`,
+      `🍀 幸运: ${player.luck}`,
       `🥟 食材: ${player.ingredients}`,
-      `✨ 双倍: ${world?.doubleLootRemaining || 0}个`,
     ];
 
-    let startY = -h / 2 + 48;
+    let startY = -h / 2 + 38;
     for (let i = 0; i < leftStats.length; i++) {
-      // 左列
-      const lText = this.scene.add.text(-w / 2 + 16, startY, leftStats[i], {
-        fontSize: '12px',
+      const lText = this.scene.add.text(-w / 2 + 14, startY, leftStats[i], {
+        fontSize: '11px',
         color: '#d8e2dc',
       });
       card.add(lText);
 
-      // 右列
-      const rText = this.scene.add.text(-w / 2 + 170, startY, rightStats[i], {
-        fontSize: '12px',
+      const rText = this.scene.add.text(-w / 2 + 168, startY, rightStats[i], {
+        fontSize: '11px',
         color: '#d8e2dc',
       });
       card.add(rText);
 
-      startY += 26;
+      startY += 22;
     }
 
-    // 分割线与风味词条栏
-    startY += 10;
+    // 分割线与羁绊流派栏
+    startY += 6;
     const divGfx = this.scene.add.graphics();
     divGfx.lineStyle(1, 0x223a40, 0.8);
-    divGfx.lineBetween(-w / 2 + 16, startY, w / 2 - 16, startY);
+    divGfx.lineBetween(-w / 2 + 14, startY, w / 2 - 14, startY);
     card.add(divGfx);
 
-    startY += 12;
-    const tagTitle = this.scene.add.text(-w / 2 + 16, startY, '🏷️ 激活风味词条:', {
-      fontSize: '13px',
+    startY += 8;
+    const tagTitle = this.scene.add.text(-w / 2 + 14, startY, '✨ 流派套装共鸣 (Synergies):', {
+      fontSize: '12px',
       color: '#ffd166',
       fontStyle: 'bold',
     });
     card.add(tagTitle);
 
-    startY += 22;
-    const activeTags = Object.entries(player.tagCounts).filter(([, count]) => (count || 0) > 0);
-    if (activeTags.length === 0) {
-      const noTagText = this.scene.add.text(-w / 2 + 16, startY, '暂无风味词条共鸣', {
-        fontSize: '12px',
+    startY += 18;
+    const synergies = SynergySystem.getActiveSynergies(player);
+    if (synergies.length === 0) {
+      const noTagText = this.scene.add.text(-w / 2 + 14, startY, '暂无流派羁绊共鸣', {
+        fontSize: '11px',
         color: '#55666c',
       });
       card.add(noTagText);
     } else {
-      const tagStrings = activeTags.map(([tag, count]) => {
-        const name = TAG_NAMES[tag as keyof typeof TAG_NAMES] || tag;
-        return `${name} Lv.${count}`;
-      });
-      const tagContent = this.scene.add.text(-w / 2 + 16, startY, tagStrings.join('  ·  '), {
-        fontSize: '12px',
+      const tagStrings = synergies.map(
+        s => `${s.synergy.icon} ${s.synergy.name} (${s.count}件${s.activeTier > 0 ? ` · T${s.activeTier}` : ''})`,
+      );
+      const tagContent = this.scene.add.text(-w / 2 + 14, startY, tagStrings.join('  ·  '), {
+        fontSize: '11px',
         color: '#00f5d4',
-        wordWrap: { width: w - 32, useAdvancedWrap: true },
-        lineSpacing: 4,
+        wordWrap: { width: w - 28, useAdvancedWrap: true },
+        lineSpacing: 3,
       });
       card.add(tagContent);
     }
@@ -365,9 +366,9 @@ export class PauseModal {
   }
 
   private renderBottomButtons(width: number, height: number, cardH: number): void {
-    const btnY = height / 2 + cardH / 2 - 38;
+    const btnY = height / 2 + cardH / 2 - 36;
     const btnW = 150;
-    const btnH = 38;
+    const btnH = 36;
     const gap = 16;
     const totalW = 5 * btnW + 4 * gap;
     const startX = width / 2 - totalW / 2 + btnW / 2;
@@ -377,7 +378,6 @@ export class PauseModal {
     const resGfx = this.scene.add.graphics();
     resGfx.fillStyle(0x2a9d8f, 1);
     resGfx.fillRoundedRect(resumeX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-    resGfx.setScrollFactor(0);
     this.container.add(resGfx);
 
     const resText = this.scene.add.text(resumeX, btnY, '▶️ 继续出摊', {
@@ -386,11 +386,9 @@ export class PauseModal {
       fontStyle: 'bold',
     });
     resText.setOrigin(0.5, 0.5);
-    resText.setScrollFactor(0);
     this.container.add(resText);
 
     const resZone = this.scene.add.zone(resumeX, btnY, btnW, btnH);
-    resZone.setScrollFactor(0);
     resZone.setInteractive({ useHandCursor: true });
     resZone.on('pointerdown', () => {
       this.hide();
@@ -405,7 +403,6 @@ export class PauseModal {
     cdxGfx.fillRoundedRect(cdxX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
     cdxGfx.lineStyle(1.5, 0x00f5d4, 1);
     cdxGfx.strokeRoundedRect(cdxX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-    cdxGfx.setScrollFactor(0);
     this.container.add(cdxGfx);
 
     const cdxText = this.scene.add.text(cdxX, btnY, '📖 查看图鉴', {
@@ -414,11 +411,9 @@ export class PauseModal {
       fontStyle: 'bold',
     });
     cdxText.setOrigin(0.5, 0.5);
-    cdxText.setScrollFactor(0);
     this.container.add(cdxText);
 
     const cdxZone = this.scene.add.zone(cdxX, btnY, btnW, btnH);
-    cdxZone.setScrollFactor(0);
     cdxZone.setInteractive({ useHandCursor: true });
     cdxZone.on('pointerdown', () => {
       this.hide();
@@ -433,7 +428,6 @@ export class PauseModal {
     const setGfx = this.scene.add.graphics();
     setGfx.fillStyle(0x3d5a5b, 1);
     setGfx.fillRoundedRect(setX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-    setGfx.setScrollFactor(0);
     this.container.add(setGfx);
 
     const setText = this.scene.add.text(setX, btnY, '⚙️ 偏好设置', {
@@ -442,11 +436,9 @@ export class PauseModal {
       fontStyle: 'bold',
     });
     setText.setOrigin(0.5, 0.5);
-    setText.setScrollFactor(0);
     this.container.add(setText);
 
     const setZone = this.scene.add.zone(setX, btnY, btnW, btnH);
-    setZone.setScrollFactor(0);
     setZone.setInteractive({ useHandCursor: true });
     setZone.on('pointerdown', () => {
       this.hide();
@@ -461,7 +453,6 @@ export class PauseModal {
     const restGfx = this.scene.add.graphics();
     restGfx.fillStyle(0xe76f51, 1);
     restGfx.fillRoundedRect(restX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-    restGfx.setScrollFactor(0);
     this.container.add(restGfx);
 
     const restText = this.scene.add.text(restX, btnY, '🔄 重新开始', {
@@ -470,11 +461,9 @@ export class PauseModal {
       fontStyle: 'bold',
     });
     restText.setOrigin(0.5, 0.5);
-    restText.setScrollFactor(0);
     this.container.add(restText);
 
     const restZone = this.scene.add.zone(restX, btnY, btnW, btnH);
-    restZone.setScrollFactor(0);
     restZone.setInteractive({ useHandCursor: true });
     restZone.on('pointerdown', () => {
       this.hide();
@@ -487,7 +476,6 @@ export class PauseModal {
     const menuGfx = this.scene.add.graphics();
     menuGfx.fillStyle(0x1f3036, 1);
     menuGfx.fillRoundedRect(menuX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-    menuGfx.setScrollFactor(0);
     this.container.add(menuGfx);
 
     const menuText = this.scene.add.text(menuX, btnY, '🚪 退出菜单', {
@@ -496,11 +484,9 @@ export class PauseModal {
       fontStyle: 'bold',
     });
     menuText.setOrigin(0.5, 0.5);
-    menuText.setScrollFactor(0);
     this.container.add(menuText);
 
     const menuZone = this.scene.add.zone(menuX, btnY, btnW, btnH);
-    menuZone.setScrollFactor(0);
     menuZone.setInteractive({ useHandCursor: true });
     menuZone.on('pointerdown', () => {
       this.hide();

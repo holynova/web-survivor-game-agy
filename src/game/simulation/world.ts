@@ -4,6 +4,7 @@ import { WEAPONS } from '@/content/weapons/data';
 import { EventBus } from '@/core/event-bus';
 import { ObjectPool } from '@/core/pool';
 import { SeededRNG } from '@/core/rng';
+import { DestructibleCrate } from '../entities/DestructibleCrate';
 import { DamageText } from '../entities/DamageText';
 import { Drop } from '../entities/Drop';
 import { Enemy } from '../entities/Enemy';
@@ -27,6 +28,7 @@ export class SimulationWorld {
   public projectilePool: ObjectPool<Projectile>;
   public dropPool: ObjectPool<Drop>;
   public damageTextPool: ObjectPool<DamageText>;
+  public destructibles: DestructibleCrate[] = [];
 
   public spatialHash: SpatialHash<Enemy>;
   public rng: SeededRNG;
@@ -110,8 +112,20 @@ export class SimulationWorld {
     }
 
     this.resetState();
+    this.spawnDestructibles(1);
     this.waveSystem.startFirstWave();
     this.clock.start();
+  }
+
+  public spawnDestructibles(waveNumber: number): void {
+    this.destructibles = [];
+    const count = 3 + Math.min(3, Math.floor(waveNumber / 3));
+    for (let i = 0; i < count; i++) {
+      const x = this.rng.nextFloat(-600, 600);
+      const y = this.rng.nextFloat(-450, 450);
+      const type = this.rng.next() < 0.35 ? 'fortune_chest' : 'steamer_basket';
+      this.destructibles.push(new DestructibleCrate(i + 1, x, y, type));
+    }
   }
 
   public resetState(): void {
@@ -119,6 +133,7 @@ export class SimulationWorld {
     this.projectilePool.releaseAll();
     this.dropPool.releaseAll();
     this.damageTextPool.releaseAll();
+    this.destructibles = [];
     this.spatialHash.clear();
     this.spawnerSystem.reset();
     this.waveSystem.reset();
@@ -140,6 +155,7 @@ export class SimulationWorld {
     if (this.gameState !== 'playing') return;
 
     this.statistics.timeSurvivedSec += dt;
+    this.player.update(dt);
 
     // 1. 检查是否有 Boss 在场
     const isBossAlive = this.enemyPool.getActiveItems().some(e => e.isBoss && e.isActive);
@@ -147,9 +163,10 @@ export class SimulationWorld {
     // 2. 波次逻辑更新与整备期状态流转
     const { phaseChanged, newPhase } = this.waveSystem.update(dt, isBossAlive);
     if (phaseChanged && newPhase === 'preparation') {
-      // 1. 每一波结束后回满血
+      // 1. 每一波结束后回满血与结算收获复利
       this.player.heal(this.player.maxHp);
       this.player.currentHp = this.player.maxHp;
+      this.player.applyEndOfWaveHarvest();
 
       // 6. 清空地上战利品，并记录数量下一波前 x 个双倍收益
       const uncollectedCount = this.dropPool.getActiveCount();
@@ -221,6 +238,7 @@ export class SimulationWorld {
       spatialHash: this.spatialHash,
       rng: this.rng,
       stats: this.statistics,
+      destructibles: this.destructibles,
       doubleLootProvider: this,
       dt,
     });

@@ -1,3 +1,4 @@
+import { DestructibleCrate } from '../entities/DestructibleCrate';
 import { EventBus } from '@/core/event-bus';
 import { distanceSquared } from '@/core/math';
 import { ObjectPool } from '@/core/pool';
@@ -34,6 +35,7 @@ export class CollisionSystem {
     spatialHash: SpatialHash<Enemy>;
     rng: SeededRNG;
     stats: RunStatistics;
+    destructibles?: DestructibleCrate[];
     doubleLootProvider?: DoubleLootProvider;
     dt: number;
   }): void {
@@ -46,6 +48,7 @@ export class CollisionSystem {
       spatialHash,
       rng,
       stats,
+      destructibles,
       doubleLootProvider,
       dt,
     } = params;
@@ -61,15 +64,18 @@ export class CollisionSystem {
         const pDistSq = distanceSquared(p.x, p.y, player.position.x, player.position.y);
         const rSum = p.radius + player.radius;
         if (pDistSq <= rSum * rSum) {
-          const dmg = player.takeDamage(p.damage);
-          if (dmg > 0) {
+          const res = player.takeDamage(p.damage);
+          if (res.dodged) {
             const dmgText = damageTextPool.acquire();
-            dmgText.spawn(String(dmg), player.position.x, player.position.y - 12, '#e76f51', false);
+            dmgText.spawn('闪避!', player.position.x, player.position.y - 14, '#00f5d4', false);
+          } else if (res.damage > 0) {
+            const dmgText = damageTextPool.acquire();
+            dmgText.spawn(String(res.damage), player.position.x, player.position.y - 12, '#e76f51', false);
 
             EventBus.getInstance().emit('entity:damaged', {
               targetId: 0,
               sourceId: 'enemy_bullet',
-              damage: dmg,
+              damage: res.damage,
               isCrit: false,
               x: player.position.x,
               y: player.position.y,
@@ -84,6 +90,35 @@ export class CollisionSystem {
           projectilePool.release(p);
         }
         continue;
+      }
+
+      // 玩家打击场地破坏物 (蒸笼/宝箱)
+      if (destructibles) {
+        for (const crate of destructibles) {
+          if (!crate.isAlive) continue;
+          const cDistSq = distanceSquared(p.x, p.y, crate.position.x, crate.position.y);
+          const crSum = p.radius + crate.radius;
+          if (cDistSq <= crSum * crSum) {
+            const broke = crate.takeDamage(p.damage);
+            const dmgText = damageTextPool.acquire();
+            dmgText.spawn(String(Math.round(p.damage)), crate.position.x, crate.position.y - 10, '#ffd166', false);
+            if (broke) {
+              if (crate.type === 'steamer_basket') {
+                const foodDrop = dropPool.acquire();
+                foodDrop.spawn('food', Math.round(player.maxHp * 0.2), crate.position.x, crate.position.y);
+              } else {
+                const ingDrop = dropPool.acquire();
+                ingDrop.spawn('ingredient', 15, crate.position.x, crate.position.y);
+                EventBus.getInstance().emit('sound:play', { key: 'sfx_coin', volume: 0.9 });
+              }
+            }
+            p.pierceRemaining--;
+            if (p.pierceRemaining <= 0) {
+              projectilePool.release(p);
+              break;
+            }
+          }
+        }
       }
 
       // 玩家武器投射物击中敌人检测 (基于空间哈希优化)
@@ -218,15 +253,18 @@ export class CollisionSystem {
         const rSum = player.radius + enemy.radius;
 
         if (distSq <= rSum * rSum) {
-          const dmgDealt = player.takeDamage(enemy.contactDamage);
-          if (dmgDealt > 0) {
+          const res = player.takeDamage(enemy.contactDamage);
+          if (res.dodged) {
             const dmgText = damageTextPool.acquire();
-            dmgText.spawn(String(dmgDealt), player.position.x, player.position.y - 12, '#e76f51', false);
+            dmgText.spawn('闪避!', player.position.x, player.position.y - 14, '#00f5d4', false);
+          } else if (res.damage > 0) {
+            const dmgText = damageTextPool.acquire();
+            dmgText.spawn(String(res.damage), player.position.x, player.position.y - 12, '#e76f51', false);
 
             EventBus.getInstance().emit('entity:damaged', {
               targetId: 0,
               sourceId: 'contact',
-              damage: dmgDealt,
+              damage: res.damage,
               isCrit: false,
               x: player.position.x,
               y: player.position.y,
