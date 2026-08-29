@@ -44,8 +44,8 @@ export class ResultsScene extends Phaser.Scene {
     const titleStr = data.isVictory ? '🎉 营业大吉！夜市名扬四海！' : '💀 营业结束！摊位被百鬼淹没';
     const titleColor = data.isVictory ? '#ffd166' : '#e76f51';
 
-    const title = this.add.text(width / 2, 35, titleStr, {
-      fontSize: '28px',
+    const title = this.add.text(width / 2, 45, titleStr, {
+      fontSize: '36px',
       color: titleColor,
       fontStyle: 'bold',
     });
@@ -55,38 +55,39 @@ export class ResultsScene extends Phaser.Scene {
     const charName = CHARACTERS[data.characterId]?.nameKey || '神厨';
     const subTitle = this.add.text(
       width / 2,
-      76,
+      95,
       `出战大厨: ${charName} | 营业地图: 山海夜市外街 | Seed: ${data.seed}`,
       {
-        fontSize: '12px',
+        fontSize: '15px',
         color: '#8fa3a6',
       },
     );
     subTitle.setOrigin(0.5, 0);
 
     // 4. 数据统计卡片 (左侧基本战报，右侧伤害构筑分析)
-    const cardW = 380;
-    const cardH = 260;
+    const cardW = 500;
+    const cardH = 360;
+    const cardY = height / 2 + 15;
 
     // 左卡片：基础经营数据
-    this.renderBasicStatsCard(data, width / 2 - cardW / 2 - 10, 240, cardW, cardH);
+    this.renderBasicStatsCard(data, width / 2 - cardW / 2 - 16, cardY, cardW, cardH);
 
     // 右卡片：伤害构成与菜谱
-    this.renderDamageStatsCard(data, width / 2 + cardW / 2 + 10, 240, cardW, cardH);
+    this.renderDamageStatsCard(data, width / 2 + cardW / 2 + 16, cardY, cardW, cardH);
 
     // 5. 底部按钮
-    const btnW = 180;
-    const btnH = 42;
+    const btnW = 220;
+    const btnH = 48;
 
     // 立即再来一局
-    const replayX = width / 2 - 100;
-    const replayY = height - 55;
+    const replayX = width / 2 - 130;
+    const replayY = height - 60;
     const replayGfx = this.add.graphics();
     replayGfx.fillStyle(0xe76f51, 1);
-    replayGfx.fillRoundedRect(replayX - btnW / 2, replayY - btnH / 2, btnW, btnH, 8);
+    replayGfx.fillRoundedRect(replayX - btnW / 2, replayY - btnH / 2, btnW, btnH, 10);
 
     const replayText = this.add.text(replayX, replayY, '🔥 再次出摊 🔥', {
-      fontSize: '15px',
+      fontSize: '18px',
       color: '#0b1315',
       fontStyle: 'bold',
     });
@@ -100,14 +101,14 @@ export class ResultsScene extends Phaser.Scene {
     });
 
     // 返回主菜单
-    const menuX = width / 2 + 100;
-    const menuY = height - 55;
+    const menuX = width / 2 + 130;
+    const menuY = height - 60;
     const menuGfx = this.add.graphics();
     menuGfx.fillStyle(0x2a9d8f, 1);
-    menuGfx.fillRoundedRect(menuX - btnW / 2, menuY - btnH / 2, btnW, btnH, 8);
+    menuGfx.fillRoundedRect(menuX - btnW / 2, menuY - btnH / 2, btnW, btnH, 10);
 
     const menuText = this.add.text(menuX, menuY, '返回主菜单', {
-      fontSize: '15px',
+      fontSize: '18px',
       color: '#0b1315',
       fontStyle: 'bold',
     });
@@ -131,14 +132,14 @@ export class ResultsScene extends Phaser.Scene {
     const card = this.add.container(x, y);
 
     const bgGfx = this.add.graphics();
-    bgGfx.fillStyle(0x121c20, 0.95);
-    bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-    bgGfx.lineStyle(1.5, 0x3d5a5b, 1);
-    bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
+    bgGfx.fillStyle(0x121c20, 0.96);
+    bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 10);
+    bgGfx.lineStyle(2, 0x3d5a5b, 1);
+    bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
     card.add(bgGfx);
 
-    const title = this.add.text(0, -h / 2 + 16, '📊 基础营业战报', {
-      fontSize: '15px',
+    const title = this.add.text(0, -h / 2 + 20, '📊 基础营业战报', {
+      fontSize: '18px',
       color: '#f4a261',
       fontStyle: 'bold',
     });
@@ -163,8 +164,8 @@ export class ResultsScene extends Phaser.Scene {
     ];
 
     for (let i = 0; i < infoList.length; i++) {
-      const text = this.add.text(-w / 2 + 25, -h / 2 + 55 + i * 32, infoList[i], {
-        fontSize: '13px',
+      const text = this.add.text(-w / 2 + 35, -h / 2 + 75 + i * 44, infoList[i], {
+        fontSize: '16px',
         color: '#d8e2dc',
       });
       card.add(text);
@@ -181,14 +182,14 @@ export class ResultsScene extends Phaser.Scene {
     const card = this.add.container(x, y);
 
     const bgGfx = this.add.graphics();
-    bgGfx.fillStyle(0x121c20, 0.95);
-    bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-    bgGfx.lineStyle(1.5, 0x3d5a5b, 1);
-    bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
+    bgGfx.fillStyle(0x121c20, 0.96);
+    bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 10);
+    bgGfx.lineStyle(2, 0x3d5a5b, 1);
+    bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
     card.add(bgGfx);
 
-    const title = this.add.text(0, -h / 2 + 16, '🍳 构筑输出占比 & 神厨菜谱', {
-      fontSize: '15px',
+    const title = this.add.text(0, -h / 2 + 20, '🍳 构筑输出占比 & 神厨菜谱', {
+      fontSize: '18px',
       color: '#2a9d8f',
       fontStyle: 'bold',
     });
@@ -200,14 +201,14 @@ export class ResultsScene extends Phaser.Scene {
     const damageByWeapon = data.stats?.damageByWeapon || {};
     const weaponEntries = Object.entries(damageByWeapon).sort((a, b) => b[1] - a[1]);
 
-    let startOffsetY = -h / 2 + 50;
+    let startOffsetY = -h / 2 + 70;
     if (weaponEntries.length === 0) {
-      const noDmgText = this.add.text(-w / 2 + 25, startOffsetY, '尚未造成武器伤害', {
-        fontSize: '12px',
+      const noDmgText = this.add.text(-w / 2 + 35, startOffsetY, '尚未造成武器伤害', {
+        fontSize: '15px',
         color: '#8fa3a6',
       });
       card.add(noDmgText);
-      startOffsetY += 30;
+      startOffsetY += 40;
     } else {
       for (let i = 0; i < Math.min(4, weaponEntries.length); i++) {
         const [wId, dmg] = weaponEntries[i];
@@ -215,11 +216,11 @@ export class ResultsScene extends Phaser.Scene {
         const pct = Math.round((dmg / totalDmg) * 100);
 
         const wText = this.add.text(
-          -w / 2 + 25,
+          -w / 2 + 35,
           startOffsetY,
           `${wName}: ${dmg} (${pct}%)`,
           {
-            fontSize: '12px',
+            fontSize: '15px',
             color: '#ffd166',
           },
         );
@@ -228,10 +229,10 @@ export class ResultsScene extends Phaser.Scene {
         // 小进度条
         const barGfx = this.add.graphics();
         barGfx.fillStyle(0x2a9d8f, 0.9);
-        barGfx.fillRect(-w / 2 + 200, startOffsetY + 2, (w - 230) * (pct / 100), 8);
+        barGfx.fillRect(-w / 2 + 260, startOffsetY + 4, (w - 300) * (pct / 100), 10);
         card.add(barGfx);
 
-        startOffsetY += 26;
+        startOffsetY += 36;
       }
     }
 
@@ -239,13 +240,13 @@ export class ResultsScene extends Phaser.Scene {
     const activeRecipes = data.activeRecipes || [];
     const recipeNames = activeRecipes.map(r => `【${r.transformation?.transformedNameKey || r.nameKey}】`).join(' ');
     const recipeTitle = this.add.text(
-      -w / 2 + 25,
-      startOffsetY + 10,
+      -w / 2 + 35,
+      startOffsetY + 15,
       `激活菜谱: ${recipeNames || '无 (未达成质变)'}`,
       {
-        fontSize: '12px',
+        fontSize: '15px',
         color: '#06d6a0',
-        wordWrap: { width: w - 40, useAdvancedWrap: true },
+        wordWrap: { width: w - 50, useAdvancedWrap: true },
       },
     );
     card.add(recipeTitle);

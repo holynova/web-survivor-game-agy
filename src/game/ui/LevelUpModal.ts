@@ -36,7 +36,7 @@ export class LevelUpModal {
     const width = this.scene.scale.width;
     const height = this.scene.scale.height;
 
-    // 半透明夜市暗色背景遮罩（固定屏幕视口）
+    // 半透明夜市暗色背景遮罩
     const bg = this.scene.add.graphics();
     bg.fillStyle(0x060b0c, 0.88);
     bg.fillRect(0, 0, width, height);
@@ -50,8 +50,8 @@ export class LevelUpModal {
     this.container.add(blockerZone);
 
     // 顶部发光标题
-    const titleGlow = this.scene.add.text(width / 2, 45, '★ 神厨升级！选择一项犒赏 ★', {
-      fontSize: '22px',
+    const titleGlow = this.scene.add.text(width / 2, 50, '★ 神厨升级！选择一项犒赏 ★', {
+      fontSize: '28px',
       color: '#ffd166',
       fontStyle: 'bold',
     });
@@ -61,10 +61,10 @@ export class LevelUpModal {
 
     const subTitle = this.scene.add.text(
       width / 2,
-      76,
-      `当前等级: Lv.${player.level}  |  生命: ${Math.round(player.currentHp)}/${player.maxHp}  |  食材: ${player.ingredients}`,
+      92,
+      `当前等级: Lv.${player.level}  |  生命: ${Math.round(player.currentHp)}/${player.maxHp}  |  拥有食材: 🥟 ${player.ingredients}`,
       {
-        fontSize: '12px',
+        fontSize: '14px',
         color: '#8fa3a6',
       },
     );
@@ -75,15 +75,15 @@ export class LevelUpModal {
     // 生成 3 个可选升级
     const options = this.generateUpgradeOptions(player, rng);
 
-    const cardWidth = 240;
-    const cardHeight = 310;
-    const totalW = options.length * cardWidth + (options.length - 1) * 24;
+    const cardWidth = 320;
+    const cardHeight = 410;
+    const totalW = options.length * cardWidth + (options.length - 1) * 32;
     const startX = (width - totalW) / 2 + cardWidth / 2;
-    const cardY = height / 2 + 25;
+    const cardY = height / 2 + 35;
 
     for (let i = 0; i < options.length; i++) {
       const opt = options[i];
-      const cx = startX + i * (cardWidth + 24);
+      const cx = startX + i * (cardWidth + 32);
       const cardContainer = this.createCard(opt, cx, cardY, cardWidth, cardHeight, player);
       this.container.add(cardContainer);
     }
@@ -103,9 +103,9 @@ export class LevelUpModal {
 
     const bgGfx = this.scene.add.graphics();
     bgGfx.fillStyle(0x121c20, 0.96);
-    bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 10);
+    bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 12);
     bgGfx.lineStyle(2, 0x3d5a5b, 1);
-    bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
+    bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 12);
     bgGfx.setScrollFactor(0);
     card.add(bgGfx);
 
@@ -154,11 +154,11 @@ export class LevelUpModal {
     }
 
     // 1. 类型标签
-    const tagObj = this.scene.add.text(0, -h / 2 + 18, typeTag, {
-      fontSize: '11px',
+    const tagObj = this.scene.add.text(0, -h / 2 + 22, typeTag, {
+      fontSize: '13px',
       color: '#2a9d8f',
       fontStyle: 'bold',
-      wordWrap: { width: w - 20, useAdvancedWrap: true },
+      wordWrap: { width: w - 24, useAdvancedWrap: true },
       align: 'center',
     });
     tagObj.setOrigin(0.5, 0);
@@ -166,11 +166,11 @@ export class LevelUpModal {
     card.add(tagObj);
 
     // 2. 物品图标与名称
-    const titleObj = this.scene.add.text(0, -h / 2 + 45, `${iconChar} ${nameText}`, {
-      fontSize: '17px',
+    const titleObj = this.scene.add.text(0, -h / 2 + 55, `${iconChar} ${nameText}`, {
+      fontSize: '21px',
       color: colorHex,
       fontStyle: 'bold',
-      wordWrap: { width: w - 24, useAdvancedWrap: true },
+      wordWrap: { width: w - 28, useAdvancedWrap: true },
       align: 'center',
     });
     titleObj.setOrigin(0.5, 0);
@@ -178,22 +178,22 @@ export class LevelUpModal {
     card.add(titleObj);
 
     // 3. 详细属性与效果描述
-    const descObj = this.scene.add.text(0, -h / 2 + 88, descText, {
-      fontSize: '12px',
+    const descObj = this.scene.add.text(0, -h / 2 + 110, descText, {
+      fontSize: '14px',
       color: '#e2ece9',
-      wordWrap: { width: w - 28, useAdvancedWrap: true },
+      wordWrap: { width: w - 36, useAdvancedWrap: true },
       align: 'center',
-      lineSpacing: 4,
+      lineSpacing: 6,
     });
     descObj.setOrigin(0.5, 0);
     descObj.setScrollFactor(0);
     card.add(descObj);
 
     // 4. 底部词条标签
-    const tagsObj = this.scene.add.text(0, h / 2 - 58, tagsStr, {
-      fontSize: '11px',
+    const tagsObj = this.scene.add.text(0, h / 2 - 76, tagsStr, {
+      fontSize: '13px',
       color: '#8fa3a6',
-      wordWrap: { width: w - 20, useAdvancedWrap: true },
+      wordWrap: { width: w - 28, useAdvancedWrap: true },
       align: 'center',
     });
     tagsObj.setOrigin(0.5, 0);
@@ -203,12 +203,12 @@ export class LevelUpModal {
     // 5. 选取按钮背景与文字
     const btnGfx = this.scene.add.graphics();
     btnGfx.fillStyle(0x2a9d8f, 1);
-    btnGfx.fillRoundedRect(-w / 2 + 24, h / 2 - 42, w - 48, 30, 6);
+    btnGfx.fillRoundedRect(-w / 2 + 30, h / 2 - 52, w - 60, 36, 8);
     btnGfx.setScrollFactor(0);
     card.add(btnGfx);
 
-    const btnText = this.scene.add.text(0, h / 2 - 27, '选 取', {
-      fontSize: '14px',
+    const btnText = this.scene.add.text(0, h / 2 - 34, '选 取', {
+      fontSize: '16px',
       color: '#060b0c',
       fontStyle: 'bold',
     });
@@ -232,18 +232,18 @@ export class LevelUpModal {
     hitZone.on('pointerover', () => {
       bgGfx.clear();
       bgGfx.fillStyle(0x1a2b32, 1);
-      bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 10);
+      bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 12);
       bgGfx.lineStyle(2.5, 0x00f5d4, 1);
-      bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
+      bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 12);
       card.setScale(1.03);
     });
 
     hitZone.on('pointerout', () => {
       bgGfx.clear();
       bgGfx.fillStyle(0x121c20, 0.96);
-      bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 10);
+      bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 12);
       bgGfx.lineStyle(2, 0x3d5a5b, 1);
-      bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
+      bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 12);
       card.setScale(1.0);
     });
 

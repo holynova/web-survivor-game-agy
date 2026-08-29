@@ -30,21 +30,21 @@ export class MenuScene extends Phaser.Scene {
 
     // 装饰暖光灯笼
     bg.fillStyle(0xe76f51, 0.12);
-    bg.fillCircle(width * 0.2, 80, 140);
-    bg.fillCircle(width * 0.8, 80, 140);
+    bg.fillCircle(width * 0.18, 100, 180);
+    bg.fillCircle(width * 0.82, 100, 180);
 
     // 2. 标题
-    const title = this.add.text(width / 2, 35, '山 海 夜 市', {
-      fontSize: '36px',
+    const title = this.add.text(width / 2, 45, '山 海 夜 市', {
+      fontSize: '44px',
       color: '#f4a261',
       fontStyle: 'bold',
     });
     title.setOrigin(0.5, 0);
 
-    const subTitle = this.add.text(width / 2, 80, '幽冥百鬼围攻，化厨具为神兵！构筑你的战斗厨房！', {
-      fontSize: '13px',
+    const subTitle = this.add.text(width / 2, 102, '幽冥百鬼围攻，化厨具为神兵！构筑你的战斗厨房！', {
+      fontSize: '15px',
       color: '#8fa3a6',
-      wordWrap: { width: width - 40, useAdvancedWrap: true },
+      wordWrap: { width: width - 60, useAdvancedWrap: true },
       align: 'center',
     });
     subTitle.setOrigin(0.5, 0);
@@ -57,27 +57,27 @@ export class MenuScene extends Phaser.Scene {
     const maxKills = saveData.highScores.maxKills;
     const hsText = this.add.text(
       width / 2,
-      height - 85,
+      height - 110,
       `🏆 最佳营业记录: 到达第 ${bestWave} 波 | 最高驱妖: ${maxKills} 只`,
       {
-        fontSize: '12px',
+        fontSize: '14px',
         color: '#ffd166',
       },
     );
     hsText.setOrigin(0.5, 0);
 
     // 5. 开始营业按钮
-    const btnW = 220;
-    const btnH = 42;
+    const btnW = 280;
+    const btnH = 50;
     const btnX = width / 2;
-    const btnY = height - 40;
+    const btnY = height - 55;
 
     const btnGfx = this.add.graphics();
     btnGfx.fillStyle(0xe76f51, 1);
-    btnGfx.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+    btnGfx.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 10);
 
     const btnText = this.add.text(btnX, btnY, '🔥 开始夜市营业 🔥', {
-      fontSize: '18px',
+      fontSize: '20px',
       color: '#0b1315',
       fontStyle: 'bold',
     });
@@ -94,15 +94,15 @@ export class MenuScene extends Phaser.Scene {
 
   private renderCharacterCards(width: number, height: number): void {
     const characters = Object.values(CHARACTERS);
-    const cardW = 230;
-    const cardH = 230;
-    const totalW = characters.length * cardW + (characters.length - 1) * 20;
+    const cardW = 280;
+    const cardH = 300;
+    const totalW = characters.length * cardW + (characters.length - 1) * 32;
     const startX = (width - totalW) / 2 + cardW / 2;
     const cardY = height / 2 - 5;
 
     for (let i = 0; i < characters.length; i++) {
       const charDef = characters[i];
-      const cx = startX + i * (cardW + 20);
+      const cx = startX + i * (cardW + 32);
       this.createCard(charDef, cx, cardY, cardW, cardH);
     }
   }
@@ -118,23 +118,23 @@ export class MenuScene extends Phaser.Scene {
     const isSelected = this.selectedCharacterId === charDef.id;
 
     const bgGfx = this.add.graphics();
-    bgGfx.fillStyle(0x121c20, 0.95);
-    bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-    bgGfx.lineStyle(2, isSelected ? 0x00f5d4 : 0x3d5a5b, 1);
-    bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
+    bgGfx.fillStyle(0x121c20, 0.96);
+    bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 10);
+    bgGfx.lineStyle(2.5, isSelected ? 0x00f5d4 : 0x3d5a5b, 1);
+    bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
     card.add(bgGfx);
 
     // 像素大厨精灵头像预览
     const charTextureKey = `char_${charDef.id}`;
     if (this.textures.exists(charTextureKey)) {
-      const charSprite = this.add.sprite(0, -h / 2 + 38, charTextureKey, 0);
-      charSprite.setScale(2.5);
+      const charSprite = this.add.sprite(0, -h / 2 + 50, charTextureKey, 0);
+      charSprite.setScale(3.0);
       card.add(charSprite);
     }
 
     // 角色名
-    const nameText = this.add.text(0, -h / 2 + 65, charDef.nameKey, {
-      fontSize: '17px',
+    const nameText = this.add.text(0, -h / 2 + 85, charDef.nameKey, {
+      fontSize: '20px',
       color: '#f4a261',
       fontStyle: 'bold',
     });
@@ -143,8 +143,8 @@ export class MenuScene extends Phaser.Scene {
 
     // 初始武器与定位
     const weaponName = WEAPONS[charDef.startingWeaponId]?.nameKey || '';
-    const startWeaponText = this.add.text(0, -h / 2 + 92, `初始厨具: ${weaponName}`, {
-      fontSize: '12px',
+    const startWeaponText = this.add.text(0, -h / 2 + 118, `初始厨具: ${weaponName}`, {
+      fontSize: '13px',
       color: '#2a9d8f',
       fontStyle: 'bold',
     });
@@ -152,12 +152,12 @@ export class MenuScene extends Phaser.Scene {
     card.add(startWeaponText);
 
     // 描述 (使用 useAdvancedWrap: true 解决中文换行)
-    const descText = this.add.text(0, -h / 2 + 116, charDef.descriptionKey, {
-      fontSize: '11px',
+    const descText = this.add.text(0, -h / 2 + 148, charDef.descriptionKey, {
+      fontSize: '13px',
       color: '#d8e2dc',
-      wordWrap: { width: w - 24, useAdvancedWrap: true },
+      wordWrap: { width: w - 32, useAdvancedWrap: true },
       align: 'center',
-      lineSpacing: 4,
+      lineSpacing: 5,
     });
     descText.setOrigin(0.5, 0);
     card.add(descText);
@@ -165,12 +165,12 @@ export class MenuScene extends Phaser.Scene {
     // 中文标签
     const tagsText = this.add.text(
       0,
-      h / 2 - 25,
+      h / 2 - 32,
       formatTags(charDef.tags),
       {
-        fontSize: '11px',
+        fontSize: '12px',
         color: '#8fa3a6',
-        wordWrap: { width: w - 20, useAdvancedWrap: true },
+        wordWrap: { width: w - 24, useAdvancedWrap: true },
         align: 'center',
       },
     );

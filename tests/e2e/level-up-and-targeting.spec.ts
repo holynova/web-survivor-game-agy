@@ -50,14 +50,14 @@ test.describe('Level Up Selection & Walking Auto-Targeting Tests', () => {
     // 截图记录升级弹窗
     await page.screenshot({ path: 'test-results/audit-10-levelup-clickable.png' });
 
-    // 点击第一张卡片的选取按钮 (位于屏幕中心左侧 card 1 位置)
+    // 点击第一张卡片 (位于屏幕中心偏左 card 1 位置)
     const canvas = await page.waitForSelector('canvas');
     const box = await canvas.boundingBox();
     if (box) {
-      const scaleX = box.width / 960;
-      const scaleY = box.height / 540;
-      // 卡片 1 的选取按钮大致在 (236, 420)
-      await page.mouse.click(box.x + 236 * scaleX, box.y + 420 * scaleY);
+      const scaleX = box.width / 1280;
+      const scaleY = box.height / 720;
+      // 卡片 1 大致在 (320, 400)
+      await page.mouse.click(box.x + 320 * scaleX, box.y + 400 * scaleY);
     }
     await page.waitForTimeout(600);
 

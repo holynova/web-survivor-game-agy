@@ -102,8 +102,8 @@ export class ShopModal {
     this.container.add(blockerZone);
 
     // 顶部标题
-    const title = this.scene.add.text(width / 2, 35, `🍢 山海夜市 · 餐车整备期 (第 ${waveNumber} 波备战)`, {
-      fontSize: '22px',
+    const title = this.scene.add.text(width / 2, 40, `🍢 山海夜市 · 餐车整备期 (第 ${waveNumber} 波备战)`, {
+      fontSize: '28px',
       color: '#f4a261',
       fontStyle: 'bold',
     });
@@ -111,13 +111,13 @@ export class ShopModal {
     title.setScrollFactor(0);
     this.container.add(title);
 
-    // 状态栏 (剩余食材、当前血量、已配厨具数)
+    // 状态栏
     const statusText = this.scene.add.text(
       width / 2,
-      68,
+      82,
       `拥有食材: 🥟 ${player.ingredients}  |  生命值: ${Math.round(player.currentHp)}/${player.maxHp}  |  已装备厨具: ${player.weapons.length}/${player.maxWeapons}`,
       {
-        fontSize: '13px',
+        fontSize: '15px',
         color: '#ffd166',
       },
     );
@@ -126,15 +126,15 @@ export class ShopModal {
     this.container.add(statusText);
 
     // 4 格商品陈列
-    const cardWidth = 195;
-    const cardHeight = 270;
-    const totalW = 4 * cardWidth + 3 * 16;
+    const cardWidth = 260;
+    const cardHeight = 360;
+    const totalW = 4 * cardWidth + 3 * 24;
     const startX = (width - totalW) / 2 + cardWidth / 2;
-    const cardY = height / 2 - 5;
+    const cardY = height / 2 + 5;
 
     for (let i = 0; i < 4; i++) {
       const slot = this.slots[i];
-      const cx = startX + i * (cardWidth + 16);
+      const cx = startX + i * (cardWidth + 24);
       const card = this.renderSlotCard(slot, cx, cardY, cardWidth, cardHeight, player, rng, waveNumber);
       this.container.add(card);
     }
@@ -159,15 +159,15 @@ export class ShopModal {
 
     const bgGfx = this.scene.add.graphics();
     bgGfx.fillStyle(slot.isBought ? 0x0a1012 : 0x121c20, 0.95);
-    bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
+    bgGfx.fillRoundedRect(-w / 2, -h / 2, w, h, 10);
     bgGfx.lineStyle(2, slot.isLocked ? 0xffbe0b : 0x3d5a5b, 1);
-    bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
+    bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
     bgGfx.setScrollFactor(0);
     card.add(bgGfx);
 
     if (slot.isBought) {
       const boughtText = this.scene.add.text(0, 0, '【已售罄】', {
-        fontSize: '16px',
+        fontSize: '20px',
         color: '#8fa3a6',
         fontStyle: 'bold',
       });
@@ -194,18 +194,17 @@ export class ShopModal {
         tagStr = `厨具 · ${formatTags(slot.weapon!.tags)}`;
       }
     } else {
-      const existingItem = player.items.find(i => i.definition.id === slot.item!.id);
-      const stacks = existingItem ? existingItem.count : 0;
+      const stacks = player.getItemCount(slot.item!.id);
       descStr = slot.item!.descriptionKey;
       tagStr = `口味 · ${formatTags(slot.item!.tags)} (已有 ${stacks}/${slot.item!.maxStacks})`;
     }
 
     // 分类
-    const tagText = this.scene.add.text(0, -h / 2 + 16, tagStr, {
-      fontSize: '11px',
+    const tagText = this.scene.add.text(0, -h / 2 + 20, tagStr, {
+      fontSize: '13px',
       color: isMergeUpgrade ? '#ffd166' : '#2a9d8f',
       fontStyle: 'bold',
-      wordWrap: { width: w - 16, useAdvancedWrap: true },
+      wordWrap: { width: w - 24, useAdvancedWrap: true },
       align: 'center',
     });
     tagText.setOrigin(0.5, 0);
@@ -213,11 +212,11 @@ export class ShopModal {
     card.add(tagText);
 
     // 标题
-    const titleText = this.scene.add.text(0, -h / 2 + 38, titleStr, {
-      fontSize: '15px',
+    const titleText = this.scene.add.text(0, -h / 2 + 48, titleStr, {
+      fontSize: '18px',
       color: slot.type === 'weapon' ? slot.weapon!.color : slot.item!.color,
       fontStyle: 'bold',
-      wordWrap: { width: w - 16, useAdvancedWrap: true },
+      wordWrap: { width: w - 24, useAdvancedWrap: true },
       align: 'center',
     });
     titleText.setOrigin(0.5, 0);
@@ -225,12 +224,12 @@ export class ShopModal {
     card.add(titleText);
 
     // 描述
-    const descText = this.scene.add.text(0, -h / 2 + 75, descStr, {
-      fontSize: '11px',
+    const descText = this.scene.add.text(0, -h / 2 + 95, descStr, {
+      fontSize: '13px',
       color: '#d8e2dc',
-      wordWrap: { width: w - 20, useAdvancedWrap: true },
+      wordWrap: { width: w - 28, useAdvancedWrap: true },
       align: 'center',
-      lineSpacing: 3,
+      lineSpacing: 5,
     });
     descText.setOrigin(0.5, 0);
     descText.setScrollFactor(0);
@@ -238,11 +237,11 @@ export class ShopModal {
 
     // 锁定按钮
     const lockBtn = this.scene.add.text(
-      -w / 2 + 14,
-      h / 2 - 24,
+      -w / 2 + 18,
+      h / 2 - 30,
       slot.isLocked ? '🔒 已锁' : '🔓 锁定',
       {
-        fontSize: '11px',
+        fontSize: '13px',
         color: slot.isLocked ? '#ffd166' : '#8fa3a6',
       },
     );
@@ -258,12 +257,12 @@ export class ShopModal {
     const canAfford = player.ingredients >= slot.cost;
     const buyBtnGfx = this.scene.add.graphics();
     buyBtnGfx.fillStyle(canAfford ? 0xe76f51 : 0x444444, 1);
-    buyBtnGfx.fillRoundedRect(w / 2 - 85, h / 2 - 36, 75, 26, 4);
+    buyBtnGfx.fillRoundedRect(w / 2 - 105, h / 2 - 46, 92, 32, 6);
     buyBtnGfx.setScrollFactor(0);
     card.add(buyBtnGfx);
 
-    const buyBtnText = this.scene.add.text(w / 2 - 47, h / 2 - 23, `🥟 ${slot.cost}`, {
-      fontSize: '12px',
+    const buyBtnText = this.scene.add.text(w / 2 - 59, h / 2 - 30, `🥟 ${slot.cost}`, {
+      fontSize: '14px',
       color: '#ffffff',
       fontStyle: 'bold',
     });
@@ -272,7 +271,7 @@ export class ShopModal {
     card.add(buyBtnText);
 
     if (canAfford) {
-      const buyZone = this.scene.add.zone(w / 2 - 47, h / 2 - 23, 75, 26);
+      const buyZone = this.scene.add.zone(w / 2 - 59, h / 2 - 30, 92, 32);
       buyZone.setScrollFactor(0);
       buyZone.setInteractive({ useHandCursor: true });
       buyZone.on('pointerdown', () => {
@@ -299,20 +298,20 @@ export class ShopModal {
     const height = this.scene.scale.height;
 
     // 1. 刷新按钮
-    const refreshBtnW = 160;
-    const refreshBtnH = 38;
-    const rx = width / 2 - 140;
-    const ry = height - 60;
+    const refreshBtnW = 200;
+    const refreshBtnH = 44;
+    const rx = width / 2 - 160;
+    const ry = height - 65;
 
     const canRefresh = player.ingredients >= this.refreshCost;
     const refGfx = this.scene.add.graphics();
     refGfx.fillStyle(canRefresh ? 0x2a9d8f : 0x444444, 1);
-    refGfx.fillRoundedRect(rx - refreshBtnW / 2, ry - refreshBtnH / 2, refreshBtnW, refreshBtnH, 6);
+    refGfx.fillRoundedRect(rx - refreshBtnW / 2, ry - refreshBtnH / 2, refreshBtnW, refreshBtnH, 8);
     refGfx.setScrollFactor(0);
     this.container.add(refGfx);
 
-    const refText = this.scene.add.text(rx, ry, `🔄 刷新 (🥟 ${this.refreshCost})`, {
-      fontSize: '13px',
+    const refText = this.scene.add.text(rx, ry, `🔄 刷新货架 (🥟 ${this.refreshCost})`, {
+      fontSize: '15px',
       color: '#ffffff',
       fontStyle: 'bold',
     });
@@ -334,19 +333,19 @@ export class ShopModal {
     }
 
     // 2. 出摊迎战按钮
-    const startBtnW = 160;
-    const startBtnH = 38;
-    const sx = width / 2 + 140;
-    const sy = height - 60;
+    const startBtnW = 200;
+    const startBtnH = 44;
+    const sx = width / 2 + 160;
+    const sy = height - 65;
 
     const startGfx = this.scene.add.graphics();
     startGfx.fillStyle(0xe76f51, 1);
-    startGfx.fillRoundedRect(sx - startBtnW / 2, sy - startBtnH / 2, startBtnW, startBtnH, 6);
+    startGfx.fillRoundedRect(sx - startBtnW / 2, sy - startBtnH / 2, startBtnW, startBtnH, 8);
     startGfx.setScrollFactor(0);
     this.container.add(startGfx);
 
     const startText = this.scene.add.text(sx, sy, '⚔️ 出摊迎战！', {
-      fontSize: '14px',
+      fontSize: '16px',
       color: '#ffffff',
       fontStyle: 'bold',
     });
@@ -380,11 +379,11 @@ export class ShopModal {
       .slice(0, 2)
       .join('  |  ');
 
-    const hintText = this.scene.add.text(width / 2, height - 110, recipeHints, {
-      fontSize: '11px',
+    const hintText = this.scene.add.text(width / 2, height - 122, recipeHints, {
+      fontSize: '13px',
       color: '#2a9d8f',
       fontStyle: 'bold',
-      wordWrap: { width: width - 40, useAdvancedWrap: true },
+      wordWrap: { width: width - 60, useAdvancedWrap: true },
       align: 'center',
     });
     hintText.setOrigin(0.5, 0.5);

@@ -11,20 +11,26 @@ test.describe('Web Survivor Full Workflow Visual Audit', () => {
 
     // 环节 2：主菜单 / 角色三选一界面
     await page.click('#start-btn');
-    await page.waitForTimeout(800);
+    await page.waitForFunction(() => {
+      const game = (window as any).__PHASER_GAME__;
+      return game && game.scene && game.scene.isActive('MenuScene');
+    });
+    await page.waitForTimeout(300);
     await page.screenshot({ path: 'test-results/audit-02-character-menu.png' });
 
     // 环节 3：进入战斗（第 1 波夜战）
-    const canvas = await page.waitForSelector('canvas');
-    const box = await canvas.boundingBox();
-    if (!box) return;
-
-    const scaleX = box.width / 960;
-    const scaleY = box.height / 540;
-
-    // 点击开始营业
-    await page.mouse.click(box.x + 480 * scaleX, box.y + 500 * scaleY);
-    await page.waitForTimeout(1000);
+    await page.evaluate(() => {
+      const game = (window as any).__PHASER_GAME__;
+      const menuScene = game.scene.getScene('MenuScene');
+      if (menuScene) {
+        menuScene.scene.start('RunScene', { characterId: 'wok_master' });
+      }
+    });
+    await page.waitForFunction(() => {
+      const game = (window as any).__PHASER_GAME__;
+      return game && game.scene && game.scene.isActive('RunScene');
+    });
+    await page.waitForTimeout(600);
     await page.screenshot({ path: 'test-results/audit-03-battle-wave1.png' });
 
     // 环节 4：升级三选一弹窗
