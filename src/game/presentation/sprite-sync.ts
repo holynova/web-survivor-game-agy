@@ -16,10 +16,9 @@ export class SpriteSyncSystem {
     this.scene = scene;
 
     // 创建夜市石板地砖背景
-    if (scene.textures.exists('tileset_floor')) {
-      this.tilemapBackground = scene.add.tileSprite(0, 0, 3000, 3000, 'tileset_floor');
+    if (scene.textures.exists('floor_stone')) {
+      this.tilemapBackground = scene.add.tileSprite(0, 0, 3200, 3200, 'floor_stone');
       this.tilemapBackground.setDepth(-10);
-      this.tilemapBackground.setTint(0x8899aa); // 赋予夜市暗色调
     }
 
     this.shadowGraphics = scene.add.graphics();

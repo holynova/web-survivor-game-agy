@@ -71,6 +71,7 @@ class App {
   private startGame(): void {
     if (!this.game) {
       this.game = new Phaser.Game(GAME_CONFIG);
+      (window as unknown as { __PHASER_GAME__: Phaser.Game }).__PHASER_GAME__ = this.game;
     }
   }
 }

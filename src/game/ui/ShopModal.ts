@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { ITEMS } from '@/content/items/data';
 import { RECIPES } from '@/content/recipes/data';
-import { Tag } from '@/content/schemas/common';
+import { Tag, formatTags, TAG_NAMES } from '@/content/schemas/common';
 import { ItemDefinition } from '@/content/schemas/item';
 import { WeaponDefinition } from '@/content/schemas/weapon';
 import { WEAPONS } from '@/content/weapons/data';
@@ -182,13 +182,13 @@ export class ShopModal {
         tagStr = `【合成升星】Lv.${existing.level} ➔ Lv.${nextLvl}`;
       } else {
         descStr = slot.weapon!.levels[0].descriptionKey;
-        tagStr = `厨具 · ${slot.weapon!.tags.map(t => `#${t}`).join(' ')}`;
+        tagStr = `厨具 · ${formatTags(slot.weapon!.tags)}`;
       }
     } else {
       const existingItem = player.items.find(i => i.definition.id === slot.item!.id);
       const stacks = existingItem ? existingItem.count : 0;
       descStr = slot.item!.descriptionKey;
-      tagStr = `口味 · ${slot.item!.tags.map(t => `#${t}`).join(' ')} (已有 ${stacks}/${slot.item!.maxStacks})`;
+      tagStr = `口味 · ${formatTags(slot.item!.tags)} (已有 ${stacks}/${slot.item!.maxStacks})`;
     }
 
     // 分类
@@ -196,6 +196,8 @@ export class ShopModal {
       fontSize: '11px',
       color: isMergeUpgrade ? '#ffd166' : '#2a9d8f',
       fontStyle: 'bold',
+      wordWrap: { width: w - 16, useAdvancedWrap: true },
+      align: 'center',
     });
     tagText.setOrigin(0.5, 0);
     card.add(tagText);
@@ -205,6 +207,8 @@ export class ShopModal {
       fontSize: '15px',
       color: slot.type === 'weapon' ? slot.weapon!.color : slot.item!.color,
       fontStyle: 'bold',
+      wordWrap: { width: w - 16, useAdvancedWrap: true },
+      align: 'center',
     });
     titleText.setOrigin(0.5, 0);
     card.add(titleText);
@@ -213,7 +217,7 @@ export class ShopModal {
     const descText = this.scene.add.text(0, -h / 2 + 75, descStr, {
       fontSize: '11px',
       color: '#d8e2dc',
-      wordWrap: { width: w - 20 },
+      wordWrap: { width: w - 20, useAdvancedWrap: true },
       align: 'center',
       lineSpacing: 3,
     });
@@ -346,7 +350,7 @@ export class ShopModal {
           : '';
         const tagReqs = r.requirement.requiredTagCounts
           ? Object.entries(r.requirement.requiredTagCounts)
-              .map(([t, c]) => `${c}x#${t}(已有${player.tagCounts[t as Tag] || 0})`)
+              .map(([t, c]) => `${c}x#${TAG_NAMES[t as Tag] || t}(已有${player.tagCounts[t as Tag] || 0})`)
               .join(' ')
           : '';
         return `💡 菜谱【${r.nameKey}】: 需要 ${wName} + ${tagReqs}`;
@@ -358,6 +362,8 @@ export class ShopModal {
       fontSize: '11px',
       color: '#2a9d8f',
       fontStyle: 'bold',
+      wordWrap: { width: width - 40, useAdvancedWrap: true },
+      align: 'center',
     });
     hintText.setOrigin(0.5, 0.5);
     this.container.add(hintText);

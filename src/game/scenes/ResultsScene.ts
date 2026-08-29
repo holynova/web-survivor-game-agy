@@ -224,7 +224,7 @@ export class ResultsScene extends Phaser.Scene {
       {
         fontSize: '12px',
         color: '#06d6a0',
-        wordWrap: { width: w - 40 },
+        wordWrap: { width: w - 40, useAdvancedWrap: true },
       },
     );
     card.add(recipeTitle);

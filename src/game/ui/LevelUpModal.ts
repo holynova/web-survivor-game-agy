@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { ITEMS } from '@/content/items/data';
+import { formatTags } from '@/content/schemas/common';
 import { ItemDefinition } from '@/content/schemas/item';
 import { WeaponDefinition } from '@/content/schemas/weapon';
 import { WEAPONS } from '@/content/weapons/data';
@@ -107,21 +108,21 @@ export class LevelUpModal {
       nameText = opt.weapon.nameKey;
       typeTag = `【厨具升星】Lv.${opt.currentLevel} ➔ Lv.${opt.nextLevel}`;
       descText = opt.weapon.levels[opt.nextLevel - 1].descriptionKey;
-      tagsStr = opt.weapon.tags.map(t => `#${t}`).join(' ');
+      tagsStr = formatTags(opt.weapon.tags);
       colorHex = opt.weapon.color;
       iconChar = this.getWeaponIcon(opt.weapon.id);
     } else if (opt.type === 'weapon_new') {
       nameText = opt.weapon.nameKey;
       typeTag = '【新增厨具】初始 Lv.1';
       descText = opt.weapon.levels[0].descriptionKey;
-      tagsStr = opt.weapon.tags.map(t => `#${t}`).join(' ');
+      tagsStr = formatTags(opt.weapon.tags);
       colorHex = opt.weapon.color;
       iconChar = this.getWeaponIcon(opt.weapon.id);
     } else if (opt.type === 'item_new') {
       nameText = opt.item.nameKey;
       typeTag = `【口味秘方】(已有 ${opt.currentStacks}/${opt.item.maxStacks})`;
       descText = opt.item.descriptionKey;
-      tagsStr = opt.item.tags.map(t => `#${t}`).join(' ');
+      tagsStr = formatTags(opt.item.tags);
       colorHex = opt.item.color;
       iconChar = this.getItemIcon(opt.item.id);
     } else if (opt.type === 'heal_pack') {
@@ -145,6 +146,8 @@ export class LevelUpModal {
       fontSize: '11px',
       color: '#2a9d8f',
       fontStyle: 'bold',
+      wordWrap: { width: w - 20, useAdvancedWrap: true },
+      align: 'center',
     });
     tagObj.setOrigin(0.5, 0);
     card.add(tagObj);
@@ -154,7 +157,7 @@ export class LevelUpModal {
       fontSize: '17px',
       color: colorHex,
       fontStyle: 'bold',
-      wordWrap: { width: w - 24 },
+      wordWrap: { width: w - 24, useAdvancedWrap: true },
       align: 'center',
     });
     titleObj.setOrigin(0.5, 0);
@@ -164,7 +167,7 @@ export class LevelUpModal {
     const descObj = this.scene.add.text(0, -h / 2 + 88, descText, {
       fontSize: '12px',
       color: '#e2ece9',
-      wordWrap: { width: w - 28 },
+      wordWrap: { width: w - 28, useAdvancedWrap: true },
       align: 'center',
       lineSpacing: 4,
     });
@@ -175,6 +178,8 @@ export class LevelUpModal {
     const tagsObj = this.scene.add.text(0, h / 2 - 58, tagsStr, {
       fontSize: '11px',
       color: '#8fa3a6',
+      wordWrap: { width: w - 20, useAdvancedWrap: true },
+      align: 'center',
     });
     tagsObj.setOrigin(0.5, 0);
     card.add(tagsObj);

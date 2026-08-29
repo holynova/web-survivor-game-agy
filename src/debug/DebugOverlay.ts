@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { EventBus } from '@/core/event-bus';
 import { SimulationWorld } from '../game/simulation/world';
 
 export class DebugOverlay {
@@ -64,6 +65,7 @@ export class DebugOverlay {
 
     this.createCheatButton(160, 180, '直接升级', world => {
       world.player.addExp(world.player.expToNextLevel);
+      EventBus.getInstance().emit('player:levelup', { newLevel: world.player.level });
     });
   }
 

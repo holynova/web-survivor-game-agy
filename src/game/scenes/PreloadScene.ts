@@ -115,11 +115,31 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   private createPlaceholderTextures(): void {
+    // 粒子圆点
     const g = this.make.graphics({ x: 0, y: 0 });
     g.fillStyle(0xffffff, 1);
     g.fillCircle(8, 8, 8);
     g.generateTexture('particle_circle', 16, 16);
     g.destroy();
+
+    // 生成夜市深色石板地砖 (64x64)
+    const floorG = this.make.graphics({ x: 0, y: 0 });
+    floorG.fillStyle(0x0f181b, 1);
+    floorG.fillRect(0, 0, 64, 64);
+    floorG.lineStyle(1, 0x1f3036, 1);
+    floorG.strokeRect(1, 1, 30, 30);
+    floorG.strokeRect(33, 1, 30, 30);
+    floorG.strokeRect(1, 33, 30, 30);
+    floorG.strokeRect(33, 33, 30, 30);
+
+    floorG.fillStyle(0x162429, 0.7);
+    floorG.fillRect(3, 3, 26, 26);
+    floorG.fillRect(35, 3, 26, 26);
+    floorG.fillRect(3, 35, 26, 26);
+    floorG.fillRect(35, 35, 26, 26);
+
+    floorG.generateTexture('floor_stone', 64, 64);
+    floorG.destroy();
   }
 
   public create(): void {

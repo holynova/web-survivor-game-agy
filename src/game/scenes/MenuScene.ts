@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { CHARACTERS } from '@/content/characters/data';
+import { formatTags } from '@/content/schemas/common';
 import { CharacterDefinition } from '@/content/schemas/character';
 import { WEAPONS } from '@/content/weapons/data';
 import { SaveManager } from '@/save/storage';
@@ -33,16 +34,18 @@ export class MenuScene extends Phaser.Scene {
     bg.fillCircle(width * 0.8, 80, 140);
 
     // 2. 标题
-    const title = this.add.text(width / 2, 40, '山 海 夜 市', {
+    const title = this.add.text(width / 2, 35, '山 海 夜 市', {
       fontSize: '36px',
       color: '#f4a261',
       fontStyle: 'bold',
     });
     title.setOrigin(0.5, 0);
 
-    const subTitle = this.add.text(width / 2, 85, '幽冥百鬼围攻，化厨具为神兵！构筑你的战斗厨房！', {
+    const subTitle = this.add.text(width / 2, 80, '幽冥百鬼围攻，化厨具为神兵！构筑你的战斗厨房！', {
       fontSize: '13px',
       color: '#8fa3a6',
+      wordWrap: { width: width - 40, useAdvancedWrap: true },
+      align: 'center',
     });
     subTitle.setOrigin(0.5, 0);
 
@@ -54,7 +57,7 @@ export class MenuScene extends Phaser.Scene {
     const maxKills = saveData.highScores.maxKills;
     const hsText = this.add.text(
       width / 2,
-      height - 95,
+      height - 85,
       `🏆 最佳营业记录: 到达第 ${bestWave} 波 | 最高驱妖: ${maxKills} 只`,
       {
         fontSize: '12px',
@@ -65,9 +68,9 @@ export class MenuScene extends Phaser.Scene {
 
     // 5. 开始营业按钮
     const btnW = 220;
-    const btnH = 44;
+    const btnH = 42;
     const btnX = width / 2;
-    const btnY = height - 45;
+    const btnY = height - 40;
 
     const btnGfx = this.add.graphics();
     btnGfx.fillStyle(0xe76f51, 1);
@@ -148,25 +151,27 @@ export class MenuScene extends Phaser.Scene {
     startWeaponText.setOrigin(0.5, 0);
     card.add(startWeaponText);
 
-    // 描述
-    const descText = this.add.text(0, -h / 2 + 118, charDef.descriptionKey, {
+    // 描述 (使用 useAdvancedWrap: true 解决中文换行)
+    const descText = this.add.text(0, -h / 2 + 116, charDef.descriptionKey, {
       fontSize: '11px',
       color: '#d8e2dc',
-      wordWrap: { width: w - 24 },
+      wordWrap: { width: w - 24, useAdvancedWrap: true },
       align: 'center',
-      lineSpacing: 3,
+      lineSpacing: 4,
     });
     descText.setOrigin(0.5, 0);
     card.add(descText);
 
-    // 标签
+    // 中文标签
     const tagsText = this.add.text(
       0,
       h / 2 - 25,
-      charDef.tags.map(t => `#${t}`).join(' '),
+      formatTags(charDef.tags),
       {
         fontSize: '11px',
         color: '#8fa3a6',
+        wordWrap: { width: w - 20, useAdvancedWrap: true },
+        align: 'center',
       },
     );
     tagsText.setOrigin(0.5, 0);
