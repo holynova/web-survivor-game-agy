@@ -16,6 +16,8 @@ export interface StatusSlow {
   durationRemainingMs: number;
 }
 
+export type EnemyChargeState = 'none' | 'windup' | 'dashing' | 'cooldown';
+
 export class Enemy implements Poolable, SpatialEntity {
   public static nextId = 1;
 
@@ -49,6 +51,14 @@ export class Enemy implements Poolable, SpatialEntity {
 
   public hitFlashTimerSec = 0;
 
+  // 冲刺状态机
+  public chargeState: EnemyChargeState = 'none';
+  public chargeTimerSec = 0;
+  public chargeDirection = new Vector2(0, 0);
+
+  // 远程射击计时器
+  public rangedShootTimerSec = 0;
+
   public spawn(def: EnemyDefinition, x: number, y: number): void {
     this.id = Enemy.nextId++;
     this.isActive = true;
@@ -73,6 +83,11 @@ export class Enemy implements Poolable, SpatialEntity {
     this.burnStatus = undefined;
     this.slowStatus = undefined;
     this.hitFlashTimerSec = 0;
+
+    this.chargeState = 'none';
+    this.chargeTimerSec = (Math.random() * 1.5);
+    this.chargeDirection.set(0, 0);
+    this.rangedShootTimerSec = (Math.random() * 1.5);
   }
 
   public reset(): void {
@@ -81,6 +96,16 @@ export class Enemy implements Poolable, SpatialEntity {
     this.slowStatus = undefined;
     this.velocity.set(0, 0);
     this.knockbackVelocity.set(0, 0);
+    this.chargeState = 'none';
+    this.chargeTimerSec = 0;
+    this.rangedShootTimerSec = 0;
+  }
+
+  public takeDamage(amount: number): number {
+    const effectiveDamage = Math.min(this.currentHp, amount);
+    this.currentHp = Math.max(0, this.currentHp - effectiveDamage);
+    this.hitFlashTimerSec = 0.12;
+    return effectiveDamage;
   }
 
   public applyKnockback(dirX: number, dirY: number, force: number): void {
@@ -89,11 +114,5 @@ export class Enemy implements Poolable, SpatialEntity {
       this.knockbackVelocity.x += dirX * effectiveForce;
       this.knockbackVelocity.y += dirY * effectiveForce;
     }
-  }
-
-  public takeDamage(amount: number): number {
-    this.currentHp = Math.max(0, this.currentHp - amount);
-    this.hitFlashTimerSec = 0.12;
-    return amount;
   }
 }

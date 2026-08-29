@@ -1,5 +1,5 @@
 import { EventBus } from '@/core/event-bus';
-import { distanceSquared, Vector2 } from '@/core/math';
+import { distanceSquared } from '@/core/math';
 import { ObjectPool } from '@/core/pool';
 import { SeededRNG } from '@/core/rng';
 import { DamageText } from '../entities/DamageText';
@@ -17,6 +17,10 @@ export interface RunStatistics {
   timeSurvivedSec: number;
 }
 
+export interface DoubleLootProvider {
+  doubleLootRemaining: number;
+}
+
 export class CollisionSystem {
   private tempNearbyEnemies: Enemy[] = [];
 
@@ -30,6 +34,7 @@ export class CollisionSystem {
     spatialHash: SpatialHash<Enemy>;
     rng: SeededRNG;
     stats: RunStatistics;
+    doubleLootProvider?: DoubleLootProvider;
     dt: number;
   }): void {
     const {
@@ -41,15 +46,47 @@ export class CollisionSystem {
       spatialHash,
       rng,
       stats,
+      doubleLootProvider,
       dt,
     } = params;
 
-    // 1. 投射物与敌人碰撞检测 (基于空间哈希优化)
+    // 1. 投射物碰撞检测
     const activeProjectiles = projectilePool.getActiveItems();
     for (let i = activeProjectiles.length - 1; i >= 0; i--) {
       const p = activeProjectiles[i];
       if (!p.isActive) continue;
 
+      // 妖魔远程子弹击中玩家检测
+      if (p.isEnemy) {
+        const pDistSq = distanceSquared(p.x, p.y, player.position.x, player.position.y);
+        const rSum = p.radius + player.radius;
+        if (pDistSq <= rSum * rSum) {
+          const dmg = player.takeDamage(p.damage);
+          if (dmg > 0) {
+            const dmgText = damageTextPool.acquire();
+            dmgText.spawn(String(dmg), player.position.x, player.position.y - 12, '#e76f51', false);
+
+            EventBus.getInstance().emit('entity:damaged', {
+              targetId: 0,
+              sourceId: 'enemy_bullet',
+              damage: dmg,
+              isCrit: false,
+              x: player.position.x,
+              y: player.position.y,
+            });
+
+            EventBus.getInstance().emit('sound:play', { key: 'sfx_hit', volume: 0.7 });
+
+            if (player.currentHp <= 0) {
+              EventBus.getInstance().emit('player:died', { cause: 'enemy_bullet' });
+            }
+          }
+          projectilePool.release(p);
+        }
+        continue;
+      }
+
+      // 玩家武器投射物击中敌人检测 (基于空间哈希优化)
       this.tempNearbyEnemies.length = 0;
       spatialHash.queryRadius(p.x, p.y, p.radius, this.tempNearbyEnemies);
 
@@ -80,36 +117,15 @@ export class CollisionSystem {
           stats.totalDamageDealt += dmgDealt;
           stats.damageByWeapon[p.weaponId] = (stats.damageByWeapon[p.weaponId] || 0) + dmgDealt;
 
-          // 生成漂字
+          // 伤害跳字
           const dmgText = damageTextPool.acquire();
           dmgText.spawn(
-            `${dmgDealt}${p.isCrit ? '!' : ''}`,
+            String(dmgDealt),
             enemy.x,
             enemy.y,
-            p.isCrit ? '#ffd166' : p.color,
+            p.isCrit ? '#ffd166' : '#ffffff',
             p.isCrit,
           );
-
-          // 击退
-          const hitDir = new Vector2(enemy.x - p.x, enemy.y - p.y).normalize();
-          for (const eff of p.effects) {
-            if (eff.type === 'knockback') {
-              enemy.applyKnockback(hitDir.x, hitDir.y, eff.value);
-            } else if (eff.type === 'burn') {
-              enemy.burnStatus = {
-                damagePerTick: eff.value,
-                durationRemainingMs: eff.durationMs || 2000,
-                tickIntervalMs: eff.tickIntervalMs || 500,
-                tickTimerMs: 0,
-                sourceId: p.weaponId,
-              };
-            } else if (eff.type === 'slow') {
-              enemy.slowStatus = {
-                slowFactor: eff.value,
-                durationRemainingMs: eff.durationMs || 2000,
-              };
-            }
-          }
 
           EventBus.getInstance().emit('entity:damaged', {
             targetId: enemy.id,
@@ -120,13 +136,44 @@ export class CollisionSystem {
             y: enemy.y,
           });
 
-          // 检查敌人死亡
+          // 击中音效
+          EventBus.getInstance().emit('sound:play', {
+            key: 'sfx_hit',
+            volume: p.isCrit ? 0.8 : 0.5,
+          });
+
+          // 触发武器附加效果 (击退、灼烧、减速)
+          for (const eff of p.effects) {
+            if (eff.type === 'knockback') {
+              const kx = enemy.x - player.position.x;
+              const ky = enemy.y - player.position.y;
+              const kDist = Math.sqrt(kx * kx + ky * ky);
+              if (kDist > 0.001) {
+                enemy.applyKnockback(kx / kDist, ky / kDist, eff.value);
+              }
+            } else if (eff.type === 'burn') {
+              enemy.burnStatus = {
+                damagePerTick: eff.value,
+                durationRemainingMs: eff.durationMs || 3000,
+                tickTimerMs: 0,
+                tickIntervalMs: 500,
+                sourceId: p.weaponId,
+              };
+            } else if (eff.type === 'slow') {
+              enemy.slowStatus = {
+                slowFactor: eff.value,
+                durationRemainingMs: eff.durationMs || 2500,
+              };
+            }
+          }
+
+          // 检查敌人击杀
           if (enemy.currentHp <= 0) {
             this.handleEnemyDeath(enemy, player, enemyPool, dropPool, spatialHash, rng, stats);
           }
 
-          // 消耗穿透次数
-          if (p.attackPattern !== 'area' && p.attackPattern !== 'orbit' && p.attackPattern !== 'summon') {
+          // 穿透损耗判定
+          if (p.attackPattern === 'projectile') {
             p.pierceRemaining--;
             if (p.pierceRemaining <= 0) {
               projectilePool.release(p);
@@ -135,51 +182,47 @@ export class CollisionSystem {
           }
         }
       }
-
-      if (p.attackPattern === 'area' || p.attackPattern === 'orbit') {
-        if (p.tickDamageTimerMs >= 300) {
-          p.tickDamageTimerMs = 0;
-          p.hitEnemyIds.clear();
-        }
-      }
     }
 
-    // 2. 敌人与玩家接触碰撞检测
-    if (player.currentHp > 0) {
-      const px = player.position.x;
-      const py = player.position.y;
+    // 2. 玩家与敌人接触伤害判定
+    if (!player.isInvincible && player.iFrameTimerSec <= 0) {
       this.tempNearbyEnemies.length = 0;
-      spatialHash.queryRadius(px, py, player.radius, this.tempNearbyEnemies);
+      spatialHash.queryRadius(player.position.x, player.position.y, player.radius + 15, this.tempNearbyEnemies);
 
       for (let i = 0; i < this.tempNearbyEnemies.length; i++) {
         const enemy = this.tempNearbyEnemies[i];
         if (!enemy.isActive) continue;
 
-        const distSq = distanceSquared(px, py, enemy.x, enemy.y);
+        const distSq = distanceSquared(player.position.x, player.position.y, enemy.x, enemy.y);
         const rSum = player.radius + enemy.radius;
 
         if (distSq <= rSum * rSum) {
-          const dmg = player.takeDamage(enemy.contactDamage);
-          if (dmg > 0) {
+          const dmgDealt = player.takeDamage(enemy.contactDamage);
+          if (dmgDealt > 0) {
             const dmgText = damageTextPool.acquire();
-            dmgText.spawn(`-${dmg}`, px, py, '#e63946', false);
+            dmgText.spawn(String(dmgDealt), player.position.x, player.position.y - 12, '#e76f51', false);
 
-            EventBus.getInstance().emit('sound:play', {
-              key: 'sfx_player_hurt',
-              volume: 0.6,
+            EventBus.getInstance().emit('entity:damaged', {
+              targetId: 0,
+              sourceId: 'contact',
+              damage: dmgDealt,
+              isCrit: false,
+              x: player.position.x,
+              y: player.position.y,
             });
 
+            EventBus.getInstance().emit('sound:play', { key: 'sfx_hit', volume: 0.8 });
+
             if (player.currentHp <= 0) {
-              EventBus.getInstance().emit('player:died', {
-                cause: enemy.definition.nameKey,
-              });
+              EventBus.getInstance().emit('player:died', { cause: 'contact' });
             }
           }
+          break; // 每次受击触发单次判定与无敌帧
         }
       }
     }
 
-    // 3. 掉落物拾取与磁铁吸附
+    // 3. 掉落物拾取与磁铁吸附 (包含双倍收益留存)
     const activeDrops = dropPool.getActiveItems();
     const pickupRadiusSq = player.pickupRadius * player.pickupRadius;
     const px = player.position.x;
@@ -202,20 +245,37 @@ export class CollisionSystem {
           drop.x += (dx / d) * drop.magnetSpeed * dt;
           drop.y += (dy / d) * drop.magnetSpeed * dt;
         } else {
-          // 拾取成功
+          // 拾取成功：计算是否触发双倍留存收益
+          let effectiveValue = drop.value;
+          let isDouble = false;
+
+          if (doubleLootProvider && doubleLootProvider.doubleLootRemaining > 0) {
+            doubleLootProvider.doubleLootRemaining--;
+            effectiveValue = drop.value * 2;
+            isDouble = true;
+          }
+
           if (drop.type === 'heat') {
-            const leveledUp = player.addExp(drop.value);
+            const leveledUp = player.addExp(effectiveValue);
             if (leveledUp) {
               EventBus.getInstance().emit('player:levelup', { newLevel: player.level });
             }
+            if (isDouble) {
+              const dmgText = damageTextPool.acquire();
+              dmgText.spawn(`EXP x2`, drop.x, drop.y - 12, '#ffd166', true);
+            }
           } else if (drop.type === 'ingredient') {
-            player.ingredients += drop.value;
-            stats.ingredientsEarned += drop.value;
+            player.ingredients += effectiveValue;
+            stats.ingredientsEarned += effectiveValue;
+            if (isDouble) {
+              const dmgText = damageTextPool.acquire();
+              dmgText.spawn(`🥟 +${effectiveValue} (双倍!)`, drop.x, drop.y - 12, '#ffd166', true);
+            }
           }
 
           EventBus.getInstance().emit('drop:collected', {
             dropType: drop.type,
-            value: drop.value,
+            value: effectiveValue,
             x: drop.x,
             y: drop.y,
           });
@@ -229,6 +289,7 @@ export class CollisionSystem {
     const activeTexts = damageTextPool.getActiveItems();
     for (let i = activeTexts.length - 1; i >= 0; i--) {
       const text = activeTexts[i];
+      if (!text.isActive) continue;
       text.lifeMs -= dt * 1000;
       text.y += text.vy * dt;
       if (text.lifeMs <= 0) {
@@ -239,38 +300,15 @@ export class CollisionSystem {
 
   public handleEnemyDeath(
     enemy: Enemy,
-    player: Player,
+    _player: Player,
     enemyPool: ObjectPool<Enemy>,
     dropPool: ObjectPool<Drop>,
     spatialHash: SpatialHash<Enemy>,
     rng: SeededRNG,
     stats: RunStatistics,
   ): void {
+    enemy.isActive = false;
     stats.totalKills++;
-
-    // 掉落热度（经验）
-    const heatDrop = dropPool.acquire();
-    heatDrop.spawn('heat', enemy.expValue, enemy.x, enemy.y);
-
-    // 概率掉落食材
-    let ingredientBonus = 0;
-    for (const item of player.items) {
-      for (const mod of item.definition.modifiers) {
-        if (mod.stat === 'ingredientDropBonus') {
-          ingredientBonus += mod.value * item.count;
-        }
-      }
-    }
-
-    if (rng.next() < enemy.ingredientChance + ingredientBonus) {
-      const ingredientDrop = dropPool.acquire();
-      ingredientDrop.spawn(
-        'ingredient',
-        enemy.ingredientValue,
-        enemy.x + rng.nextFloat(-8, 8),
-        enemy.y + rng.nextFloat(-8, 8),
-      );
-    }
 
     EventBus.getInstance().emit('entity:died', {
       entityId: enemy.id,
@@ -280,7 +318,16 @@ export class CollisionSystem {
       isBoss: enemy.isBoss,
     });
 
-    spatialHash.remove(enemy);
+    // 爆出火候(经验)或食材(金币)
+    if (rng.next() < enemy.ingredientChance) {
+      const ingDrop = dropPool.acquire();
+      ingDrop.spawn('ingredient', enemy.ingredientValue, enemy.x, enemy.y);
+    } else {
+      const heatDrop = dropPool.acquire();
+      heatDrop.spawn('heat', enemy.expValue, enemy.x, enemy.y);
+    }
+
     enemyPool.release(enemy);
+    spatialHash.remove(enemy);
   }
 }

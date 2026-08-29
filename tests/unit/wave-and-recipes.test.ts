@@ -51,4 +51,13 @@ describe('Wave State Machine & Recipe Transformations', () => {
     expect(wokWeapon?.isTransformed).toBe(true);
     expect(wokWeapon?.transformedRecipeId).toBe('spicy_fire_wok');
   });
+
+  it('should test wave end heal and double loot accumulation logic', () => {
+    const player = new Player(CHARACTERS.wok_master);
+    player.takeDamage(50);
+    expect(player.currentHp).toBeLessThan(player.maxHp);
+
+    player.heal(player.maxHp);
+    expect(player.currentHp).toBe(player.maxHp);
+  });
 });

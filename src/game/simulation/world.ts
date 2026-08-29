@@ -124,6 +124,8 @@ export class SimulationWorld {
     };
   }
 
+  public doubleLootRemaining = 0;
+
   /**
    * 固定逻辑步长更新 (每秒执行 60 次)
    */
@@ -138,18 +140,29 @@ export class SimulationWorld {
     // 2. 波次逻辑更新与整备期状态流转
     const { phaseChanged, newPhase } = this.waveSystem.update(dt, isBossAlive);
     if (phaseChanged && newPhase === 'preparation') {
+      // 1. 每一波结束后回满血
+      this.player.heal(this.player.maxHp);
+      this.player.currentHp = this.player.maxHp;
+
+      // 6. 清空地上战利品，并记录数量下一波前 x 个双倍收益
+      const uncollectedCount = this.dropPool.getActiveCount();
+      this.doubleLootRemaining += uncollectedCount;
+      this.dropPool.releaseAll();
+      this.projectilePool.releaseAll();
+
       this.gameState = 'shop';
       this.clock.pause();
       return;
     }
 
-    // 3. 玩家与敌人移动
+    // 3. 玩家与敌人移动 (包含冲刺怪与远程怪射击调度)
     this.movementSystem.updatePlayer(this.player, this.inputVector.x, this.inputVector.y, dt);
     this.movementSystem.updateEnemies(
       this.enemyPool.getActiveItems(),
       this.player,
       this.spatialHash,
       dt,
+      this.projectilePool,
     );
 
     // 4. 刷怪系统
@@ -200,6 +213,7 @@ export class SimulationWorld {
       spatialHash: this.spatialHash,
       rng: this.rng,
       stats: this.statistics,
+      doubleLootProvider: this,
       dt,
     });
 

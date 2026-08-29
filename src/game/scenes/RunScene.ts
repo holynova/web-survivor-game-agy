@@ -89,7 +89,7 @@ export class RunScene extends Phaser.Scene {
         if (this.world.gameState === 'playing') {
           this.world.gameState = 'paused';
           this.world.clock.pause();
-          this.pauseModal.show();
+          this.pauseModal.show(this.world.player, this.world);
         } else if (this.world.gameState === 'paused') {
           this.pauseModal.hide();
           this.world.resumeGame();

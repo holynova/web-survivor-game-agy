@@ -15,6 +15,7 @@ export const WAVES: WaveDefinition[] = [
     preparationSeconds: 15,
     spawnEntries: [
       { enemyId: 'hungry_ghost', weight: 8, intervalMs: 800, batchSize: 2 },
+      { enemyId: 'charging_boar', weight: 3, intervalMs: 1600, batchSize: 1 },
       { enemyId: 'spicy_slime', weight: 4, intervalMs: 1400, batchSize: 1 },
     ],
   }),
@@ -25,6 +26,7 @@ export const WAVES: WaveDefinition[] = [
     preparationSeconds: 15,
     spawnEntries: [
       { enemyId: 'hungry_ghost', weight: 6, intervalMs: 700, batchSize: 3 },
+      { enemyId: 'spitting_shaman', weight: 4, intervalMs: 1300, batchSize: 2 },
       { enemyId: 'lantern_spirit', weight: 4, intervalMs: 1200, batchSize: 2 },
     ],
   }),
@@ -35,8 +37,9 @@ export const WAVES: WaveDefinition[] = [
     preparationSeconds: 15,
     spawnEntries: [
       { enemyId: 'hungry_ghost', weight: 5, intervalMs: 600, batchSize: 3 },
+      { enemyId: 'charging_boar', weight: 4, intervalMs: 1000, batchSize: 2 },
       { enemyId: 'grease_goblin', weight: 5, intervalMs: 1000, batchSize: 2 },
-      { enemyId: 'lantern_spirit', weight: 3, intervalMs: 1200, batchSize: 2 },
+      { enemyId: 'spitting_shaman', weight: 3, intervalMs: 1200, batchSize: 2 },
     ],
   }),
   WaveDefinitionSchema.parse({
@@ -45,9 +48,10 @@ export const WAVES: WaveDefinition[] = [
     maxActiveEnemies: 220,
     preparationSeconds: 15,
     spawnEntries: [
+      { enemyId: 'charging_boar', weight: 5, intervalMs: 800, batchSize: 2 },
       { enemyId: 'grease_goblin', weight: 6, intervalMs: 600, batchSize: 3 },
       { enemyId: 'skewer_thief', weight: 5, intervalMs: 800, batchSize: 2 },
-      { enemyId: 'spicy_slime', weight: 4, intervalMs: 1000, batchSize: 2 },
+      { enemyId: 'spitting_shaman', weight: 4, intervalMs: 1000, batchSize: 2 },
     ],
   }),
   WaveDefinitionSchema.parse({
@@ -58,7 +62,8 @@ export const WAVES: WaveDefinition[] = [
     preparationSeconds: 20,
     spawnEntries: [
       { enemyId: 'giant_bao_demon', weight: 1, intervalMs: 25000, batchSize: 1 },
-      { enemyId: 'hungry_ghost', weight: 6, intervalMs: 500, batchSize: 4 },
+      { enemyId: 'charging_boar', weight: 5, intervalMs: 600, batchSize: 3 },
+      { enemyId: 'spitting_shaman', weight: 4, intervalMs: 800, batchSize: 2 },
       { enemyId: 'lantern_spirit', weight: 4, intervalMs: 800, batchSize: 2 },
     ],
   }),
@@ -69,8 +74,9 @@ export const WAVES: WaveDefinition[] = [
     preparationSeconds: 15,
     spawnEntries: [
       { enemyId: 'steam_phantom', weight: 6, intervalMs: 600, batchSize: 3 },
+      { enemyId: 'charging_boar', weight: 5, intervalMs: 700, batchSize: 3 },
+      { enemyId: 'spitting_shaman', weight: 5, intervalMs: 700, batchSize: 3 },
       { enemyId: 'skewer_thief', weight: 5, intervalMs: 600, batchSize: 3 },
-      { enemyId: 'spicy_slime', weight: 4, intervalMs: 800, batchSize: 2 },
     ],
   }),
   WaveDefinitionSchema.parse({
@@ -80,8 +86,9 @@ export const WAVES: WaveDefinition[] = [
     preparationSeconds: 15,
     spawnEntries: [
       { enemyId: 'steam_phantom', weight: 5, intervalMs: 500, batchSize: 3 },
+      { enemyId: 'charging_boar', weight: 5, intervalMs: 600, batchSize: 3 },
+      { enemyId: 'spitting_shaman', weight: 5, intervalMs: 600, batchSize: 3 },
       { enemyId: 'grease_goblin', weight: 5, intervalMs: 500, batchSize: 3 },
-      { enemyId: 'lantern_spirit', weight: 5, intervalMs: 500, batchSize: 3 },
     ],
   }),
   WaveDefinitionSchema.parse({
@@ -92,7 +99,8 @@ export const WAVES: WaveDefinition[] = [
     preparationSeconds: 20,
     spawnEntries: [
       { enemyId: 'flame_pot_guard', weight: 1, intervalMs: 25000, batchSize: 1 },
-      { enemyId: 'skewer_thief', weight: 6, intervalMs: 450, batchSize: 4 },
+      { enemyId: 'charging_boar', weight: 6, intervalMs: 500, batchSize: 4 },
+      { enemyId: 'spitting_shaman', weight: 5, intervalMs: 500, batchSize: 3 },
       { enemyId: 'steam_phantom', weight: 5, intervalMs: 500, batchSize: 3 },
     ],
   }),
@@ -103,8 +111,9 @@ export const WAVES: WaveDefinition[] = [
     preparationSeconds: 15,
     spawnEntries: [
       { enemyId: 'steam_phantom', weight: 6, intervalMs: 400, batchSize: 4 },
+      { enemyId: 'charging_boar', weight: 6, intervalMs: 400, batchSize: 4 },
+      { enemyId: 'spitting_shaman', weight: 6, intervalMs: 400, batchSize: 4 },
       { enemyId: 'grease_goblin', weight: 6, intervalMs: 400, batchSize: 4 },
-      { enemyId: 'spicy_slime', weight: 4, intervalMs: 600, batchSize: 3 },
     ],
   }),
   WaveDefinitionSchema.parse({
@@ -115,8 +124,9 @@ export const WAVES: WaveDefinition[] = [
     spawnEntries: [
       { enemyId: 'giant_bao_demon', weight: 1, intervalMs: 30000, batchSize: 1 },
       { enemyId: 'flame_pot_guard', weight: 1, intervalMs: 30000, batchSize: 1 },
+      { enemyId: 'charging_boar', weight: 6, intervalMs: 400, batchSize: 4 },
+      { enemyId: 'spitting_shaman', weight: 6, intervalMs: 400, batchSize: 4 },
       { enemyId: 'skewer_thief', weight: 6, intervalMs: 400, batchSize: 4 },
-      { enemyId: 'lantern_spirit', weight: 6, intervalMs: 400, batchSize: 4 },
     ],
   }),
   WaveDefinitionSchema.parse({
@@ -128,9 +138,9 @@ export const WAVES: WaveDefinition[] = [
     preparationSeconds: 0,
     spawnEntries: [
       { enemyId: 'night_glutton_king', weight: 1, intervalMs: 999999, batchSize: 1 },
+      { enemyId: 'charging_boar', weight: 4, intervalMs: 500, batchSize: 3 },
+      { enemyId: 'spitting_shaman', weight: 4, intervalMs: 500, batchSize: 3 },
       { enemyId: 'hungry_ghost', weight: 4, intervalMs: 500, batchSize: 4 },
-      { enemyId: 'spicy_slime', weight: 3, intervalMs: 600, batchSize: 3 },
-      { enemyId: 'lantern_spirit', weight: 3, intervalMs: 600, batchSize: 3 },
     ],
   }),
 ];

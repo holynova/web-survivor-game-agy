@@ -11,6 +11,7 @@ export class Projectile implements Poolable {
 
   public weaponId = '';
   public attackPattern: AttackPattern = 'projectile';
+  public isEnemy = false;
   public x = 0;
   public y = 0;
   public velocity = new Vector2(0, 0);
@@ -52,11 +53,13 @@ export class Projectile implements Poolable {
     orbitAngle?: number;
     orbitRadius?: number;
     orbitSpeed?: number;
+    isEnemy?: boolean;
   }): void {
     this.id = Projectile.nextId++;
     this.isActive = true;
     this.weaponId = params.weaponId;
     this.attackPattern = params.attackPattern;
+    this.isEnemy = params.isEnemy || false;
     this.x = params.x;
     this.y = params.y;
     this.velocity.set(params.vx, params.vy);
@@ -68,17 +71,20 @@ export class Projectile implements Poolable {
     this.radius = params.radius;
     this.color = params.color;
     this.effects = params.effects ? [...params.effects] : [];
+
     this.orbitAngle = params.orbitAngle || 0;
     this.orbitRadius = params.orbitRadius || 80;
     this.orbitSpeed = params.orbitSpeed || 2.5;
+
     this.hitEnemyIds.clear();
     this.tickDamageTimerMs = 0;
   }
 
   public reset(): void {
     this.isActive = false;
-    this.hitEnemyIds.clear();
-    this.effects = [];
+    this.isEnemy = false;
     this.velocity.set(0, 0);
+    this.effects.length = 0;
+    this.hitEnemyIds.clear();
   }
 }

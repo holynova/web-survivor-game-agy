@@ -62,7 +62,7 @@ test.describe('Web Survivor Full Workflow Visual Audit', () => {
       const runScene = game.scene.getScene('RunScene');
       if (runScene && runScene.pauseModal) {
         runScene.shopModal.hide();
-        runScene.pauseModal.show();
+        runScene.pauseModal.show(runScene.world.player, runScene.world);
       }
     });
     await page.waitForTimeout(600);

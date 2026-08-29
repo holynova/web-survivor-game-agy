@@ -33,6 +33,7 @@ export class SpriteSyncSystem {
   private playerSprite: Phaser.GameObjects.Sprite | null = null;
   private enemySprites: Map<number, Phaser.GameObjects.Sprite> = new Map();
   private dropSprites: Map<number, Phaser.GameObjects.Image> = new Map();
+  private projectileSprites: Map<number, Phaser.GameObjects.Image | Phaser.GameObjects.Sprite> = new Map();
   private damageTexts: Map<number, Phaser.GameObjects.Text> = new Map();
   private tilemapBackground: Phaser.GameObjects.TileSprite | null = null;
 
@@ -91,16 +92,16 @@ export class SpriteSyncSystem {
     // 1. 绘制环境边界
     this.renderEnvironment();
 
-    // 2. 同步并渲染掉落物 (像素美食/食材)
+    // 2. 同步并渲染掉落物 (纯净像素食材，去掉圆圈)
     this.renderDrops(world);
 
-    // 3. 渲染投射物与攻击特效
+    // 3. 渲染投射物与攻击特效 (精美像素武器与弹道)
     this.renderProjectiles(world);
 
     // 4. 同步并渲染怪物像素精灵、受击白闪与血条
     this.renderEnemies(world);
 
-    // 5. 同步玩家角色精灵与状态
+    // 5. 同步玩家角色精灵与状态 (去掉自身圆圈)
     this.renderPlayer(player);
 
     // 6. 渲染打击粒子与冲击波
@@ -140,7 +141,7 @@ export class SpriteSyncSystem {
 
         img = this.scene.add.image(drop.x, drop.y, textureKey);
         img.setDepth(3);
-        img.setScale(1.2);
+        img.setScale(1.3);
         this.dropSprites.set(drop.id, img);
       }
 
@@ -149,13 +150,9 @@ export class SpriteSyncSystem {
       img.setPosition(drop.x, drop.y + bob);
       img.setVisible(true);
 
-      // 阴影与微光
-      this.shadowGraphics.fillStyle(0x000000, 0.3);
+      // 干净自然的地面柔和投影 (去掉了原本的辅助外圈)
+      this.shadowGraphics.fillStyle(0x000000, 0.35);
       this.shadowGraphics.fillEllipse(drop.x, drop.y + drop.radius + 2, drop.radius * 1.5, 4);
-
-      const colorNum = parseInt(drop.color.replace('#', '0x'), 16);
-      this.graphics.lineStyle(1.5, colorNum, 0.6);
-      this.graphics.strokeCircle(drop.x, drop.y + bob, drop.radius + 3);
     }
 
     // 清理非激活掉落物精灵
@@ -172,63 +169,153 @@ export class SpriteSyncSystem {
     if (!player) return;
 
     const activeProjectiles = world.projectilePool.getActiveItems();
+    const activeProjIds = new Set<number>();
+
     for (let i = 0; i < activeProjectiles.length; i++) {
       const p = activeProjectiles[i];
+      activeProjIds.add(p.id);
+
       const colorNum = parseInt(p.color.replace('#', '0x'), 16);
 
+      // 1. 敌方妖火/毒丸弹道
+      if (p.isEnemy || p.weaponId === 'enemy_bullet') {
+        this.graphics.fillStyle(0xc77dff, 0.9);
+        this.graphics.fillCircle(p.x, p.y, p.radius);
+        this.graphics.fillStyle(0xffffff, 0.95);
+        this.graphics.fillCircle(p.x, p.y, p.radius * 0.45);
+        this.graphics.lineStyle(2, 0x7209b7, 0.8);
+        this.graphics.strokeCircle(p.x, p.y, p.radius + 2);
+        continue;
+      }
+
+      // 2. 近战厚重铁锅 (金色弧形斩刃与刀气)
       if (p.attackPattern === 'arc') {
-        // 近战弧形扇面斩击
-        this.graphics.fillStyle(colorNum, 0.4);
-        this.graphics.lineStyle(3, colorNum, 0.95);
+        this.graphics.fillStyle(colorNum, 0.35);
+        this.graphics.lineStyle(4, 0xffd166, 0.95);
         this.graphics.beginPath();
         this.graphics.arc(
           player.position.x,
           player.position.y,
           p.rangeRemaining || 120,
-          p.orbitAngle - 0.75,
-          p.orbitAngle + 0.75,
+          p.orbitAngle - 0.8,
+          p.orbitAngle + 0.8,
         );
         this.graphics.strokePath();
-      } else if (p.attackPattern === 'area') {
-        // 地面燃烧火域
-        this.graphics.fillStyle(colorNum, 0.35);
-        this.graphics.fillCircle(p.x, p.y, p.radius);
-        this.graphics.lineStyle(2, 0xffbe0b, 0.8);
-        this.graphics.strokeCircle(p.x, p.y, p.radius);
 
-        // 火苗中心爆点
-        this.graphics.fillStyle(0xffffff, 0.5);
+        // 刀光外层残影
+        this.graphics.lineStyle(1.5, 0xffffff, 0.7);
+        this.graphics.beginPath();
+        this.graphics.arc(
+          player.position.x,
+          player.position.y,
+          (p.rangeRemaining || 120) - 8,
+          p.orbitAngle - 0.65,
+          p.orbitAngle + 0.65,
+        );
+        this.graphics.strokePath();
+        continue;
+      }
+
+      // 3. 猛火炉灶 (地火烈焰火域)
+      if (p.attackPattern === 'area') {
+        this.graphics.fillStyle(0xd90429, 0.35);
+        this.graphics.fillCircle(p.x, p.y, p.radius);
+        this.graphics.fillStyle(0xf77f00, 0.55);
+        this.graphics.fillCircle(p.x, p.y, p.radius * 0.7);
+        this.graphics.fillStyle(0xfcbf49, 0.75);
         this.graphics.fillCircle(p.x, p.y, p.radius * 0.35);
-      } else if (p.attackPattern === 'orbit') {
-        // 环绕调料瓶/护盾
-        this.graphics.fillStyle(colorNum, 1);
-        this.graphics.fillCircle(p.x, p.y, p.radius);
-        this.graphics.lineStyle(2, 0xffffff, 0.9);
-        this.graphics.strokeCircle(p.x, p.y, p.radius);
-      } else if (p.attackPattern === 'summon') {
-        // 召唤帮厨小幽灵
-        this.graphics.fillStyle(0x7209b7, 0.85);
-        this.graphics.fillCircle(p.x, p.y, p.radius);
-        this.graphics.fillStyle(0x00f5d4, 1);
-        this.graphics.fillCircle(p.x - 3, p.y - 2, 2);
-        this.graphics.fillCircle(p.x + 3, p.y - 2, 2);
-      } else if (p.attackPattern === 'pierceLine') {
-        // 竹签穿透疾刺金光
-        this.graphics.fillStyle(0xffbe0b, 1);
-        this.graphics.fillCircle(p.x, p.y, p.radius + 1);
-        this.graphics.lineStyle(3, 0xffffff, 0.8);
+        this.graphics.fillStyle(0xffffff, 0.9);
+        this.graphics.fillCircle(p.x, p.y, p.radius * 0.15);
+        continue;
+      }
+
+      // 4. 精钢菜刀 (高速旋转像素菜刀精灵)
+      if (p.weaponId === 'cleaver') {
+        let sprite = this.projectileSprites.get(p.id);
+        if (!sprite) {
+          sprite = this.scene.add.image(p.x, p.y, 'weapon_cleaver');
+          sprite.setDepth(8);
+          sprite.setScale(1.4);
+          this.projectileSprites.set(p.id, sprite);
+        }
+        sprite.setPosition(p.x, p.y);
+        sprite.rotation += 0.35;
+        sprite.setVisible(true);
+
+        // 旋转刀风残影
+        this.graphics.lineStyle(1.5, 0xf4a261, 0.4);
+        this.graphics.strokeCircle(p.x, p.y, 14);
+        continue;
+      }
+
+      // 5. 穿心竹签 (朝向飞行角度的像素飞签精灵)
+      if (p.weaponId === 'bamboo_skewer' || p.attackPattern === 'pierceLine') {
+        let sprite = this.projectileSprites.get(p.id);
+        if (!sprite) {
+          sprite = this.scene.add.image(p.x, p.y, 'item_skewer');
+          sprite.setDepth(8);
+          sprite.setScale(1.3);
+          this.projectileSprites.set(p.id, sprite);
+        }
+        sprite.setPosition(p.x, p.y);
+        const flightAngle = Math.atan2(p.velocity.y, p.velocity.x);
+        sprite.rotation = flightAngle + Math.PI / 4;
+        sprite.setVisible(true);
+
+        // 金色疾刺流光尾焰
+        this.graphics.lineStyle(2.5, 0xffd166, 0.7);
         this.graphics.lineBetween(
-          p.x - p.velocity.x * 0.05,
-          p.y - p.velocity.y * 0.05,
+          p.x - p.velocity.x * 0.04,
+          p.y - p.velocity.y * 0.04,
           p.x,
           p.y,
         );
-      } else {
-        // 飞刀/普通投射物
-        this.graphics.fillStyle(colorNum, 1);
+        continue;
+      }
+
+      // 6. 八宝调料瓶 (环绕调料药瓶精灵)
+      if (p.weaponId === 'seasoning_jar' || p.attackPattern === 'orbit') {
+        let sprite = this.projectileSprites.get(p.id);
+        if (!sprite) {
+          sprite = this.scene.add.image(p.x, p.y, 'item_potion');
+          sprite.setDepth(8);
+          sprite.setScale(1.2);
+          this.projectileSprites.set(p.id, sprite);
+        }
+        sprite.setPosition(p.x, p.y);
+        sprite.rotation = p.orbitAngle;
+        sprite.setVisible(true);
+
+        // 环绕香料星尘
+        this.graphics.fillStyle(0x2a9d8f, 0.6);
+        this.graphics.fillCircle(p.x, p.y, 4);
+        continue;
+      }
+
+      // 7. 唤灵上菜铃 (帮厨小幽灵与音波光环)
+      if (p.weaponId === 'service_bell' || p.attackPattern === 'summon') {
+        this.graphics.fillStyle(0x7209b7, 0.85);
         this.graphics.fillCircle(p.x, p.y, p.radius);
-        this.graphics.lineStyle(1.5, 0xffffff, 0.8);
-        this.graphics.strokeCircle(p.x, p.y, p.radius);
+        this.graphics.fillStyle(0x00f5d4, 1);
+        this.graphics.fillCircle(p.x - 3, p.y - 2, 2.5);
+        this.graphics.fillCircle(p.x + 3, p.y - 2, 2.5);
+        this.graphics.lineStyle(1.5, 0xffd166, 0.6);
+        this.graphics.strokeCircle(p.x, p.y, p.radius + 3);
+        continue;
+      }
+
+      // 8. 默认通用光弹
+      this.graphics.fillStyle(colorNum, 0.9);
+      this.graphics.fillCircle(p.x, p.y, p.radius);
+      this.graphics.fillStyle(0xffffff, 0.8);
+      this.graphics.fillCircle(p.x, p.y, p.radius * 0.4);
+    }
+
+    // 清理非激活投射物精灵
+    for (const [id, sprite] of this.projectileSprites.entries()) {
+      if (!activeProjIds.has(id)) {
+        sprite.destroy();
+        this.projectileSprites.delete(id);
       }
     }
   }
@@ -266,7 +353,7 @@ export class SpriteSyncSystem {
 
       // 1. 核心受击反馈：白闪、形变、微抖
       if (e.hitFlashTimerSec > 0) {
-        // 纯白高亮受击剪影 (兼顾 Phaser 3/4 API)
+        // 纯白高亮受击剪影
         sprite.setTint(0xffffff);
         if (typeof (sprite as any).setTintFill === 'function') {
           (sprite as any).setTintFill(0xffffff);
@@ -288,6 +375,13 @@ export class SpriteSyncSystem {
         sprite.setTint(0x48cae4);
       } else {
         sprite.clearTint();
+      }
+
+      // 冲刺怪蓄力红光提示
+      if (e.chargeState === 'windup') {
+        sprite.setTint(0xff0055);
+        scaleX = baseScale * 0.9;
+        scaleY = baseScale * 1.15;
       }
 
       sprite.setPosition(drawX, drawY);
@@ -339,7 +433,7 @@ export class SpriteSyncSystem {
       let textObj = this.damageTexts.get(dt.id);
       if (!textObj) {
         textObj = this.scene.add.text(dt.x, dt.y, dt.text, {
-          fontSize: dt.isCrit ? '16px' : '12px',
+          fontSize: dt.isCrit ? '16px' : '13px',
           fontStyle: 'bold',
           color: dt.isCrit ? '#ffd166' : dt.color || '#ffffff',
           stroke: '#060b0c',
@@ -399,13 +493,9 @@ export class SpriteSyncSystem {
       this.playerSprite.setFlipX(player.facingDirection.x < 0);
     }
 
-    // 玩家阴影
+    // 纯净自然的玩家角色阴影 (去掉了原本脚下的拾取范围大白圈)
     this.shadowGraphics.fillStyle(0x000000, 0.4);
     this.shadowGraphics.fillEllipse(px, py + player.radius - 2, player.radius * 1.8, 8);
-
-    // 拾取光环范围微光
-    this.graphics.lineStyle(1.5, 0x2a9d8f, 0.25);
-    this.graphics.strokeCircle(px, py, player.pickupRadius);
 
     // 玩家头顶血条
     const pBarW = 36;
@@ -457,7 +547,7 @@ export class SpriteSyncSystem {
         size: Math.random() * 4 + 2,
         alpha: 1.0,
         lifeSec: 0,
-        maxLifeSec: Math.random() * 0.25 + 0.18,
+        maxLifeSec: Math.random() * 0.25 + 0.15,
       });
     }
   }
@@ -466,33 +556,17 @@ export class SpriteSyncSystem {
     this.shockwaves.push({
       x,
       y,
-      radius: 6,
+      radius: 4,
       maxRadius,
       color,
       alpha: 0.9,
       lifeSec: 0,
-      maxLifeSec: 0.22,
+      maxLifeSec: 0.18,
     });
   }
 
   private updateAndRenderParticles(dt: number): void {
-    // 1. 渲染并更新冲击波
-    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
-      const sw = this.shockwaves[i];
-      sw.lifeSec += dt;
-      if (sw.lifeSec >= sw.maxLifeSec) {
-        this.shockwaves.splice(i, 1);
-        continue;
-      }
-      const progress = sw.lifeSec / sw.maxLifeSec;
-      const currentRadius = sw.radius + (sw.maxRadius - sw.radius) * progress;
-      const currentAlpha = sw.alpha * (1 - progress);
-
-      this.graphics.lineStyle(2.5 * (1 - progress * 0.5), sw.color, currentAlpha);
-      this.graphics.strokeCircle(sw.x, sw.y, currentRadius);
-    }
-
-    // 2. 渲染并更新火花粒子
+    // 1. 更新并绘制火花粒子
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       p.lifeSec += dt;
@@ -503,40 +577,38 @@ export class SpriteSyncSystem {
 
       p.x += p.vx * dt;
       p.y += p.vy * dt;
-      p.vx *= 0.88; // 阻尼减速
-      p.vy *= 0.88;
+      p.alpha = Math.max(0, 1 - p.lifeSec / p.maxLifeSec);
 
-      const progress = p.lifeSec / p.maxLifeSec;
-      const currentAlpha = p.alpha * (1 - progress);
-      const currentSize = Math.max(1, p.size * (1 - progress * 0.5));
+      this.graphics.fillStyle(p.color, p.alpha);
+      this.graphics.fillCircle(p.x, p.y, p.size);
+    }
 
-      this.graphics.fillStyle(p.color, currentAlpha);
-      this.graphics.fillCircle(p.x, p.y, currentSize);
+    // 2. 更新并绘制受击震波
+    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+      const sw = this.shockwaves[i];
+      sw.lifeSec += dt;
+      if (sw.lifeSec >= sw.maxLifeSec) {
+        this.shockwaves.splice(i, 1);
+        continue;
+      }
+
+      const progress = sw.lifeSec / sw.maxLifeSec;
+      sw.radius = 4 + (sw.maxRadius - 4) * progress;
+      sw.alpha = Math.max(0, (1 - progress) * 0.85);
+
+      this.graphics.lineStyle(2.5, sw.color, sw.alpha);
+      this.graphics.strokeCircle(sw.x, sw.y, sw.radius);
     }
   }
 
   public destroy(): void {
     this.graphics.destroy();
     this.shadowGraphics.destroy();
-    if (this.playerSprite) {
-      this.playerSprite.destroy();
-      this.playerSprite = null;
-    }
-    for (const sprite of this.enemySprites.values()) {
-      sprite.destroy();
-    }
-    this.enemySprites.clear();
-    for (const sprite of this.dropSprites.values()) {
-      sprite.destroy();
-    }
-    this.dropSprites.clear();
-    for (const text of this.damageTexts.values()) {
-      text.destroy();
-    }
-    this.damageTexts.clear();
-    if (this.tilemapBackground) {
-      this.tilemapBackground.destroy();
-      this.tilemapBackground = null;
-    }
+    this.playerSprite?.destroy();
+    for (const s of this.enemySprites.values()) s.destroy();
+    for (const s of this.dropSprites.values()) s.destroy();
+    for (const s of this.projectileSprites.values()) s.destroy();
+    for (const t of this.damageTexts.values()) t.destroy();
+    this.tilemapBackground?.destroy();
   }
 }

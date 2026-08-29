@@ -15,6 +15,7 @@ export const ENEMIES: Record<string, EnemyDefinition> = {
     ingredientValue: 1,
     color: '#8fa3a6',
     assetKey: 'enemy_hungry_ghost',
+    behaviors: [],
   }),
 
   spicy_slime: EnemyDefinitionSchema.parse({
@@ -31,6 +32,7 @@ export const ENEMIES: Record<string, EnemyDefinition> = {
     ingredientValue: 1,
     color: '#e76f51',
     assetKey: 'enemy_spicy_slime',
+    behaviors: [],
   }),
 
   lantern_spirit: EnemyDefinitionSchema.parse({
@@ -47,6 +49,41 @@ export const ENEMIES: Record<string, EnemyDefinition> = {
     ingredientValue: 1,
     color: '#ffd166',
     assetKey: 'enemy_lantern_spirit',
+    behaviors: [],
+  }),
+
+  charging_boar: EnemyDefinitionSchema.parse({
+    id: 'charging_boar',
+    nameKey: '狂暴野猪灵',
+    category: 'normal',
+    maxHp: 65,
+    moveSpeed: 95,
+    contactDamage: 18,
+    radius: 16,
+    knockbackResistance: 0.4,
+    expValue: 3,
+    ingredientChance: 0.3,
+    ingredientValue: 2,
+    color: '#b7094c',
+    assetKey: 'enemy_grease_goblin',
+    behaviors: ['charge'],
+  }),
+
+  spitting_shaman: EnemyDefinitionSchema.parse({
+    id: 'spitting_shaman',
+    nameKey: '离火幽巫',
+    category: 'normal',
+    maxHp: 40,
+    moveSpeed: 80,
+    contactDamage: 10,
+    radius: 14,
+    knockbackResistance: 0.1,
+    expValue: 3,
+    ingredientChance: 0.35,
+    ingredientValue: 2,
+    color: '#8338ec',
+    assetKey: 'enemy_steam_phantom',
+    behaviors: ['ranged'],
   }),
 
   grease_goblin: EnemyDefinitionSchema.parse({
@@ -63,6 +100,7 @@ export const ENEMIES: Record<string, EnemyDefinition> = {
     ingredientValue: 2,
     color: '#588157',
     assetKey: 'enemy_grease_goblin',
+    behaviors: [],
   }),
 
   skewer_thief: EnemyDefinitionSchema.parse({
@@ -79,6 +117,7 @@ export const ENEMIES: Record<string, EnemyDefinition> = {
     ingredientValue: 2,
     color: '#264653',
     assetKey: 'enemy_skewer_thief',
+    behaviors: [],
   }),
 
   steam_phantom: EnemyDefinitionSchema.parse({
@@ -95,6 +134,7 @@ export const ENEMIES: Record<string, EnemyDefinition> = {
     ingredientValue: 2,
     color: '#a8dadc',
     assetKey: 'enemy_steam_phantom',
+    behaviors: [],
   }),
 
   giant_bao_demon: EnemyDefinitionSchema.parse({
@@ -111,6 +151,7 @@ export const ENEMIES: Record<string, EnemyDefinition> = {
     ingredientValue: 10,
     color: '#f4a261',
     assetKey: 'enemy_giant_bao_demon',
+    behaviors: ['charge'],
   }),
 
   flame_pot_guard: EnemyDefinitionSchema.parse({
@@ -127,6 +168,7 @@ export const ENEMIES: Record<string, EnemyDefinition> = {
     ingredientValue: 15,
     color: '#d62828',
     assetKey: 'enemy_flame_pot_guard',
+    behaviors: ['charge', 'ranged'],
   }),
 
   night_glutton_king: EnemyDefinitionSchema.parse({
@@ -143,5 +185,6 @@ export const ENEMIES: Record<string, EnemyDefinition> = {
     ingredientValue: 50,
     color: '#7209b7',
     assetKey: 'enemy_night_glutton_king',
+    behaviors: ['charge', 'ranged'],
   }),
 };
