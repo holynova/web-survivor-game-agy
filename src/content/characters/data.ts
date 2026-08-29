@@ -3,9 +3,9 @@ import { CharacterDefinition, CharacterDefinitionSchema } from '../schemas/chara
 export const CHARACTERS: Record<string, CharacterDefinition> = {
   wok_master: CharacterDefinitionSchema.parse({
     id: 'wok_master',
-    nameKey: 'character.wok_master.name',
-    titleKey: 'character.wok_master.title',
-    descriptionKey: 'character.wok_master.desc',
+    nameKey: '爆炒大厨',
+    titleKey: '夜市宗师',
+    descriptionKey: '大排档掌勺宗师。生命值与防御极高，专精火候与近战猛攻。',
     startingWeaponId: 'iron_wok',
     tags: ['wok', 'fire', 'melee', 'defense'],
     baseStats: {
@@ -23,9 +23,9 @@ export const CHARACTERS: Record<string, CharacterDefinition> = {
 
   cold_brewer: CharacterDefinitionSchema.parse({
     id: 'cold_brewer',
-    nameKey: 'character.cold_brewer.name',
-    titleKey: 'character.cold_brewer.title',
-    descriptionKey: 'character.cold_brewer.desc',
+    nameKey: '冷饮师',
+    titleKey: '冰饮掌柜',
+    descriptionKey: '幽冥冰饮铺主理人。步履如风，拾取范围广阔，擅长冰霜减速与游击。',
     startingWeaponId: 'cleaver',
     tags: ['ice', 'projectile', 'speed'],
     baseStats: {
@@ -43,9 +43,9 @@ export const CHARACTERS: Record<string, CharacterDefinition> = {
 
   skewer_griller: CharacterDefinitionSchema.parse({
     id: 'skewer_griller',
-    nameKey: 'character.skewer_griller.name',
-    titleKey: 'character.skewer_griller.title',
-    descriptionKey: 'character.skewer_griller.desc',
+    nameKey: '串烧厨神',
+    titleKey: '炭火烧烤王',
+    descriptionKey: '炭火烧烤摊主。攻速迅猛，暴击率极高，擅长以暴制暴快速收割。',
     startingWeaponId: 'bamboo_skewer',
     tags: ['skewer', 'oil', 'crit', 'projectile'],
     baseStats: {

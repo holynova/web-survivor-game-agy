@@ -25,9 +25,10 @@ export const RecipeDefinitionSchema = z.object({
   id: z.string().min(1),
   nameKey: z.string().min(1),
   descriptionKey: z.string().min(1),
+  tags: z.array(TagSchema).default([]),
   requirement: RecipeRequirementSchema,
   transformation: RecipeTransformationSchema,
-  assetKey: z.string().min(1),
+  assetKey: z.string().default('recipe_badge'),
 });
 
 export type RecipeDefinition = z.infer<typeof RecipeDefinitionSchema>;

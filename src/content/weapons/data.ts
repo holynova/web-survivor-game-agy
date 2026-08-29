@@ -3,8 +3,8 @@ import { WeaponDefinition, WeaponDefinitionSchema } from '../schemas/weapon';
 export const WEAPONS: Record<string, WeaponDefinition> = {
   iron_wok: WeaponDefinitionSchema.parse({
     id: 'iron_wok',
-    nameKey: 'weapon.iron_wok.name',
-    descriptionKey: 'weapon.iron_wok.desc',
+    nameKey: '厚重铁锅',
+    descriptionKey: '厚重大铁锅，近战扇面横扫击退周围妖怪',
     tags: ['wok', 'melee', 'defense'],
     attackPattern: 'arc',
     targeting: 'forward',
@@ -15,7 +15,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
     levels: [
       {
         level: 1,
-        descriptionKey: 'weapon.iron_wok.lvl1',
+        descriptionKey: '近战扇面挥舞，造成 28 伤害与强力击退',
         damage: 28,
         cooldownMs: 900,
         projectileCount: 1,
@@ -28,7 +28,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
       },
       {
         level: 2,
-        descriptionKey: 'weapon.iron_wok.lvl2',
+        descriptionKey: '铁锅范围扩大，伤害提升至 42，击退增强',
         damage: 42,
         cooldownMs: 800,
         projectileCount: 1,
@@ -41,7 +41,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
       },
       {
         level: 3,
-        descriptionKey: 'weapon.iron_wok.lvl3',
+        descriptionKey: '铁锅附带爆炒烈火，造成 65 伤害并点燃敌人',
         damage: 65,
         cooldownMs: 700,
         projectileCount: 1,
@@ -60,8 +60,8 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
 
   cleaver: WeaponDefinitionSchema.parse({
     id: 'cleaver',
-    nameKey: 'weapon.cleaver.name',
-    descriptionKey: 'weapon.cleaver.desc',
+    nameKey: '精钢菜刀',
+    descriptionKey: '飞掷旋转菜刀，穿透斩割沿途敌人',
     tags: ['cleaver', 'projectile', 'crit'],
     attackPattern: 'projectile',
     targeting: 'nearest',
@@ -72,7 +72,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
     levels: [
       {
         level: 1,
-        descriptionKey: 'weapon.cleaver.lvl1',
+        descriptionKey: '向最近敌人飞掷 1 把菜刀，造成 22 伤害并穿透 2 名敌人',
         damage: 22,
         cooldownMs: 750,
         projectileCount: 1,
@@ -85,7 +85,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
       },
       {
         level: 2,
-        descriptionKey: 'weapon.cleaver.lvl2',
+        descriptionKey: '飞刀数量 +1，伤害提升至 32，穿透 +1',
         damage: 32,
         cooldownMs: 650,
         projectileCount: 2,
@@ -98,7 +98,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
       },
       {
         level: 3,
-        descriptionKey: 'weapon.cleaver.lvl3',
+        descriptionKey: '飞刀数量 +1 (共3把)，伤害 48，弹速提升且暴击大幅提高',
         damage: 48,
         cooldownMs: 550,
         projectileCount: 3,
@@ -114,8 +114,8 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
 
   bamboo_skewer: WeaponDefinitionSchema.parse({
     id: 'bamboo_skewer',
-    nameKey: 'weapon.bamboo_skewer.name',
-    descriptionKey: 'weapon.bamboo_skewer.desc',
+    nameKey: '穿心竹签',
+    descriptionKey: '高速穿刺直线弹道，洞穿前行妖魔',
     tags: ['skewer', 'pierce', 'crit'],
     attackPattern: 'pierceLine',
     targeting: 'nearest',
@@ -126,7 +126,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
     levels: [
       {
         level: 1,
-        descriptionKey: 'weapon.bamboo_skewer.lvl1',
+        descriptionKey: '射出高速竹签疾刺，造成 18 伤害并无限穿透直线敌人',
         damage: 18,
         cooldownMs: 600,
         projectileCount: 1,
@@ -139,7 +139,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
       },
       {
         level: 2,
-        descriptionKey: 'weapon.bamboo_skewer.lvl2',
+        descriptionKey: '竹签数量 +1 (双发突刺)，伤害提升至 28',
         damage: 28,
         cooldownMs: 500,
         projectileCount: 2,
@@ -152,7 +152,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
       },
       {
         level: 3,
-        descriptionKey: 'weapon.bamboo_skewer.lvl3',
+        descriptionKey: '竹签数量 +1 (三连穿心)，伤害 42，攻击间隔大幅缩短',
         damage: 42,
         cooldownMs: 400,
         projectileCount: 3,
@@ -168,8 +168,8 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
 
   stove_flame: WeaponDefinitionSchema.parse({
     id: 'stove_flame',
-    nameKey: 'weapon.stove_flame.name',
-    descriptionKey: 'weapon.stove_flame.desc',
+    nameKey: '猛火炉灶',
+    descriptionKey: '在地面喷射持续灼烧的炽热火域',
     tags: ['fire', 'area'],
     attackPattern: 'area',
     targeting: 'random',
@@ -180,7 +180,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
     levels: [
       {
         level: 1,
-        descriptionKey: 'weapon.stove_flame.lvl1',
+        descriptionKey: '在周围喷射 1 处猛火区域，持续 2.5 秒造成灼烧伤害',
         damage: 12,
         cooldownMs: 1600,
         projectileCount: 1,
@@ -193,7 +193,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
       },
       {
         level: 2,
-        descriptionKey: 'weapon.stove_flame.lvl2',
+        descriptionKey: '喷射 2 处火域，范围扩大，伤害提升至 20/跳',
         damage: 20,
         cooldownMs: 1400,
         projectileCount: 2,
@@ -206,7 +206,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
       },
       {
         level: 3,
-        descriptionKey: 'weapon.stove_flame.lvl3',
+        descriptionKey: '喷射 3 处巨大火域，伤害 32/跳，灼烧伤害大幅跃升',
         damage: 32,
         cooldownMs: 1200,
         projectileCount: 3,
@@ -222,8 +222,8 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
 
   seasoning_jar: WeaponDefinitionSchema.parse({
     id: 'seasoning_jar',
-    nameKey: 'weapon.seasoning_jar.name',
-    descriptionKey: 'weapon.seasoning_jar.desc',
+    nameKey: '八宝调料瓶',
+    descriptionKey: '围绕玩家旋转护体，撞击近身妖魔',
     tags: ['orbit', 'defense'],
     attackPattern: 'orbit',
     targeting: 'forward',
@@ -234,20 +234,20 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
     levels: [
       {
         level: 1,
-        descriptionKey: 'weapon.seasoning_jar.lvl1',
+        descriptionKey: '召唤 2 个调料瓶环绕护体，碰撞造成 20 伤害与击退',
         damage: 20,
         cooldownMs: 3000,
         projectileCount: 2,
-        projectileSpeed: 2.2, // 旋转角速度 rad/s
+        projectileSpeed: 2.2,
         pierce: 999,
-        range: 90, // 旋转半径
+        range: 90,
         durationMs: 999999,
         radius: 15,
         effects: [{ type: 'knockback', value: 80 }],
       },
       {
         level: 2,
-        descriptionKey: 'weapon.seasoning_jar.lvl2',
+        descriptionKey: '调料瓶数量 +1 (共3个)，旋转速度与伤害提升至 32',
         damage: 32,
         cooldownMs: 3000,
         projectileCount: 3,
@@ -260,7 +260,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
       },
       {
         level: 3,
-        descriptionKey: 'weapon.seasoning_jar.lvl3',
+        descriptionKey: '调料瓶数量 +1 (共4个)，伤害 46，形成密不透风的调料结界',
         damage: 46,
         cooldownMs: 3000,
         projectileCount: 4,
@@ -276,8 +276,8 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
 
   service_bell: WeaponDefinitionSchema.parse({
     id: 'service_bell',
-    nameKey: 'weapon.service_bell.name',
-    descriptionKey: 'weapon.service_bell.desc',
+    nameKey: '唤灵上菜铃',
+    descriptionKey: '摇动铜铃召唤帮厨小幽灵自动追击敌人',
     tags: ['summon', 'economy'],
     attackPattern: 'summon',
     targeting: 'nearest',
@@ -288,7 +288,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
     levels: [
       {
         level: 1,
-        descriptionKey: 'weapon.service_bell.lvl1',
+        descriptionKey: '召唤 1 只帮厨小幽灵巡航追杀敌人，造成 16 伤害',
         damage: 16,
         cooldownMs: 3500,
         projectileCount: 1,
@@ -301,7 +301,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
       },
       {
         level: 2,
-        descriptionKey: 'weapon.service_bell.lvl2',
+        descriptionKey: '同时召唤 2 只帮厨幽灵，幽灵移速提升，伤害 26',
         damage: 26,
         cooldownMs: 3000,
         projectileCount: 2,
@@ -314,7 +314,7 @@ export const WEAPONS: Record<string, WeaponDefinition> = {
       },
       {
         level: 3,
-        descriptionKey: 'weapon.service_bell.lvl3',
+        descriptionKey: '同时召唤 3 只帮厨幽灵，伤害 40，幽灵移速与索敌范围大幅增强',
         damage: 40,
         cooldownMs: 2500,
         projectileCount: 3,

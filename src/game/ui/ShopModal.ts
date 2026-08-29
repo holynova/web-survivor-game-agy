@@ -169,26 +169,30 @@ export class ShopModal {
     }
 
     const titleStr = slot.type === 'weapon' ? slot.weapon!.nameKey : slot.item!.nameKey;
-    const tagStr =
-      slot.type === 'weapon'
-        ? `厨具 · ${slot.weapon!.tags.map(t => `#${t}`).join(' ')}`
-        : `口味 · ${slot.item!.tags.map(t => `#${t}`).join(' ')}`;
-    const descStr =
-      slot.type === 'weapon'
-        ? slot.weapon!.levels[0].descriptionKey
-        : slot.item!.descriptionKey;
-
-    // 检查是否为同名升级合成
     let isMergeUpgrade = false;
+    let descStr = '';
+    let tagStr = '';
+
     if (slot.type === 'weapon') {
       const existing = player.weapons.find(w => w.definition.id === slot.weapon!.id);
       if (existing) {
         isMergeUpgrade = true;
+        const nextLvl = Math.min(slot.weapon!.levels.length, existing.level + 1);
+        descStr = slot.weapon!.levels[nextLvl - 1].descriptionKey;
+        tagStr = `【合成升星】Lv.${existing.level} ➔ Lv.${nextLvl}`;
+      } else {
+        descStr = slot.weapon!.levels[0].descriptionKey;
+        tagStr = `厨具 · ${slot.weapon!.tags.map(t => `#${t}`).join(' ')}`;
       }
+    } else {
+      const existingItem = player.items.find(i => i.definition.id === slot.item!.id);
+      const stacks = existingItem ? existingItem.count : 0;
+      descStr = slot.item!.descriptionKey;
+      tagStr = `口味 · ${slot.item!.tags.map(t => `#${t}`).join(' ')} (已有 ${stacks}/${slot.item!.maxStacks})`;
     }
 
     // 分类
-    const tagText = this.scene.add.text(0, -h / 2 + 16, isMergeUpgrade ? '★ 合成升星 ★' : tagStr, {
+    const tagText = this.scene.add.text(0, -h / 2 + 16, tagStr, {
       fontSize: '11px',
       color: isMergeUpgrade ? '#ffd166' : '#2a9d8f',
       fontStyle: 'bold',

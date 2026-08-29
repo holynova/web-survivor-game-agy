@@ -3,8 +3,8 @@ import { ItemDefinition, ItemDefinitionSchema } from '../schemas/item';
 export const ITEMS: Record<string, ItemDefinition> = {
   chili_pepper: ItemDefinitionSchema.parse({
     id: 'chili_pepper',
-    nameKey: 'item.chili_pepper.name',
-    descriptionKey: 'item.chili_pepper.desc',
+    nameKey: '朝天红辣椒',
+    descriptionKey: '全武器伤害 +15%，灼烧持续伤害 +25%',
     tags: ['fire', 'crit'],
     rarity: 'common',
     cost: 8,
@@ -19,8 +19,8 @@ export const ITEMS: Record<string, ItemDefinition> = {
 
   ice_cube: ItemDefinitionSchema.parse({
     id: 'ice_cube',
-    nameKey: 'item.ice_cube.name',
-    descriptionKey: 'item.ice_cube.desc',
+    nameKey: '老窖碎冰块',
+    descriptionKey: '减速持续时间 +30%，角色护甲 +1',
     tags: ['ice', 'defense'],
     rarity: 'common',
     cost: 8,
@@ -35,8 +35,8 @@ export const ITEMS: Record<string, ItemDefinition> = {
 
   sesame_oil: ItemDefinitionSchema.parse({
     id: 'sesame_oil',
-    nameKey: 'item.sesame_oil.name',
-    descriptionKey: 'item.sesame_oil.desc',
+    nameKey: '纯香芝麻油',
+    descriptionKey: '角色移动速度 +10%，暴击率 +4%',
     tags: ['oil', 'speed'],
     rarity: 'common',
     cost: 8,
@@ -51,8 +51,8 @@ export const ITEMS: Record<string, ItemDefinition> = {
 
   cane_sugar: ItemDefinitionSchema.parse({
     id: 'cane_sugar',
-    nameKey: 'item.cane_sugar.name',
-    descriptionKey: 'item.cane_sugar.desc',
+    nameKey: '古法红蔗糖',
+    descriptionKey: '掉落物拾取范围 +25%，食材掉落收益 +35%',
     tags: ['sugar', 'economy'],
     rarity: 'common',
     cost: 8,
@@ -60,36 +60,36 @@ export const ITEMS: Record<string, ItemDefinition> = {
     color: '#ffd166',
     assetKey: 'item_cane_sugar',
     modifiers: [
-      { stat: 'ingredientDropBonus', value: 0.2, mode: 'flat' },
-      { stat: 'pickupRadius', value: 25, mode: 'flat' },
+      { stat: 'pickupRadius', value: 0.25, mode: 'flat' },
+      { stat: 'ingredientDropBonus', value: 0.35, mode: 'flat' },
     ],
   }),
 
   fermented_sauce: ItemDefinitionSchema.parse({
     id: 'fermented_sauce',
-    nameKey: 'item.fermented_sauce.name',
-    descriptionKey: 'item.fermented_sauce.desc',
+    nameKey: '特酿豆瓣酱',
+    descriptionKey: '暴击伤害倍率 +35%，全武器伤害 +10%',
     tags: ['ferment', 'crit'],
     rarity: 'rare',
     cost: 12,
-    maxStacks: 4,
-    color: '#6b705c',
+    maxStacks: 3,
+    color: '#9b2226',
     assetKey: 'item_fermented_sauce',
     modifiers: [
-      { stat: 'damageMultiplier', value: 0.2, mode: 'flat' },
-      { stat: 'critMultiplier', value: 0.3, mode: 'flat' },
+      { stat: 'critMultiplier', value: 0.35, mode: 'flat' },
+      { stat: 'damageMultiplier', value: 0.1, mode: 'flat' },
     ],
   }),
 
   bamboo_steamer: ItemDefinitionSchema.parse({
     id: 'bamboo_steamer',
-    nameKey: 'item.bamboo_steamer.name',
-    descriptionKey: 'item.bamboo_steamer.desc',
-    tags: ['defense'],
+    nameKey: '老竹小蒸笼',
+    descriptionKey: '最大生命值 +25 点，角色护甲 +2',
+    tags: ['defense', 'ferment'],
     rarity: 'rare',
     cost: 12,
-    maxStacks: 4,
-    color: '#cb997e',
+    maxStacks: 3,
+    color: '#d4a373',
     assetKey: 'item_bamboo_steamer',
     modifiers: [
       { stat: 'maxHp', value: 25, mode: 'flat' },
@@ -99,30 +99,32 @@ export const ITEMS: Record<string, ItemDefinition> = {
 
   garlic_clove: ItemDefinitionSchema.parse({
     id: 'garlic_clove',
-    nameKey: 'item.garlic_clove.name',
-    descriptionKey: 'item.garlic_clove.desc',
-    tags: ['speed'],
-    rarity: 'rare',
-    cost: 12,
+    nameKey: '紫皮独头蒜',
+    descriptionKey: '最大生命值 +15 点，角色护甲 +1',
+    tags: ['defense', 'oil'],
+    rarity: 'common',
+    cost: 7,
     maxStacks: 4,
-    color: '#f8f9fa',
+    color: '#e2ece9',
     assetKey: 'item_garlic_clove',
-    modifiers: [{ stat: 'attackSpeedMultiplier', value: 0.15, mode: 'flat' }],
+    modifiers: [
+      { stat: 'maxHp', value: 15, mode: 'flat' },
+      { stat: 'armor', value: 1, mode: 'flat' },
+    ],
   }),
 
   star_anise: ItemDefinitionSchema.parse({
     id: 'star_anise',
-    nameKey: 'item.star_anise.name',
-    descriptionKey: 'item.star_anise.desc',
-    tags: ['crit'],
-    rarity: 'epic',
-    cost: 16,
+    nameKey: '阴阳八角茴',
+    descriptionKey: '全武器攻击速度 +12%',
+    tags: ['speed', 'crit'],
+    rarity: 'rare',
+    cost: 12,
     maxStacks: 3,
-    color: '#bc4749',
+    color: '#8d0801',
     assetKey: 'item_star_anise',
     modifiers: [
-      { stat: 'critChance', value: 0.08, mode: 'flat' },
-      { stat: 'critMultiplier', value: 0.5, mode: 'flat' },
+      { stat: 'attackSpeedMultiplier', value: 0.12, mode: 'flat' },
     ],
   }),
 };
