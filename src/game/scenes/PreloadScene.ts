@@ -238,6 +238,103 @@ export class PreloadScene extends Phaser.Scene {
     skewG.fillRect(8, 12, 8, 4);
     skewG.generateTexture('weapon_bamboo_skewer', 24, 24);
     skewG.destroy();
+
+    // 12. 朝天红辣椒贴图 (item_chili_pepper)
+    const chiliG = this.make.graphics({ x: 0, y: 0 });
+    chiliG.fillStyle(0xd90429, 1);
+    chiliG.fillTriangle(14, 22, 6, 8, 20, 8);
+    chiliG.fillStyle(0x2b9348, 1);
+    chiliG.fillRect(11, 2, 4, 7);
+    chiliG.generateTexture('item_chili_pepper', 26, 26);
+    chiliG.destroy();
+
+    // 13. 老窖碎冰块贴图 (item_ice_cube)
+    const iceG = this.make.graphics({ x: 0, y: 0 });
+    iceG.fillStyle(0x00b4d8, 1);
+    iceG.fillRect(4, 4, 18, 18);
+    iceG.fillStyle(0x90e0ef, 1);
+    iceG.fillRect(6, 6, 8, 8);
+    iceG.fillStyle(0xffffff, 0.9);
+    iceG.fillRect(6, 6, 4, 4);
+    iceG.generateTexture('item_ice_cube', 26, 26);
+    iceG.destroy();
+
+    // 14. 纯香芝麻油贴图 (item_sesame_oil)
+    const oilG = this.make.graphics({ x: 0, y: 0 });
+    oilG.fillStyle(0xf4a261, 1);
+    oilG.fillRect(6, 10, 14, 14);
+    oilG.fillStyle(0xe76f51, 1);
+    oilG.fillRect(9, 4, 8, 6);
+    oilG.fillStyle(0xffd166, 1);
+    oilG.fillCircle(13, 16, 4);
+    oilG.generateTexture('item_sesame_oil', 26, 26);
+    oilG.destroy();
+
+    // 15. 古法红蔗糖贴图 (item_cane_sugar)
+    const sugG = this.make.graphics({ x: 0, y: 0 });
+    sugG.fillStyle(0x9d0208, 1);
+    sugG.fillRect(5, 7, 16, 14);
+    sugG.fillStyle(0xd00000, 1);
+    sugG.fillRect(7, 5, 12, 4);
+    sugG.fillStyle(0xffba08, 1);
+    sugG.fillRect(8, 10, 10, 8);
+    sugG.generateTexture('item_cane_sugar', 26, 26);
+    sugG.destroy();
+
+    // 16. 特酿豆瓣酱贴图 (item_fermented_sauce)
+    const beanG = this.make.graphics({ x: 0, y: 0 });
+    beanG.fillStyle(0x6a040f, 1);
+    beanG.fillRect(4, 8, 18, 16);
+    beanG.fillStyle(0x370617, 1);
+    beanG.fillRect(3, 6, 20, 4);
+    beanG.fillStyle(0xe85d04, 1);
+    beanG.fillRect(8, 12, 10, 8);
+    beanG.generateTexture('item_fermented_sauce', 26, 26);
+    beanG.destroy();
+
+    // 17. 老竹小蒸笼贴图 (item_bamboo_steamer)
+    const stmG = this.make.graphics({ x: 0, y: 0 });
+    stmG.fillStyle(0xd4a373, 1);
+    stmG.fillRect(4, 8, 18, 15);
+    stmG.fillStyle(0xfaedcd, 1);
+    stmG.fillRect(5, 5, 16, 4);
+    stmG.fillStyle(0xb08968, 1);
+    stmG.fillRect(4, 14, 18, 2);
+    stmG.generateTexture('item_bamboo_steamer', 26, 26);
+    stmG.destroy();
+
+    // 18. 紫皮独头蒜贴图 (item_garlic_clove)
+    const garG = this.make.graphics({ x: 0, y: 0 });
+    garG.fillStyle(0xf8f9fa, 1);
+    garG.fillCircle(13, 15, 8);
+    garG.fillStyle(0x7209b7, 0.7);
+    garG.fillRect(10, 10, 6, 10);
+    garG.fillStyle(0x2b9348, 1);
+    garG.fillRect(12, 3, 3, 6);
+    garG.generateTexture('item_garlic_clove', 26, 26);
+    garG.destroy();
+
+    // 19. 阴阳八角茴贴图 (item_star_anise)
+    const starG = this.make.graphics({ x: 0, y: 0 });
+    starG.fillStyle(0x582f0e, 1);
+    starG.fillRect(11, 3, 4, 20);
+    starG.fillRect(3, 11, 20, 4);
+    starG.fillRect(5, 5, 16, 16);
+    starG.fillStyle(0xa68a64, 1);
+    starG.fillCircle(13, 13, 4);
+    starG.generateTexture('item_star_anise', 26, 26);
+    starG.destroy();
+
+    // 20. 招财金灵猫贴图 (item_lucky_cat)
+    const catG = this.make.graphics({ x: 0, y: 0 });
+    catG.fillStyle(0xffd166, 1);
+    catG.fillRect(6, 10, 14, 14);
+    catG.fillTriangle(6, 10, 9, 3, 12, 10);
+    catG.fillTriangle(14, 10, 17, 3, 20, 10);
+    catG.fillStyle(0xe76f51, 1);
+    catG.fillCircle(13, 16, 3);
+    catG.generateTexture('item_lucky_cat', 26, 26);
+    catG.destroy();
   }
 
   public create(): void {
