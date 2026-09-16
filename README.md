@@ -2,7 +2,21 @@
 
 > 一款基于 Phaser 4.2.1 + TypeScript + Vite 构建的 2D 俯视角战斗厨房类幸存者游戏。
 
+<p align="center">
+  <img src="assets/readme/hero.svg" width="100%" alt="《山海夜市》(Shanhai Night Market) - Web Survivor Game: &gt; 一款基于 Phaser 4.2.1 + TypeScript + Vite 构建的 2D 俯视角战斗厨房类幸存者游戏。">
+</p>
+
+
 ---
+
+## 先玩一局
+
+```bash
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+打开终端打印的地址，使用 WASD / 方向键移动，武器自动攻击；按 Esc 暂停。详细触屏与调试操作见文末。
 
 ## 1. 游戏特色与卖点
 
@@ -20,8 +34,8 @@
 - **游戏引擎**：Phaser 4.2.1（精确版本锁定）
 - **物理与计算优化**：
   - 固定 60Hz 步长模拟时钟（`SimulationClock`），单帧最多 4 步补算，切后台清空累积防跳跃。
-  - 带种子的 PRNG（`SeededRNG`，Mulberry32 算法），保证相同 Seed 100% 可重现。
-  - 2D 空间哈希网格（`SpatialHash`），将 O(N^2) 碰撞检测降为 O(1) 局部近邻查询，实测支持 500+ 敌人与 1000+ 投射物稳定 60 FPS。
+  - 带种子的 PRNG（`SeededRNG`，Mulberry32 算法），用于在相同输入和配置下复现模拟过程。
+  - 2D 空间哈希网格（`SpatialHash`），按空间划分候选碰撞对象，减少全量两两比较；性能取决于场景密度、设备与浏览器。
   - 核心对象全量池化（`ObjectPool`：敌人、投射物、经验/食材掉落物、伤害飘字）。
 - **表现层与音频**：
   - 强类型领域事件总线（`EventBus`），彻底解耦物理模拟与表现渲染。
