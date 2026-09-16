@@ -2,6 +2,11 @@
 
 > 一款基于 Phaser 4.2.1 + TypeScript + Vite 构建的 2D 俯视角战斗厨房类幸存者游戏。
 
+<p align="center">
+  <img src="assets/readme/hero.svg" width="100%" alt="《山海夜市》(Shanhai Night Market) - Web Survivor Game: &gt; 一款基于 Phaser 4.2.1 + TypeScript + Vite 构建的 2D 俯视角战斗厨房类幸存者游戏。">
+</p>
+
+
 ---
 
 ## 先玩一局
