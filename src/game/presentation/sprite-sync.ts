@@ -640,7 +640,7 @@ export class SpriteSyncSystem {
     const px = player.position.x;
     const py = player.position.y;
 
-    const charTextureKey = `char_${player.characterDef.id}`;
+    const charTextureKey = player.characterDef.assetKey || `char_${player.characterDef.id}`;
     if (!this.playerSprite) {
       const tex = this.scene.textures.exists(charTextureKey) ? charTextureKey : 'char_wok_master';
       this.playerSprite = this.scene.add.sprite(px, py, tex);

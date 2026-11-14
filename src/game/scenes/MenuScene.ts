@@ -52,13 +52,20 @@ export class MenuScene extends Phaser.Scene {
     });
     title.setOrigin(0.5, 0);
 
-    const subTitle = this.add.text(width / 2, 85, '幽冥百鬼围攻，化厨具为神兵！构筑你的战斗厨房！', {
+    const subTitle = this.add.text(width / 2, 85, '幽冥百鬼围攻，化厨具为神兵！活过 12 波，击败夜市饕餮王。', {
       fontSize: '14px',
       color: '#8fa3a6',
       wordWrap: { width: width - 60, useAdvancedWrap: true },
       align: 'center',
     });
     subTitle.setOrigin(0.5, 0);
+
+    const controlsHint = this.add.text(width / 2, 108, 'WASD / 方向键移动，手机拖动左半屏，武器自动攻击', {
+      fontSize: '13px',
+      color: '#d8e2dc',
+      align: 'center',
+    });
+    controlsHint.setOrigin(0.5, 0);
 
     // 3. 右上角偏好设置与图鉴系统按钮
     const codexModal = new CodexModal(this);
@@ -125,10 +132,14 @@ export class MenuScene extends Phaser.Scene {
     // 5. 最高分与历史战绩
     const bestWave = saveData.highScores.highestWave;
     const maxKills = saveData.highScores.maxKills;
+    const hsLabel =
+      bestWave > 0 || maxKills > 0
+        ? `🏆 最佳纪录：第 ${bestWave} 波，最高驱妖 ${maxKills} 只`
+        : '🏆 暂无营业记录，今晚就是第一晚';
     const hsText = this.add.text(
       width / 2,
       height - 86,
-      `🏆 最佳营业记录: 到达第 ${bestWave} 波 | 最高驱妖: ${maxKills} 只`,
+      hsLabel,
       {
         fontSize: '13px',
         color: '#ffd166',
@@ -199,7 +210,7 @@ export class MenuScene extends Phaser.Scene {
     card.add(bgGfx);
 
     // 像素大厨精灵头像预览
-    const charTextureKey = `char_${charDef.id}`;
+    const charTextureKey = charDef.assetKey || `char_${charDef.id}`;
     const tex = this.textures.exists(charTextureKey) ? charTextureKey : 'char_wok_master';
     const charSprite = this.add.sprite(0, -h / 2 + 40, tex, 0);
     charSprite.setScale(2.4);
@@ -216,7 +227,7 @@ export class MenuScene extends Phaser.Scene {
 
     // 初始武器与槽位
     const weaponName = WEAPONS[charDef.startingWeaponId]?.nameKey || '';
-    const startWeaponText = this.add.text(0, -h / 2 + 94, `🔪 ${weaponName} (槽位: ${charDef.maxWeapons})`, {
+    const startWeaponText = this.add.text(0, -h / 2 + 94, `🔪 ${weaponName}，可带 ${charDef.maxWeapons} 把武器`, {
       fontSize: '11px',
       color: '#2a9d8f',
       fontStyle: 'bold',
@@ -280,7 +291,7 @@ export class MenuScene extends Phaser.Scene {
     const diffTitle = this.add.text(
       width / 2,
       selectorY - 26,
-      `🎯 选择挑战难度 · 当前模式: 【${curDiff.nameKey}】 ${curDiff.badge}`,
+      `🎯 选择挑战难度：当前为${curDiff.nameKey} ${curDiff.badge}`,
       {
         fontSize: '14px',
         color: curDiff.color,

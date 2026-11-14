@@ -3,11 +3,11 @@ import { z } from 'zod';
 export const SaveDataSchema = z.object({
   schemaVersion: z.number().int().default(1),
   highScores: z.object({
-    highestWave: z.number().int().default(1),
+    highestWave: z.number().int().default(0),
     maxKills: z.number().int().default(0),
     bestTimeSec: z.number().default(0),
   }),
-  unlockedCharacters: z.array(z.string()).default(['wok_master', 'cold_brewer', 'skewer_griller']),
+  unlockedCharacters: z.array(z.string()).default(['wok_master', 'one_handed', 'six_armed', 'investor', 'herbalist']),
   selectedCharacterId: z.string().default('wok_master'),
   selectedDifficultyId: z.string().default('normal'),
   settings: z.object({
@@ -26,11 +26,11 @@ export type SaveData = z.infer<typeof SaveDataSchema>;
 export const DEFAULT_SAVE_DATA: SaveData = {
   schemaVersion: 1,
   highScores: {
-    highestWave: 1,
+    highestWave: 0,
     maxKills: 0,
     bestTimeSec: 0,
   },
-  unlockedCharacters: ['wok_master', 'cold_brewer', 'skewer_griller'],
+  unlockedCharacters: ['wok_master', 'one_handed', 'six_armed', 'investor', 'herbalist'],
   selectedCharacterId: 'wok_master',
   selectedDifficultyId: 'normal',
   settings: {

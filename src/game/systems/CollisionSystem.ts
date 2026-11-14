@@ -10,6 +10,15 @@ import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
 import { SpatialHash } from '../spatial/spatial-hash';
 
+/**
+ * 幸运加成：每点幸运提升掉率 0.4%，上限 +20%，总概率不超过 95%。
+ * 幸运此前只显示不生效（角色与道具均可加幸运，但无人读取该属性）。
+ */
+export function applyLuckBonus(baseChance: number, luck: number): number {
+  const bonus = Math.min(0.2, Math.max(0, luck) * 0.004);
+  return Math.min(0.95, baseChance + bonus);
+}
+
 export interface RunStatistics {
   totalKills: number;
   totalDamageDealt: number;
@@ -318,7 +327,7 @@ export class CollisionSystem {
             // 拾取美食恢复生命
             player.heal(effectiveValue);
             const healText = damageTextPool.acquire();
-            healText.spawn(`💚 +${effectiveValue} HP`, player.position.x, player.position.y - 14, '#06d6a0', true);
+            healText.spawn(`💚 +${effectiveValue} 生命`, player.position.x, player.position.y - 14, '#06d6a0', true);
             EventBus.getInstance().emit('sound:play', { key: 'sfx_pickup', volume: 0.8 });
           } else if (drop.type === 'heat') {
             const leveledUp = player.addExp(effectiveValue);
@@ -388,12 +397,12 @@ export class CollisionSystem {
       player.heal(player.healOnKill);
     }
 
-    // 爆出美食(回血)、火候(经验)或食材(金币)
-    const foodChance = enemy.isBoss ? 0.9 : enemy.isElite ? 0.4 : 0.07;
+    // 爆出美食(回血)、火候(经验)或食材(金币)；幸运提升美食与食材掉率
+    const foodChance = applyLuckBonus(enemy.isBoss ? 0.9 : enemy.isElite ? 0.4 : 0.07, player.luck);
     if (rng.next() < foodChance) {
       const foodDrop = dropPool.acquire();
       foodDrop.spawn('food', enemy.isBoss ? 50 : 25, enemy.x, enemy.y);
-    } else if (rng.next() < enemy.ingredientChance) {
+    } else if (rng.next() < applyLuckBonus(enemy.ingredientChance, player.luck)) {
       const ingDrop = dropPool.acquire();
       ingDrop.spawn('ingredient', enemy.ingredientValue, enemy.x, enemy.y);
     } else {

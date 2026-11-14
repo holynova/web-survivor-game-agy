@@ -65,7 +65,7 @@ export class CodexModal {
     this.container.add(cardGfx);
 
     // 3. 顶部标题
-    const title = this.scene.add.text(width / 2 - cardW / 2 + 25, height / 2 - cardH / 2 + 22, '📖 山海夜市 · 百味神魔全图鉴', {
+    const title = this.scene.add.text(width / 2 - cardW / 2 + 25, height / 2 - cardH / 2 + 22, '📖 山海夜市：百味神魔全图鉴', {
       fontSize: '22px',
       color: '#ffd166',
       fontStyle: 'bold',
@@ -362,8 +362,8 @@ export class CodexModal {
         textureKey: this.getWeaponTextureKey(w.id),
         description: w.levels[0].descriptionKey,
         stats: [
-          `🔥 初始威力: 伤害 ${w.levels[0].damage} | 攻击范围 ${w.levels[0].range}px`,
-          `⏱️ 冷却时间: ${(w.levels[0].cooldownMs / 1000).toFixed(2)}s | 穿透上限: ${w.levels[0].pierce} 次`,
+          `🔥 初始威力：伤害 ${w.levels[0].damage}，攻击范围 ${w.levels[0].range}`,
+          `⏱️ 冷却时间：${(w.levels[0].cooldownMs / 1000).toFixed(2)} 秒，穿透上限：${w.levels[0].pierce} 次`,
           `⭐ 满星形态: ${w.levels[w.levels.length - 1].descriptionKey}`,
           `🏷️ 词条风味: ${formatTags(w.tags)}`,
         ],
@@ -400,12 +400,12 @@ export class CodexModal {
         id: rcp.id,
         name: rcp.nameKey,
         category: '绝品菜谱',
-        badge: `质变神技: ${rcp.transformation?.transformedNameKey || '共鸣爆发'}`,
+        badge: `质变神技：${rcp.transformation?.transformedNameKey || '共鸣爆发'}`,
         textureKey: 'weapon_dragon_spatula',
         description: `【质变公式】${rcp.requirement.requiredWeaponId || '神兵'} (Lv.3) + 秘方配料 ➔ 进化为终极神技`,
         stats: [
-          `🔥 终极技能: ${rcp.transformation?.transformedNameKey || '神火共鸣'}`,
-          `⚡ 质变增幅: 伤害提升 ${(rcp.transformation?.damageMultiplier || 1.5) * 100}% | 冷却加速`,
+          `🔥 终极技能：${rcp.transformation?.transformedNameKey || '神火共鸣'}`,
+          `⚡ 质变增幅：伤害提升 ${(rcp.transformation?.damageMultiplier || 1.5) * 100}%，冷却加速`,
           `🌟 附加特效: 攻击附带全屏火海与金色神龙流光！`,
         ],
         flavorText: '山海饕餮谱传世合体绝学，刀火相生，天下无双。',
@@ -415,12 +415,12 @@ export class CodexModal {
         id: e.id,
         name: e.nameKey,
         category: e.category === 'boss' ? '👑 幽冥首领' : e.category === 'elite' ? '🏮 狂暴精英' : '👻 游荡妖物',
-        badge: `基础生命: ${e.maxHp} HP`,
+        badge: `基础生命：${e.maxHp}`,
         textureKey: e.assetKey || 'enemy_hungry_ghost',
-        description: `徘徊于山海夜市的幽界怪物。移动速度: ${e.moveSpeed}px/s | 触碰伤害: ${e.contactDamage} 点。`,
+        description: `徘徊于山海夜市的幽界怪物。移动速度：${e.moveSpeed}，触碰伤害：${e.contactDamage} 点。`,
         stats: [
-          `❤️ 基础生命: ${e.maxHp} HP | 移动速度: ${e.moveSpeed} px/s`,
-          `⚔️ 触碰伤害: ${e.contactDamage} 点 | 击杀掉落经验: ${e.expValue} 点`,
+          `❤️ 基础生命：${e.maxHp}，移动速度：${e.moveSpeed}`,
+          `⚔️ 触碰伤害：${e.contactDamage} 点，击杀掉落经验：${e.expValue} 点`,
           `🥟 掉落食材率: ${Math.round(e.ingredientChance * 100)}% (掉落 ${e.ingredientValue} 份)`,
         ],
         flavorText: '因垂涎夜市人间烟火气而聚集的魑魅魍魉，需以烈火猛炒驱散。',
