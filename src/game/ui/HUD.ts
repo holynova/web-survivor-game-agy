@@ -29,9 +29,8 @@ export class HUD {
     cdGfx: Phaser.GameObjects.Graphics;
   }[] = [];
 
-  // 顶部快捷操作按钮 (设置 & 测试)
+  // 顶部快捷操作按钮 (设置)
   public onSettingsClick?: () => void;
-  public onDebugClick?: () => void;
 
   // 移动端虚拟摇杆
   private joystickBase!: Phaser.GameObjects.Graphics;
@@ -82,7 +81,7 @@ export class HUD {
     this.hpBarFill = this.scene.add.graphics();
     this.container.add(this.hpBarFill);
 
-    this.hpText = this.scene.add.text(125, 27, 'HP 120/120', {
+    this.hpText = this.scene.add.text(125, 27, '生命 120/120', {
       fontSize: '12px',
       color: '#ffffff',
       fontStyle: 'bold',
@@ -108,7 +107,7 @@ export class HUD {
     this.container.add(this.timerText);
 
     // 4. 右上角食材金币与双倍留存提示
-    this.ingredientText = this.scene.add.text(width - 150, 24, '🥟 食材: 0', {
+    this.ingredientText = this.scene.add.text(width - 150, 24, '🥟 食材：0', {
       fontSize: '15px',
       color: '#ffd166',
       fontStyle: 'bold',
@@ -124,7 +123,7 @@ export class HUD {
     this.doubleLootText.setOrigin(1, 0);
     this.container.add(this.doubleLootText);
 
-    // 5. 顶部右上角快捷按钮 (🧪 测试指令 & ⚙️ 画面设置)
+    // 5. 顶部右上角快捷按钮 (⚙️ 画面设置)
     this.createTopRightButtons(width);
 
     // 6. 底部中央武器栏 (Weapon Hotbar)
@@ -170,33 +169,7 @@ export class HUD {
     });
     this.container.add(setZone);
 
-    // 2. 测试菜单按钮
-    const dbgBtnW = 68;
-    const dbgBtnH = 26;
-    const dbgBtnX = width - 38;
-    const dbgBtnY = 32;
-
-    const dbgGfx = this.scene.add.graphics();
-    dbgGfx.fillStyle(0x1b2d34, 0.9);
-    dbgGfx.fillRoundedRect(dbgBtnX - dbgBtnW / 2, dbgBtnY - dbgBtnH / 2, dbgBtnW, dbgBtnH, 5);
-    dbgGfx.lineStyle(1, 0x00f5d4, 0.8);
-    dbgGfx.strokeRoundedRect(dbgBtnX - dbgBtnW / 2, dbgBtnY - dbgBtnH / 2, dbgBtnW, dbgBtnH, 5);
-    this.container.add(dbgGfx);
-
-    const dbgText = this.scene.add.text(dbgBtnX, dbgBtnY, '🧪 测试', {
-      fontSize: '12px',
-      color: '#00f5d4',
-      fontStyle: 'bold',
-    });
-    dbgText.setOrigin(0.5, 0.5);
-    this.container.add(dbgText);
-
-    const dbgZone = this.scene.add.zone(dbgBtnX, dbgBtnY, dbgBtnW, dbgBtnH);
-    dbgZone.setInteractive({ useHandCursor: true });
-    dbgZone.on('pointerdown', () => {
-      if (this.onDebugClick) this.onDebugClick();
-    });
-    this.container.add(dbgZone);
+    // 测试菜单按钮已移除：作弊面板只留 F2 快捷键入口，不再对普通玩家展示。
   }
 
   private initWeaponHotbar(): void {
@@ -376,7 +349,7 @@ export class HUD {
     const hpColor = hpRatio > 0.5 ? 0x2a9d8f : hpRatio > 0.25 ? 0xf4a261 : 0xe76f51;
     this.hpBarFill.fillStyle(hpColor, 1);
     this.hpBarFill.fillRect(20, 24, 210 * hpRatio, 22);
-    this.hpText.setText(`HP ${Math.ceil(player.currentHp)}/${player.maxHp}`);
+    this.hpText.setText(`生命 ${Math.ceil(player.currentHp)}/${player.maxHp}`);
 
     // 3. 波次与倒计时
     const wave = world.waveSystem.currentWave;
@@ -396,7 +369,7 @@ export class HUD {
     this.timerText.setColor(isPrep ? '#06d6a0' : remainingSec <= 10 ? '#e76f51' : '#f4a261');
 
     // 4. 食材金币与双倍留存
-    this.ingredientText.setText(`🥟 食材: ${player.ingredients}`);
+    this.ingredientText.setText(`🥟 食材：${player.ingredients}`);
     if (world.doubleLootRemaining > 0) {
       this.doubleLootText.setText(`✨ 双倍留存: ${world.doubleLootRemaining} 个`);
     } else {

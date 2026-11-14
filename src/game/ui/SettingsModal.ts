@@ -74,10 +74,10 @@ export class SettingsModal {
       y: rowY,
       width,
       options: [
-        { label: '关闭 (0%)', value: 'none' },
-        { label: '轻柔 (30%)', value: 'light' },
-        { label: '标准 (60%)', value: 'normal' },
-        { label: '强烈 (100%)', value: 'heavy' },
+        { label: '关闭', value: 'none' },
+        { label: '轻柔', value: 'light' },
+        { label: '标准', value: 'normal' },
+        { label: '强烈', value: 'heavy' },
       ],
       currentValue: settings.shakeIntensity || 'normal',
       onSelect: (val: string) => {
@@ -109,7 +109,7 @@ export class SettingsModal {
 
     // 3. 受击白闪与粒子特效 (开 / 关)
     this.renderOptionRow({
-      label: '💡 怪物受击白闪与特效',
+      label: '💡 受击闪光与特效',
       y: rowY,
       width,
       options: [

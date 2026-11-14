@@ -9,6 +9,8 @@ export class PauseModal {
   private container: Phaser.GameObjects.Container;
   private onResumeCallback: () => void;
   private onRestartCallback: () => void;
+  private restartArmed = false;
+  private menuArmed = false;
   private onSettingsCallback?: () => void;
   private onCodexCallback?: () => void;
 
@@ -32,6 +34,8 @@ export class PauseModal {
 
   public show(player?: Player, world?: SimulationWorld): void {
     this.container.removeAll(true);
+    this.restartArmed = false;
+    this.menuArmed = false;
 
     const width = this.scene.scale.width;
     const height = this.scene.scale.height;
@@ -54,7 +58,7 @@ export class PauseModal {
     this.container.add(cardGfx);
 
     // 3. 顶部标题
-    const title = this.scene.add.text(width / 2, height / 2 - cardH / 2 + 20, '⏸ 游戏暂停 · 神厨当前状态详情', {
+    const title = this.scene.add.text(width / 2, height / 2 - cardH / 2 + 20, '⏸ 游戏暂停：神厨当前状态', {
       fontSize: '24px',
       color: '#ffd166',
       fontStyle: 'bold',
@@ -163,7 +167,7 @@ export class PauseModal {
         slotBox.strokeRoundedRect(-w / 2 + 12, startY, w - 24, slotH - 6, 6);
         card.add(slotBox);
 
-        const emptyText = this.scene.add.text(0, startY + (slotH - 6) / 2, `【空置槽位 ${i + 1}】升级或商店添置`, {
+        const emptyText = this.scene.add.text(0, startY + (slotH - 6) / 2, `【空武器位 ${i + 1}】升级或去商店添置`, {
           fontSize: '11px',
           color: '#55666c',
         });
@@ -189,7 +193,7 @@ export class PauseModal {
     bgGfx.setScrollFactor(0);
     card.add(bgGfx);
 
-    const title = this.scene.add.text(0, -h / 2 + 12, `🌶️ 口味秘方 & 绝技`, {
+    const title = this.scene.add.text(0, -h / 2 + 12, `🌶️ 口味秘方与绝技`, {
       fontSize: '15px',
       color: '#f4a261',
       fontStyle: 'bold',
@@ -202,7 +206,7 @@ export class PauseModal {
 
     // 1. 已激活菜谱
     if (player.activeRecipes.length > 0) {
-      const recipeTitle = this.scene.add.text(-w / 2 + 16, startY, '🔥 质变绝技菜谱:', {
+      const recipeTitle = this.scene.add.text(-w / 2 + 16, startY, '🔥 质变绝技菜谱：', {
         fontSize: '12px',
         color: '#06d6a0',
         fontStyle: 'bold',
@@ -228,7 +232,7 @@ export class PauseModal {
     }
 
     // 2. 被动食材秘方
-    const itemTitle = this.scene.add.text(-w / 2 + 16, startY, '📦 已获秘方食材:', {
+    const itemTitle = this.scene.add.text(-w / 2 + 16, startY, '📦 已获秘方食材：', {
       fontSize: '12px',
       color: '#8fa3a6',
       fontStyle: 'bold',
@@ -281,7 +285,7 @@ export class PauseModal {
     bgGfx.setScrollFactor(0);
     card.add(bgGfx);
 
-    const title = this.scene.add.text(0, -h / 2 + 12, `📊 12维全维属性`, {
+    const title = this.scene.add.text(0, -h / 2 + 12, `📊 12 项属性`, {
       fontSize: '15px',
       color: '#00f5d4',
       fontStyle: 'bold',
@@ -292,21 +296,21 @@ export class PauseModal {
 
     // 12 维深度双列网格属性
     const leftStats = [
-      `❤️ 生命: ${Math.round(player.currentHp)}/${player.maxHp}`,
-      `💖 秒回: +${player.hpRegen}/5s`,
-      `🏃 移速: ${Math.round(player.moveSpeed)}`,
-      `⚔️ 全伤: +${Math.round((player.damageMultiplier - 1) * 100)}%`,
-      `⚡ 攻频: +${Math.round((player.attackSpeedMultiplier - 1) * 100)}%`,
-      `🎯 暴击: ${Math.round(player.critChance * 100)}%`,
+      `❤️ 生命：${Math.round(player.currentHp)}/${player.maxHp}`,
+      `💖 回复：每 5 秒 +${player.hpRegen}`,
+      `🏃 移速：${Math.round(player.moveSpeed)}`,
+      `⚔️ 全伤：+${Math.round((player.damageMultiplier - 1) * 100)}%`,
+      `⚡ 攻频：+${Math.round((player.attackSpeedMultiplier - 1) * 100)}%`,
+      `🎯 暴击：${Math.round(player.critChance * 100)}%`,
     ];
 
     const rightStats = [
-      `💥 爆伤: ${player.critMultiplier.toFixed(1)}x`,
-      `🛡️ 护甲: ${player.armor}`,
-      `💨 闪避: ${Math.round(player.dodge * 100)}%`,
-      `🌾 收获: +${player.harvest}/波`,
-      `🍀 幸运: ${player.luck}`,
-      `🥟 食材: ${player.ingredients}`,
+      `💥 爆伤：${player.critMultiplier.toFixed(1)} 倍`,
+      `🛡️ 护甲：${player.armor}`,
+      `💨 闪避：${Math.round(player.dodge * 100)}%`,
+      `🌾 收获：+${player.harvest}/波`,
+      `🍀 幸运：${player.luck}`,
+      `🥟 食材：${player.ingredients}`,
     ];
 
     let startY = -h / 2 + 38;
@@ -334,7 +338,7 @@ export class PauseModal {
     card.add(divGfx);
 
     startY += 8;
-    const tagTitle = this.scene.add.text(-w / 2 + 14, startY, '✨ 流派套装共鸣 (Synergies):', {
+    const tagTitle = this.scene.add.text(-w / 2 + 14, startY, '✨ 流派套装共鸣：', {
       fontSize: '12px',
       color: '#ffd166',
       fontStyle: 'bold',
@@ -351,9 +355,9 @@ export class PauseModal {
       card.add(noTagText);
     } else {
       const tagStrings = synergies.map(
-        s => `${s.synergy.icon} ${s.synergy.name} (${s.count}件${s.activeTier > 0 ? ` · T${s.activeTier}` : ''})`,
+        s => `${s.synergy.icon} ${s.synergy.name}（${s.count}件${s.activeTier > 0 ? `，${s.activeTier} 级` : ''}）`,
       );
-      const tagContent = this.scene.add.text(-w / 2 + 14, startY, tagStrings.join('  ·  '), {
+      const tagContent = this.scene.add.text(-w / 2 + 14, startY, tagStrings.join('，'), {
         fontSize: '11px',
         color: '#00f5d4',
         wordWrap: { width: w - 28, useAdvancedWrap: true },
@@ -466,6 +470,13 @@ export class PauseModal {
     const restZone = this.scene.add.zone(restX, btnY, btnW, btnH);
     restZone.setInteractive({ useHandCursor: true });
     restZone.on('pointerdown', () => {
+      // 不可逆操作：第一次点击只武装确认，第二次才真正重开
+      if (!this.restartArmed) {
+        this.restartArmed = true;
+        restText.setText('确认重开？进度不保存');
+        restText.setFontSize(12);
+        return;
+      }
       this.hide();
       this.onRestartCallback();
     });
@@ -478,7 +489,7 @@ export class PauseModal {
     menuGfx.fillRoundedRect(menuX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
     this.container.add(menuGfx);
 
-    const menuText = this.scene.add.text(menuX, btnY, '🚪 退出菜单', {
+    const menuText = this.scene.add.text(menuX, btnY, '🚪 返回主菜单', {
       fontSize: '14px',
       color: '#ffffff',
       fontStyle: 'bold',
@@ -489,6 +500,13 @@ export class PauseModal {
     const menuZone = this.scene.add.zone(menuX, btnY, btnW, btnH);
     menuZone.setInteractive({ useHandCursor: true });
     menuZone.on('pointerdown', () => {
+      // 不可逆操作：第一次点击只武装确认，第二次才真正退出
+      if (!this.menuArmed) {
+        this.menuArmed = true;
+        menuText.setText('确认退出？进度不保存');
+        menuText.setFontSize(12);
+        return;
+      }
       this.hide();
       this.scene.scene.start('MenuScene');
     });

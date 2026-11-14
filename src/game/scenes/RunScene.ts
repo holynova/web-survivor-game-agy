@@ -95,20 +95,12 @@ export class RunScene extends Phaser.Scene {
       },
     );
 
-    // 5. 绑定 HUD 快捷入口 (设置 & 测试面板)
+    // 5. 绑定 HUD 快捷入口 (设置面板；测试面板只留 F2 快捷键)
     this.hud.onSettingsClick = () => {
       if (this.world.gameState === 'playing') {
         this.world.gameState = 'paused';
         this.world.clock.pause();
         this.settingsModal.show();
-      }
-    };
-
-    this.hud.onDebugClick = () => {
-      if (this.world.gameState === 'playing') {
-        this.world.gameState = 'paused';
-        this.world.clock.pause();
-        this.debugModal.show(this.world);
       }
     };
 
@@ -221,6 +213,7 @@ export class RunScene extends Phaser.Scene {
       bus.on('wave:started', data => {
         if (data.isBossWave) {
           AudioManager.getInstance().playBgm('bgm_boss', true, 0.55);
+          this.showBossBanner();
         } else {
           AudioManager.getInstance().playBgm('bgm_night_market_theme', true, 0.45);
         }
@@ -286,5 +279,30 @@ export class RunScene extends Phaser.Scene {
         this.world.waveSystem.currentWave.waveNumber,
       );
     }
+  }
+
+  /**
+   * Boss 波入场横幅：第 12 波夜市饕餮王出现时只换 BGM、屏幕上没有任何提示，
+   * 玩家不知道 Boss 来了。横幅停留 3 秒后淡出。
+   */
+  private showBossBanner(): void {
+    const width = this.scale.width;
+    const banner = this.add.text(width / 2, 120, '⚠️ 夜市饕餮王来了，击败它！', {
+      fontSize: '28px',
+      color: '#ffd166',
+      fontStyle: 'bold',
+      backgroundColor: 'rgba(6, 11, 13, 0.72)',
+      padding: { x: 18, y: 10 },
+    });
+    banner.setOrigin(0.5, 0.5);
+    banner.setScrollFactor(0);
+    banner.setDepth(150);
+    this.tweens.add({
+      targets: banner,
+      alpha: 0,
+      delay: 3000,
+      duration: 800,
+      onComplete: () => banner.destroy(),
+    });
   }
 }

@@ -6,6 +6,7 @@ import { WeaponDefinition } from '@/content/schemas/weapon';
 import { WEAPONS } from '@/content/weapons/data';
 import { EventBus } from '@/core/event-bus';
 import { SeededRNG } from '@/core/rng';
+import { weaponPriceFor } from '../shop-pricing';
 import { Player } from '../entities/Player';
 import { SynergySystem } from '../systems/SynergySystem';
 
@@ -81,7 +82,7 @@ export class ShopModal {
         newSlots.push({
           type: 'weapon',
           weapon: chosenWeapon,
-          cost: chosenWeapon.cost || 10,
+          cost: weaponPriceFor(chosenWeapon.cost || 10, player?.characterDef.id ?? ''),
           isLocked: false,
           isBought: false,
         });
@@ -116,7 +117,7 @@ export class ShopModal {
     const title = this.scene.add.text(
       width / 2,
       25,
-      `🏮 夜市整备铺 · 第 ${waveNumber} 波战前补给 🏮`,
+      `🏮 夜市整备铺：备战第 ${waveNumber + 1} 波 🏮`,
       {
         fontSize: '24px',
         color: '#ffd166',
@@ -129,7 +130,7 @@ export class ShopModal {
     const subTitle = this.scene.add.text(
       width / 2,
       58,
-      `🥟 食材资产: ${player.ingredients}  |  🌾 营收收获: +${player.harvest}/波  |  🍀 幸运: ${player.luck}  |  🔪 装备厨具: ${player.weapons.length}/${player.maxWeapons}`,
+      `🥟 食材资产：${player.ingredients}，🌾 营收收获：+${player.harvest}/波，🍀 幸运：${player.luck}，🔪 装备厨具：${player.weapons.length}/${player.maxWeapons}`,
       {
         fontSize: '13px',
         color: '#00f5d4',
@@ -138,8 +139,23 @@ export class ShopModal {
     subTitle.setOrigin(0.5, 0);
     this.container.add(subTitle);
 
+    // 波末结算提示：每波结束回满生命、收获入账，此前没有任何地方告诉玩家
+    const settleNote = this.scene.add.text(
+      width / 2,
+      78,
+      player.characterDef.id === 'six_armed'
+        ? `第 ${waveNumber} 波结束：生命已回满，收获 +${player.lastHarvestEarned} 食材已入账；六臂神童买武器 8 折`
+        : `第 ${waveNumber} 波结束：生命已回满，收获 +${player.lastHarvestEarned} 食材已入账`,
+      {
+        fontSize: '12px',
+        color: '#8fa3a6',
+      },
+    );
+    settleNote.setOrigin(0.5, 0);
+    this.container.add(settleNote);
+
     // 3. 上方：已装备神兵背包管理栏（支持折价变卖）
-    this.renderEquippedWeaponsBar(player, width, 88, rng, waveNumber);
+    this.renderEquippedWeaponsBar(player, width, 98, rng, waveNumber);
 
     // 4. 中间：4 个货架商品卡片（大尺寸 Hero 独立像素图标与展示台）
     const cardW = 250;
@@ -171,7 +187,7 @@ export class ShopModal {
     barGfx.strokeRoundedRect(screenW / 2 - barW / 2, y, barW, barH, 8);
     this.container.add(barGfx);
 
-    const barTitle = this.scene.add.text(screenW / 2 - barW / 2 + 16, y + 6, `🎒 厨神背包 (点击变卖按钮可折价回收食材，腾出槽位)`, {
+    const barTitle = this.scene.add.text(screenW / 2 - barW / 2 + 16, y + 6, `🎒 厨神背包（点击变卖可按 7 折回收食材，腾出武器位）`, {
       fontSize: '11px',
       color: '#8fa3a6',
       fontStyle: 'bold',
@@ -318,13 +334,13 @@ export class ShopModal {
           descStr = `已满 ${player.maxWeapons} 把武器，请先变卖闲置厨具`;
         } else {
           descStr = slot.weapon!.levels[0].descriptionKey;
-          tagStr = `新增神兵 · ${formatTags(slot.weapon!.tags)}`;
+          tagStr = `新增神兵：${formatTags(slot.weapon!.tags)}`;
         }
       }
     } else {
       const stacks = player.getItemCount(slot.item!.id);
       descStr = slot.item!.descriptionKey;
-      tagStr = `口味秘方 · ${formatTags(slot.item!.tags)} (${stacks}/${slot.item!.maxStacks})`;
+      tagStr = `口味秘方：${formatTags(slot.item!.tags)}（${stacks}/${slot.item!.maxStacks}）`;
     }
 
     // 1. 顶部状态标签
@@ -509,9 +525,9 @@ export class ShopModal {
     // 1. 流派羁绊提示行
     const synergies = SynergySystem.getActiveSynergies(player);
     const synTextList = synergies.map(s => `${s.synergy.icon} ${s.synergy.name} (${s.count}件)`);
-    const synSummary = synTextList.length > 0 ? synTextList.join('  ·  ') : '暂无激活的流派套装羁绊';
+    const synSummary = synTextList.length > 0 ? synTextList.join('，') : '暂无激活的流派套装羁绊';
 
-    const synLabel = this.scene.add.text(width / 2, height - 76, `✨ 当前神兵流派共鸣: ${synSummary}`, {
+    const synLabel = this.scene.add.text(width / 2, height - 76, `✨ 当前神兵流派共鸣：${synSummary}`, {
       fontSize: '12px',
       color: '#ffd166',
       fontStyle: 'bold',
@@ -563,7 +579,7 @@ export class ShopModal {
     rdyGfx.fillRoundedRect(rdx - rdyW / 2, rdy - rdyH / 2, rdyW, rdyH, 8);
     this.container.add(rdyGfx);
 
-    const rdyText = this.scene.add.text(rdx, rdy, '🔥 准备就绪 · 出摊迎战 🔥', {
+    const rdyText = this.scene.add.text(rdx, rdy, '🔥 出摊迎战 🔥', {
       fontSize: '14px',
       color: '#ffffff',
       fontStyle: 'bold',

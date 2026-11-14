@@ -99,7 +99,7 @@ export class Player {
       this.iFrameTimerSec = Math.max(0, this.iFrameTimerSec - dtSec);
     }
 
-    // 生命秒回逻辑 (每 5 秒自动恢复 hpRegen 点生命)
+    // 生命回复逻辑 (每 5 秒自动恢复 hpRegen 点生命)
     if (this.hpRegen > 0 && this.currentHp < this.maxHp) {
       this.hpRegenTimerSec += dtSec;
       if (this.hpRegenTimerSec >= 5.0) {
@@ -131,8 +131,11 @@ export class Player {
     this.currentHp = Math.min(this.maxHp, this.currentHp + amount);
   }
 
+  public lastHarvestEarned = 0;
+
   public applyEndOfWaveHarvest(): number {
     const earned = this.harvest;
+    this.lastHarvestEarned = earned;
     this.ingredients += earned;
     // 复利增长 5% (向上取整)
     if (this.harvest > 0) {

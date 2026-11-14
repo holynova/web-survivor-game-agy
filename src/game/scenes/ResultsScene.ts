@@ -195,7 +195,7 @@ export class ResultsScene extends Phaser.Scene {
     bgGfx.strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
     card.add(bgGfx);
 
-    const title = this.add.text(0, -h / 2 + 20, '🍳 构筑输出占比 & 神厨菜谱', {
+    const title = this.add.text(0, -h / 2 + 20, '🍳 构筑输出占比与神厨菜谱', {
       fontSize: '18px',
       color: '#2a9d8f',
       fontStyle: 'bold',
