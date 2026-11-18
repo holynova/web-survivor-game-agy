@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1200" height="360" viewBox="0 0 1200 360"
+     role="img" aria-labelledby="title desc">
+  <title id="title">山海夜市 Shanhai Night Market — 战斗厨房幸存者游戏</title>
+  <desc id="desc">深夜夜市风标题：山海夜市，副标题幽冥小怪夜袭，化厨具为神兵；右侧是红灯笼与一口冒着火焰的铁锅。</desc>
+
+  <defs>
+    <radialGradient id="glowEmber" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#e86a2c" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#e86a2c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="360" rx="26" fill="#0a1214"/>
+
+  <g id="glow">
+    <circle cx="980" cy="330" r="380" fill="url(#glowEmber)"/>
+  </g>
+
+  <g id="title-block" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
+    <text x="56" y="62" font-size="19" letter-spacing="3" fill="#f5b942">SHANHAI NIGHT MARKET · 战斗厨房幸存者</text>
+    <text x="56" y="128" font-size="62" font-weight="700" fill="#f5ead9">山海夜市</text>
+    <text x="56" y="168" font-size="23" fill="#f5ead9">WEB SURVIVOR — 幽冥小怪夜袭，化厨具为神兵</text>
+    <text x="56" y="204" font-size="19" fill="#b8b0a0">5 位摊主 · 10 件厨具 · 12 波百鬼，构筑你的战斗厨房。</text>
+    <g id="chips" font-size="18" fill="#f5ead9" text-anchor="middle">
+      <g><rect x="56" y="238" width="112" height="36" rx="18" fill="#161f22" stroke="#3a4448" stroke-width="1.5"/><text x="112" y="262">5 位摊主</text></g>
+      <g><rect x="180" y="238" width="126" height="36" rx="18" fill="#161f22" stroke="#3a4448" stroke-width="1.5"/><text x="243" y="262">10 件厨具</text></g>
+      <g><rect x="318" y="238" width="154" height="36" rx="18" fill="#161f22" stroke="#3a4448" stroke-width="1.5"/><text x="395" y="262">6 道神厨菜谱</text></g>
+      <g><rect x="484" y="238" width="196" height="36" rx="18" fill="#161f22" stroke="#3a4448" stroke-width="1.5"/><text x="582" y="262">12 波 + 饕餮 Boss</text></g>
+    </g>
+  </g>
+
+  <g id="night-market">
+    <g id="lantern-1">
+      <line x1="830" y1="0" x2="830" y2="44" stroke="#8a6d3b" stroke-width="3"/>
+      <rect x="818" y="44" width="24" height="8" rx="2" fill="#f5b942"/>
+      <ellipse cx="830" cy="84" rx="28" ry="34" fill="#c8402f"/>
+      <ellipse cx="830" cy="84" rx="16" ry="34" fill="#e05a45"/>
+      <rect x="818" y="116" width="24" height="8" rx="2" fill="#f5b942"/>
+      <line x1="830" y1="124" x2="830" y2="142" stroke="#f5b942" stroke-width="3"/>
+    </g>
+    <g id="lantern-2">
+      <line x1="1108" y1="0" x2="1108" y2="30" stroke="#8a6d3b" stroke-width="3"/>
+      <rect x="1096" y="30" width="24" height="8" rx="2" fill="#f5b942"/>
+      <ellipse cx="1108" cy="70" rx="28" ry="34" fill="#c8402f"/>
+      <ellipse cx="1108" cy="70" rx="16" ry="34" fill="#e05a45"/>
+      <rect x="1096" y="102" width="24" height="8" rx="2" fill="#f5b942"/>
+      <line x1="1108" y1="110" x2="1108" y2="128" stroke="#f5b942" stroke-width="3"/>
+    </g>
+    <g id="wok">
+      <path d="M 856 138 q 10 -22 0 -40" fill="none" stroke="#9a94a6" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+      <path d="M 892 130 q 10 -22 0 -40" fill="none" stroke="#9a94a6" stroke-width="4" stroke-linecap="round" opacity="0.45"/>
+      <path d="M 820 180 A 130 130 0 0 0 1080 180 Z" fill="#232a2e" stroke="#4a5257" stroke-width="3"/>
+      <path d="M 820 180 A 130 130 0 0 0 1080 180" fill="none" stroke="#6b7276" stroke-width="4"/>
+      <rect x="1064" y="166" width="70" height="16" rx="8" fill="#3a4145" stroke="#4a5257" stroke-width="2" transform="rotate(-18 1064 174)"/>
+      <g id="flames">
+        <polygon points="880,352 900,302 912,330 928,292 946,334 962,306 978,352" fill="#e86a2c"/>
+        <polygon points="902,352 916,320 928,340 942,316 954,352" fill="#f5b942"/>
+      </g>
+      <g id="chili">
+        <path d="M 900 166 q 34 22 66 2 q -30 30 -66 -2" fill="#c8402f"/>
+        <path d="M 962 166 q 8 -10 2 -18" fill="none" stroke="#5b8a4a" stroke-width="4" stroke-linecap="round"/>
+      </g>
+    </g>
+  </g>
+</svg>
