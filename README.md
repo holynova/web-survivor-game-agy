@@ -1,18 +1,18 @@
+<p align="right"><a href="README.en.md">English</a></p>
+
 <p align="center">
   <img src="./assets/readme/hero.svg" width="100%" alt="山海夜市 Shanhai Night Market — 战斗厨房幸存者游戏：深夜夜市风标题，右侧是红灯笼与一口冒着火焰的铁锅">
 </p>
 
 <p align="center">
-  <a href="https://holynova.github.io/web-survivor-game-agy/">▶ 在线玩 Play Online</a>
+  <a href="https://holynova.github.io/web-survivor-game-agy/">▶ 在线玩</a>
   ·
   <a href="https://github.com/holynova/web-survivor-game-agy">GitHub 仓库</a>
 </p>
 
 山海夜市是一款 2D 俯视角「战斗厨房」幸存者游戏：你扮演一名夜市摊主，在妖怪围攻的山海夜市中穿梭移动、自动攻击，收集「热度」（经验）与「食材」（金币），把厨具与口味组合成夸张的战斗厨房，挑战 12 波幽冥百鬼与最终的饕餮 Boss。单局 10~15 分钟，Phaser 4 + TypeScript + Vite 构建。
 
-Shanhai Night Market is a 2D top-down "battle kitchen" survivor game: you play a night-market stall owner, weaving through waves of demons, auto-attacking, collecting heat (XP) and ingredients (coins), and combining cookware with flavors into an absurd battle kitchen — across 12 waves of ghosts and a final Taotie boss. A run lasts 10–15 minutes. Built with Phaser 4 + TypeScript + Vite.
-
-## 截图 / Screenshots
+## 截图
 
 <p align="center">
   <img src="./assets/readme/screenshot-start.png" width="100%" alt="开始界面：灯笼高挂的夜市街景，中央是山海夜市标题与开启夜市营业按钮">
@@ -22,14 +22,14 @@ Shanhai Night Market is a 2D top-down "battle kitchen" survivor game: you play a
   <img src="./assets/readme/screenshot-select.png" width="100%" alt="选角界面：5 位摊主卡片与 5 档难度选择">
 </p>
 
-## 玩法 / How to Play
+## 玩法
 
 - **移动**：`W` `A` `S` `D` 或方向键；触屏左半屏滑动唤起跟手虚拟摇杆。攻击全自动，你只管走位。
 - **升级与构筑**：杀怪掉「热度」升级，升级三选一拿厨具或口味；波次间有夜市整备（商店）时间，用「食材」买装备。
 - **12 波 + Boss**：第 12 波是 Boss 战——夜市饕餮王。死亡或胜利后可快速重开。
 - **暂停**：`Esc`；调试面板：`~`（无敌、刷食材、跳波、2x 加速等）。
 
-## 内容 / Content
+## 内容
 
 数量均按 `src/content/` 下的数据文件实数：
 
@@ -40,7 +40,7 @@ Shanhai Night Market is a 2D top-down "battle kitchen" survivor game: you play a
 - **11 种敌人**：饥饿游魂、麻辣泥怪、引魂灯笼、狂暴野猪灵、离火幽巫、地沟油怪、偷串鼠妖、蒸汽魅影、大包子妖魔、火锅煞将，以及 Boss 夜市饕餮王。
 - **5 档难度**：初试身手、热闹夜市、百鬼夜行、饕餮盛宴、修罗地狱。
 
-## 本地运行 / Run Locally
+## 本地运行
 
 ```bash
 pnpm install
@@ -52,7 +52,7 @@ pnpm typecheck  # TypeScript 严格类型检查
 pnpm lint       # ESLint
 ```
 
-## 技术 / Tech
+## 技术
 
 - **引擎**：Phaser 4.2.1（精确版本锁定）+ TypeScript（strict）+ Vite 5；Zod 做全量内容校验。
 - **性能**：固定 60Hz 步长模拟时钟（`SimulationClock`，单帧最多 4 步补算）；带种子的 PRNG（Mulberry32，相同 Seed 可重现）；2D 空间哈希网格（`SpatialHash`）做碰撞近邻查询；敌人、投射物、掉落物、伤害飘字全量对象池化。
@@ -70,12 +70,3 @@ src/content/                数据：角色 / 敌人 / 武器 / 口味 / 菜谱 
 public/assets/              角色 / 敌人 / 道具精灵、音效与 BGM、封面图
 tests/                      Vitest 单元测试 + Playwright 端到端测试
 ```
-
-## English
-
-**Shanhai Night Market** is a 2D top-down survivor game with a "battle kitchen" twist: play a night-market stall owner fighting off waves of demons with cookware as weapons.
-
-- **Run it**: move with `WASD`/arrows (or a touch joystick); attacks are automatic. Collect heat (XP) to level up and ingredients (coins) to shop between waves. 12 waves, ending with the Taotie boss. `Esc` pauses; `` ` `` opens a debug panel.
-- **Content** (counted from `src/content/`): 5 playable chefs, 10 weapons (3 levels each), 15 flavor passives, 6 recipe evolutions triggered by cookware + flavor tag combos, 11 enemy types, 5 difficulty levels.
-- **Tech**: Phaser 4.2.1 + TypeScript (strict) + Vite 5, Zod-validated data-driven content, fixed 60Hz simulation clock, seeded RNG, spatial-hash collision, object pooling, localStorage saves with migration.
-- **Dev**: `pnpm install && pnpm dev` (port 3000); `pnpm build`, `pnpm test`, `pnpm test:e2e`, `pnpm typecheck`, `pnpm lint`.
